@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-dark-bg text-neon-green font-mono;
+  }
+}
+
+@layer components {
+  .cyber-border {
+    @apply border border-neon-green/30 bg-dark-surface/50;
+  }
+  
+  .cyber-button {
+    @apply cyber-border px-6 py-3 hover:bg-neon-green/10 hover:border-neon-green transition-all duration-200 font-mono text-sm uppercase tracking-wider;
+  }
+  
+  .cyber-input {
+    @apply cyber-border px-4 py-2 bg-transparent text-neon-green placeholder-neon-green/50 focus:border-neon-green focus:outline-none;
+  }
+  
+  .glow-text {
+    text-shadow: 0 0 10px currentColor;
+  }
+  
+  .pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes pulse-glow {
+  from {
+    text-shadow: 0 0 5px currentColor;
+  }
+  to {
+    text-shadow: 0 0 20px currentColor, 0 0 30px currentColor;
+  }
+}
