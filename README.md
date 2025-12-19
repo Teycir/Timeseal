@@ -29,6 +29,8 @@
 
 **TIME-SEAL** is a cryptographically enforced time-locked vault system built on Cloudflare's edge infrastructure. It allows you to encrypt a file or message that **mathematically cannot be opened** until a specific moment in the future.
 
+![Time-Seal Architecture](explainerimage.png)
+
 ### Why is this different?
 > most "future message" apps contain "trust me bro" promises. Time-Seal is **Cryptographically Enforced** at the Edge.
 
