@@ -9,13 +9,13 @@ export async function GET(
 ) {
   try {
     const { id: sealId } = await params;
-    
+
     // Initialize database
     const db = new Database(createMockDB());
-    
+
     // Get seal from database
     const seal = await db.getSeal(sealId);
-    
+
     if (!seal) {
       return NextResponse.json(
         { error: 'Seal not found' },
@@ -36,13 +36,30 @@ export async function GET(
       });
     }
 
-    // Time has passed - release Key B
+    // Time has passed - release Key B and Blob
+
+    // Fetch blob from mock storage
+    const { getMockBlob } = await import('@/lib/database');
+    const blob = getMockBlob(sealId);
+
+    // Convert blob to base64 for transport (prototype only)
+    let blobBase64 = '';
+    if (blob) {
+      const bytes = new Uint8Array(blob);
+      let binary = '';
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      blobBase64 = btoa(binary);
+    }
+
     return NextResponse.json({
       id: sealId,
       isLocked: false,
       unlockTime: seal.unlockTime,
       keyB: seal.keyB,
       iv: seal.iv,
+      encryptedBlob: blobBase64,
     });
 
   } catch (error) {

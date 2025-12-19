@@ -37,12 +37,12 @@ CREATE INDEX IF NOT EXISTS idx_pulse_token ON seals(pulse_token);
 `;
 
 export class Database {
-  constructor(private db: D1Database) {}
+  constructor(private db: D1Database) { }
 
   async createSeal(seal: Omit<TimeSeal, 'createdAt'>): Promise<string> {
     const id = crypto.randomUUID();
     const createdAt = Date.now();
-    
+
     await this.db
       .prepare(`
         INSERT INTO seals (id, key_b, iv, unlock_time, created_at, pulse_token, pulse_duration, is_active)
@@ -102,21 +102,95 @@ export class Database {
   }
 }
 
+// Global mock store for local development persistence
+const globalMockStore = {
+  seals: new Map<string, any>(),
+  blobs: new Map<string, ArrayBuffer>(), // Store encrypted blobs
+};
+
 // Mock database for local development
 export function createMockDB(): D1Database {
   return {
     prepare(query: string) {
+      // Very basic SQL parser for our specific queries
+      const isInsert = query.trim().toUpperCase().startsWith('INSERT');
+      const isSelect = query.trim().toUpperCase().startsWith('SELECT');
+      const isUpdate = query.trim().toUpperCase().startsWith('UPDATE');
+
+      let boundValues: any[] = [];
+
       return {
-        bind(...values: unknown[]) {
+        bind(...values: any[]) {
+          boundValues = values;
           return this;
         },
         async first() {
+          if (isSelect) {
+            // SELECT * FROM seals WHERE id = ? AND is_active = 1
+            const id = boundValues[0];
+            const seal = globalMockStore.seals.get(id);
+
+            if (seal && seal.is_active === 1) {
+              return seal;
+            }
+          }
           return null;
         },
         async run() {
+          if (isInsert) {
+            // INSERT INTO seals ...
+            const id = boundValues[0];
+            const seal = {
+              id: boundValues[0],
+              key_b: boundValues[1],
+              iv: boundValues[2],
+              unlock_time: boundValues[3],
+              created_at: boundValues[4],
+              pulse_token: boundValues[5],
+              pulse_duration: boundValues[6],
+              is_active: boundValues[7]
+            };
+            globalMockStore.seals.set(id, seal);
+            return { success: true, meta: { last_row_id: 1 } };
+          }
+
+          if (isUpdate) {
+            if (query.includes('unlock_time')) {
+              // UPDATE seals SET unlock_time = ? WHERE pulse_token = ?
+              const newTime = boundValues[0];
+              const token = boundValues[1];
+
+              for (const [id, seal] of globalMockStore.seals) {
+                if (seal.pulse_token === token && seal.is_active === 1) {
+                  seal.unlock_time = newTime;
+                  globalMockStore.seals.set(id, seal);
+                  return { success: true, meta: { last_row_id: 1 } };
+                }
+              }
+            } else if (query.includes('is_active')) {
+              // UPDATE seals SET is_active = 0 WHERE id = ?
+              const id = boundValues[0];
+              const seal = globalMockStore.seals.get(id);
+              if (seal) {
+                seal.is_active = 0;
+                globalMockStore.seals.set(id, seal);
+                return { success: true, meta: { last_row_id: 1 } };
+              }
+            }
+          }
+
           return { success: true, meta: { last_row_id: 1 } };
         }
       };
     }
   };
+}
+
+// Helper to store blobs in our global mock
+export function storeMockBlob(id: string, blob: ArrayBuffer) {
+  globalMockStore.blobs.set(id, blob);
+}
+
+export function getMockBlob(id: string): ArrayBuffer | undefined {
+  return globalMockStore.blobs.get(id);
 }

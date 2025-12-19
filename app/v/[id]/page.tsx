@@ -31,7 +31,7 @@ function VaultPageClient({ id }: { id: string }) {
   useEffect(() => {
     if (status?.isLocked && status.timeRemaining) {
       setTimeLeft(status.timeRemaining);
-      
+
       const interval = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1000) {
@@ -51,10 +51,10 @@ function VaultPageClient({ id }: { id: string }) {
     try {
       const response = await fetch(`/api/seal/${id}`);
       const data = await response.json();
-      
+
       if (response.ok) {
         setStatus(data);
-        
+
         // If unlocked and we have Key A in URL hash, decrypt immediately
         if (!data.isLocked && data.keyB && data.iv) {
           await decryptMessage(data.keyB, data.iv);
@@ -77,11 +77,31 @@ function VaultPageClient({ id }: { id: string }) {
         return;
       }
 
-      // Fetch encrypted blob (mock for now)
-      // In production: const blob = await fetch(`/api/blob/${id}`);
-      const mockEncryptedBlob = new ArrayBuffer(0); // Mock data
-      
-      const decrypted = await decryptData(mockEncryptedBlob, { keyA, keyB, iv });
+      // In production: const blob = await fetch(`/api/blob/${params.id}`);
+      // Prototype: Blob is likely passed in data (if we modified the API)
+      // We need to fetch the blob content. For this prototype, let's assume the API returns it
+      // or we fetch it from a new endpoint.
+      // Since I modified the API to return `encryptedBlob` (base64) in the validation step:
+
+      let encryptedBuffer: ArrayBuffer;
+
+      // Re-fetch status to get the blob if it wasn't passed to this function
+      // (Optimization: Pass it in args)
+      const response = await fetch(`/api/seal/${id}`);
+      const data = await response.json();
+
+      if (data.encryptedBlob) {
+        const binary = atob(data.encryptedBlob);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+        encryptedBuffer = bytes.buffer;
+      } else {
+        encryptedBuffer = new ArrayBuffer(0); // Fallback
+      }
+
+      const decrypted = await decryptData(encryptedBuffer, { keyA, keyB, iv });
       const content = new TextDecoder().decode(decrypted);
       setDecryptedContent(content);
     } catch (err) {
@@ -140,13 +160,13 @@ function VaultPageClient({ id }: { id: string }) {
             <h1 className="text-4xl font-bold glow-text mb-4">VAULT UNLOCKED</h1>
             <p className="text-neon-green/70">The seal has been broken. Here is your message:</p>
           </div>
-          
+
           <div className="cyber-border p-6 mb-8">
             <pre className="whitespace-pre-wrap text-sm leading-relaxed">
               {decryptedContent}
             </pre>
           </div>
-          
+
           <div className="text-center">
             <a href="/" className="cyber-button">
               CREATE YOUR OWN TIME-SEAL
@@ -162,11 +182,11 @@ function VaultPageClient({ id }: { id: string }) {
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="max-w-md w-full text-center">
         <motion.div
-          animate={{ 
+          animate={{
             scale: [1, 1.1, 1],
             rotate: [0, 5, -5, 0]
           }}
-          transition={{ 
+          transition={{
             duration: 2,
             repeat: Infinity,
             repeatType: "reverse"
@@ -175,30 +195,30 @@ function VaultPageClient({ id }: { id: string }) {
         >
           🔒
         </motion.div>
-        
+
         <h1 className="text-4xl font-bold glow-text mb-4">VAULT SEALED</h1>
         <p className="text-neon-green/70 mb-8">
           This message is cryptographically locked until:
         </p>
-        
+
         <div className="cyber-border p-6 mb-8">
           <div className="text-2xl font-bold mb-4">
             {new Date(status.unlockTime).toLocaleString()}
           </div>
-          
+
           {timeLeft > 0 && (
             <div className="text-4xl font-mono pulse-glow">
               {formatTimeLeft(timeLeft)}
             </div>
           )}
         </div>
-        
+
         <div className="space-y-4">
           <p className="text-sm text-neon-green/50">
-            This vault uses split-key encryption and WORM storage.<br/>
+            This vault uses split-key encryption and WORM storage.<br />
             It cannot be opened early, even by the creator.
           </p>
-          
+
           <a href="/" className="cyber-button inline-block">
             CREATE YOUR OWN TIME-SEAL
           </a>

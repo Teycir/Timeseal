@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     const iv = formData.get('iv') as string;
     const unlockTime = parseInt(formData.get('unlockTime') as string);
     const pulseToken = formData.get('pulseToken') as string | null;
-    const pulseDuration = formData.get('pulseDuration') ? 
+    const pulseDuration = formData.get('pulseDuration') ?
       parseInt(formData.get('pulseDuration') as string) : null;
 
     if (!encryptedBlob || !keyB || !iv || !unlockTime || isNaN(unlockTime)) {
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
     // Initialize database (use env.DB in production with Cloudflare Workers)
     const db = new Database(createMockDB());
-    
+
     // Create seal record
     const sealId = await db.createSeal({
       id: '', // Will be generated
@@ -37,8 +37,12 @@ export async function POST(request: NextRequest) {
 
     // In production, upload to R2 with Object Lock
     // For now, we'll simulate the R2 upload
-    await encryptedBlob.arrayBuffer();
-    
+    const blobBuffer = await encryptedBlob.arrayBuffer();
+
+    // Store in global mock for local dev
+    const { storeMockBlob } = await import('@/lib/database');
+    storeMockBlob(sealId, blobBuffer);
+
     // Mock R2 upload with WORM compliance
     // In production: 
     // await env.R2.put(`seals/${sealId}`, blobBuffer, {
