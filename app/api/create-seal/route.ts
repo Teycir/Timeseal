@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Database, createMockDB } from '@/lib/database';
-import { CreateSealRequest } from '@/lib/types';
 
 export const runtime = 'edge';
 
@@ -15,7 +14,7 @@ export async function POST(request: NextRequest) {
     const pulseDuration = formData.get('pulseDuration') ? 
       parseInt(formData.get('pulseDuration') as string) : null;
 
-    if (!encryptedBlob || !keyB || !iv || !unlockTime) {
+    if (!encryptedBlob || !keyB || !iv || !unlockTime || isNaN(unlockTime)) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -38,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     // In production, upload to R2 with Object Lock
     // For now, we'll simulate the R2 upload
-    const blobBuffer = await encryptedBlob.arrayBuffer();
+    await encryptedBlob.arrayBuffer();
     
     // Mock R2 upload with WORM compliance
     // In production: 

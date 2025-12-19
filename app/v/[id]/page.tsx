@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { decryptData } from '@/lib/crypto';
 
@@ -13,7 +13,12 @@ interface SealStatus {
   iv?: string;
 }
 
-export default function VaultPage({ params }: { params: { id: string } }) {
+export default async function VaultPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  return <VaultPageClient id={id} />;
+}
+
+function VaultPageClient({ id }: { id: string }) {
   const [status, setStatus] = useState<SealStatus | null>(null);
   const [decryptedContent, setDecryptedContent] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +26,7 @@ export default function VaultPage({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     fetchSealStatus();
-  }, [params.id]);
+  }, [fetchSealStatus]);
 
   useEffect(() => {
     if (status?.isLocked && status.timeRemaining) {
@@ -40,11 +45,11 @@ export default function VaultPage({ params }: { params: { id: string } }) {
 
       return () => clearInterval(interval);
     }
-  }, [status]);
+  }, [status, fetchSealStatus]);
 
-  const fetchSealStatus = async () => {
+  const fetchSealStatus = useCallback(async () => {
     try {
-      const response = await fetch(`/api/seal/${params.id}`);
+      const response = await fetch(`/api/seal/${id}`);
       const data = await response.json();
       
       if (response.ok) {
@@ -58,11 +63,12 @@ export default function VaultPage({ params }: { params: { id: string } }) {
         setError(data.error || 'Seal not found');
       }
     } catch (err) {
+      console.error('Fetch seal error:', err);
       setError('Failed to fetch seal status');
     }
-  };
+  }, [id]);
 
-  const decryptMessage = async (keyB: string, iv: string) => {
+  const decryptMessage = useCallback(async (keyB: string, iv: string) => {
     try {
       // Get Key A from URL hash
       const keyA = window.location.hash.substring(1);
@@ -72,16 +78,17 @@ export default function VaultPage({ params }: { params: { id: string } }) {
       }
 
       // Fetch encrypted blob (mock for now)
-      // In production: const blob = await fetch(`/api/blob/${params.id}`);
+      // In production: const blob = await fetch(`/api/blob/${id}`);
       const mockEncryptedBlob = new ArrayBuffer(0); // Mock data
       
       const decrypted = await decryptData(mockEncryptedBlob, { keyA, keyB, iv });
       const content = new TextDecoder().decode(decrypted);
       setDecryptedContent(content);
     } catch (err) {
+      console.error('Decrypt error:', err);
       setError('Failed to decrypt message');
     }
-  };
+  }, [id]);
 
   const formatTimeLeft = (ms: number) => {
     const days = Math.floor(ms / (1000 * 60 * 60 * 24));

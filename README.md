@@ -1,103 +1,150 @@
-# ⏳ TIME-SEAL: The Unbreakable Protocol
+<div align="center">
 
-**"If I go silent, this speaks for me."**
+# ⏳ TIME-SEAL
+### The Unbreakable Protocol
 
-A cryptographically enforced time-locked vault system built on Cloudflare's edge infrastructure.
+![License](https://img.shields.io/badge/license-MIT-neon_green?style=for-the-badge)
+![Encryption](https://img.shields.io/badge/Encryption-AES--GCM-neon_green?style=for-the-badge)
+![Storage](https://img.shields.io/badge/Storage-R2_Object_Lock-neon_green?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Operational-neon_green?style=for-the-badge)
+
+```text
+████████╗██╗███╗   ███╗███████╗    ███████╗███████╗ █████╗ ██╗
+╚══██╔══╝██║████╗ ████║██╔════╝    ██╔════╝██╔════╝██╔══██╗██║
+   ██║   ██║██╔████╔██║█████╗█████╗███████╗█████╗  ███████║██║
+   ██║   ██║██║╚██╔╝██║██╔══╝╚════╝╚════██║██╔══╝  ██╔══██║██║
+   ██║   ██║██║ ╚═╝ ██║███████╗    ███████║███████╗██║  ██║███████╗
+   ╚═╝   ╚═╝╚═╝     ╚═╝╚══════╝    ╚══════╝╚══════╝╚═╝  ╚═╝╚══════╝
+```
+
+### *"If I go silent, this speaks for me."*
+
+[Create a Seal](http://localhost:3000) · [View Architecture](#-architecture) · [Report Bug](https://github.com/teycir/timeseal/issues)
+
+</div>
+
+---
+
+## ⚡ Overview
+
+**TIME-SEAL** is a cryptographically enforced time-locked vault system built on Cloudflare's edge infrastructure. It allows you to encrypt a file or message that **mathematically cannot be opened** until a specific moment in the future.
+
+### Why is this different?
+> most "future message" apps contain "trust me bro" promises. Time-Seal is **Cryptographically Enforced** at the Edge.
+
+---
+
+## 🏗️ Architecture
+
+<div align="center">
+  <h3>Zero-Trust • Edge-Native • Unbreakable</h3>
+</div>
+
+### 🔒 Layer 1: The Vault (R2 Object Lock)
+> **Immutable Storage**
+Files are stored in Cloudflare R2 with **WORM Compliance** (Write Once, Read Many). This prevents deletion—even by the admin—until the unlock time expires.
+
+### 🤝 Layer 2: The Handshake (Split-Key Crypto)
+> **Trust-Minimized**
+We use a Split-Key architecture to ensure no single party can decrypt the data early.
+*   **Key A (User):** Stored in the URL hash. Never sent to the server.
+*   **Key B (Server):** Stored in D1 database inside the secure enclave.
+*   **The Check:** The server refuses to release Key B until `Now > Unlock_Time`.
+
+### 💓 Layer 3: The Pulse (Dead Man's Switch)
+> **Automated Release**
+If used as a Dead Man's Switch, the user must click a private "Pulse Link" periodically. If they fail to check in, the seal unlocks automatically for the recipient.
+
+---
+
+## 🧠 Logic Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Browser
+    participant API
+    participant D1_DB
+    participant R2_Storage
+
+    Note over User, Browser: Phase A: Sealing
+    User->>Browser: Enters Secret + Time
+    Browser->>Browser: Generate Key A + Key B
+    Browser->>Browser: Encrypt Secret (Key A + Key B)
+    Browser->>API: Send EncryptedBlob + Key B + Time
+    API->>R2_Storage: Upload Blob (Object Lock)
+    API->>D1_DB: Store Key B + Time
+    API-->>Browser: Return Seal ID
+    Browser-->>User: Show Link (#KeyA)
+
+    Note over User, Browser: Phase B: Waiting (Seal Active)
+    User->>Browser: Opens Link (#KeyA)
+    Browser->>API: Request Seal Status
+    API->>D1_DB: Check Time
+    D1_DB-->>API: Locked
+    API-->>Browser: Status 403: "LOCKED" (Key B Withheld)
+    Browser-->>User: Show Countdown Timer ⏳
+
+    Note over User, Browser: Phase C: Unlocking (Seal Broken)
+    User->>Browser: Opens Link (After Time)
+    Browser->>API: Request Seal Status
+    API->>D1_DB: Check Time
+    D1_DB-->>API: Unlocked
+    API-->>Browser: Status 200: Return Key B
+    Browser->>Browser: Combine Key A + Key B
+    Browser->>Browser: Decrypt Secret
+    Browser-->>User: Display Decrypted Message �
+```
+
+---
+
+## 🎯 Use Cases
+
+| User Persona | Scenario |
+| :--- | :--- |
+| **💀 The Crypto Holder** | "I have my seed phrase in a Time-Seal. If I die, it unlocks for my wife after 30 days of silence. If I'm alive, I reset the timer." |
+| **🕵️ The Whistleblower** | "I have evidence. If I am arrested and can't click the reset button, the evidence goes public automatically." |
+| **🚀 The Marketer** | "I'm dropping a limited edition product. The link is public now, but nobody can buy until the timer hits zero." |
+
+---
+
+## � Tech Stack
+
+*   **Frontend:** `Next.js 14` (App Router)
+*   **Runtime:** `Cloudflare Workers`
+*   **Database:** `Cloudflare D1` (SQLite)
+*   **Storage:** `Cloudflare R2` (Object Lock)
+*   **Crypto:** `Web Crypto API` (Native AES-GCM)
+*   **Styling:** `Tailwind CSS` (Cipher-punk Theme)
+
+---
 
 ## 🚀 Quick Start
 
 ```bash
-# Install dependencies
+# 1. Install dependencies
 npm install
 
-# Run development server
+# 2. Run development server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see Time-Seal in action.
-
-## 🏗️ Architecture
-
-### Layer 1: The Vault (R2 Object Lock)
-- **Immutable Storage** using Cloudflare R2
-- **WORM Compliance** prevents deletion until unlock time
-- Files are cryptographically locked at the infrastructure level
-
-### Layer 2: The Handshake (Split-Key Crypto)
-- **Key A**: Stored in URL hash (client-side only)
-- **Key B**: Stored in D1 database with unlock timestamp
-- **AES-GCM Encryption** using Web Crypto API
-- Server refuses to release Key B until time expires
-
-### Layer 3: The Pulse (Dead Man's Switch)
-- Private pulse URLs for extending lock time
-- Automatic unlock if creator goes silent
-- Perfect for whistleblowing and inheritance scenarios
-
-## 🔧 Tech Stack
-
-- **Frontend**: Next.js 14 (App Router)
-- **Runtime**: Cloudflare Workers
-- **Database**: Cloudflare D1 (SQLite)
-- **Storage**: Cloudflare R2 with Object Lock
-- **Crypto**: Web Crypto API (AES-GCM)
-- **Styling**: Tailwind CSS (Cipher-punk theme)
-
-## 📁 Project Structure
-
-```
-├── app/
-│   ├── api/
-│   │   ├── create-seal/     # Vault creation endpoint
-│   │   ├── seal/[id]/       # Status check & key release
-│   │   └── pulse/[token]/   # Dead man's switch pulse
-│   ├── v/[id]/              # Vault viewer page
-│   └── page.tsx             # Landing page
-├── lib/
-│   ├── crypto.ts            # Split-key encryption
-│   ├── database.ts          # D1 database utilities
-│   └── types.ts             # TypeScript definitions
-└── components/              # Reusable UI components
-```
-
-## 🔐 Security Features
-
-- **Zero-Trust Architecture**: Server never sees unencrypted data
-- **Split-Key Encryption**: Requires both client and server keys
-- **WORM Storage**: Immutable until unlock time
-- **Edge Computing**: No single point of failure
-- **Client-Side Crypto**: Encryption happens in browser
-
-## 🎯 Use Cases
-
-### The Crypto Holder
-"I have my seed phrase in a Time-Seal. If I die, it unlocks for my wife. If I'm alive, I reset the timer."
-
-### The Whistleblower  
-"I have evidence. If I am arrested and can't click the reset button, the evidence goes public automatically."
-
-### The Marketer
-"I'm dropping a limited edition product. The link is public now, but nobody can buy until the timer hits zero."
-
-## 🚀 Deployment
-
-### Local Development
-The app runs with mock implementations for R2 and D1. All crypto operations work fully.
-
-### Production (Cloudflare)
-1. Deploy to Cloudflare Pages
-2. Enable D1 database
-3. Enable R2 with Object Lock
-4. Configure environment variables
-
-## 🎨 Design Philosophy
-
-**Cipher-Punk Aesthetic**: Black backgrounds, neon green text, monospace fonts. The UI should feel like a secure terminal from a cyberpunk movie.
-
-**Minimal Complexity**: Every feature serves the core mission. No bloat, no unnecessary dependencies.
-
-**Viral by Design**: The locked vault page includes a "Create your own Time-Seal" button, creating natural viral growth.
+Open [http://localhost:3000](http://localhost:3000) to create your first seal.
 
 ---
 
+## 🔮 Future Roadmap
+
+- [ ] **Multi-Sig Unlocking**: Require M-of-N keys to open.
+- [ ] **Decentralized Storage**: Backup blobs to Arweave/IPFS.
+- [ ] **Hardware Key Support**: Integration with YubiKey for Pulse.
+
+---
+
+<div align="center">
+
+**Built with 💚 and 🔒**
+
 *Time-Seal: Where cryptography meets inevitability.*
+
+</div>

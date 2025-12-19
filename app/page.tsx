@@ -9,6 +9,7 @@ export default function HomePage() {
   const [sealType, setSealType] = useState<'timed' | 'deadman'>('timed');
   const [pulseDays, setPulseDays] = useState(7);
   const [isCreating, setIsCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{
     publicUrl: string;
     pulseUrl?: string;
@@ -18,6 +19,7 @@ export default function HomePage() {
     if (!message.trim()) return;
     
     setIsCreating(true);
+    setError(null);
     try {
       // Encrypt the message
       const encrypted = await encryptData(message);
@@ -29,6 +31,10 @@ export default function HomePage() {
       
       if (sealType === 'timed') {
         unlockTime = new Date(unlockDate).getTime();
+        if (isNaN(unlockTime) || unlockTime <= Date.now()) {
+          console.error('Invalid unlock date');
+          return;
+        }
       } else {
         // Dead man's switch
         pulseDuration = pulseDays * 24 * 60 * 60 * 1000;
@@ -58,8 +64,11 @@ export default function HomePage() {
           publicUrl: `${window.location.origin}${data.publicUrl}#${encrypted.keyA}`,
           pulseUrl: data.pulseUrl ? `${window.location.origin}${data.pulseUrl}` : undefined,
         });
+      } else {
+        setError(data.error || 'Failed to create seal');
       }
     } catch (error) {
+      setError('Failed to create seal');
       console.error('Failed to create seal:', error);
     } finally {
       setIsCreating(false);
@@ -190,6 +199,10 @@ export default function HomePage() {
           >
             {isCreating ? 'CREATING SEAL...' : 'CREATE TIME-SEAL'}
           </button>
+          
+          {error && (
+            <p className="text-red-500 text-sm text-center">{error}</p>
+          )}
         </div>
       </div>
     </div>

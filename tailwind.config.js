@@ -11,6 +11,9 @@ module.exports = {
         'neon-green': '#00ff41',
         'dark-bg': '#0a0a0a',
         'dark-surface': '#1a1a1a',
+        'red': {
+          500: '#ef4444',
+        },
       },
       fontFamily: {
         'mono': ['JetBrains Mono', 'Courier New', 'monospace'],

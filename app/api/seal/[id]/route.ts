@@ -5,10 +5,10 @@ export const runtime = 'edge';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const sealId = params.id;
+    const { id: sealId } = await params;
     
     // Initialize database
     const db = new Database(createMockDB());

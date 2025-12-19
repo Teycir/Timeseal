@@ -5,10 +5,10 @@ export const runtime = 'edge';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { token: string } }
+  { params }: { params: Promise<{ token: string }> }
 ) {
   try {
-    const pulseToken = params.token;
+    const { token: pulseToken } = await params;
     
     // Initialize database
     const db = new Database(createMockDB());

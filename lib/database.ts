@@ -7,8 +7,8 @@ interface D1Database {
 }
 
 interface D1PreparedStatement {
-  bind(...values: any[]): D1PreparedStatement;
-  first(): Promise<any>;
+  bind(...values: unknown[]): D1PreparedStatement;
+  first(): Promise<Record<string, unknown> | null>;
   run(): Promise<D1Result>;
 }
 
@@ -72,13 +72,13 @@ export class Database {
     if (!result) return null;
 
     return {
-      id: result.id,
-      keyB: result.key_b,
-      iv: result.iv,
-      unlockTime: result.unlock_time,
-      createdAt: result.created_at,
-      pulseToken: result.pulse_token,
-      pulseDuration: result.pulse_duration,
+      id: result.id as string,
+      keyB: result.key_b as string,
+      iv: result.iv as string,
+      unlockTime: result.unlock_time as number,
+      createdAt: result.created_at as number,
+      pulseToken: result.pulse_token as string | undefined,
+      pulseDuration: result.pulse_duration as number | undefined,
       isActive: result.is_active === 1,
     };
   }
@@ -104,16 +104,13 @@ export class Database {
 
 // Mock database for local development
 export function createMockDB(): D1Database {
-  const mockData = new Map<string, any>();
-  
   return {
     prepare(query: string) {
       return {
-        bind(...values: any[]) {
+        bind(...values: unknown[]) {
           return this;
         },
         async first() {
-          // Simple mock - in real app this would query D1
           return null;
         },
         async run() {
