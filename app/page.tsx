@@ -308,7 +308,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative w-full overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center p-4 relative w-full overflow-x-hidden">
       <BackgroundBeams className="absolute top-0 left-0 w-full h-full z-0" />
       <div className="max-w-2xl w-full space-y-8 relative z-10">
 

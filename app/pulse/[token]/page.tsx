@@ -107,7 +107,7 @@ function PulsePageClient() {
 
   if (!hasToken) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 relative w-full overflow-hidden">
+      <div className="min-h-screen flex items-center justify-center p-4 relative w-full overflow-x-hidden">
         <BackgroundBeams className="absolute top-0 left-0 w-full h-full z-0" />
         <div className="max-w-md w-full relative z-10 text-center">
           <motion.div
@@ -145,7 +145,7 @@ function PulsePageClient() {
 
   if (showBurnConfirm) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 relative w-full overflow-hidden">
+      <div className="min-h-screen flex items-center justify-center p-4 relative w-full overflow-x-hidden">
         <BackgroundBeams className="absolute top-0 left-0 w-full h-full z-0" />
         <div className="max-w-md w-full relative z-10 text-center">
           <div className="text-6xl mb-4">🔥</div>
@@ -175,7 +175,7 @@ function PulsePageClient() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 relative w-full overflow-hidden">
+      <div className="min-h-screen flex items-center justify-center p-4 relative w-full overflow-x-hidden">
         <BackgroundBeams className="absolute top-0 left-0 w-full h-full z-0" />
         <div className="max-w-md w-full relative z-10 text-center">
           <motion.div
