@@ -200,6 +200,23 @@
   }
 }
 
+@keyframes subtle-shimmer {
+  0%, 100% {
+    opacity: 0.5;
+    text-shadow: 0 0 2px rgba(0, 255, 65, 0.1);
+  }
+  50% {
+    opacity: 0.7;
+    text-shadow: 0 0 4px rgba(0, 255, 65, 0.2);
+  }
+}
+
+.animate-subtle-shimmer {
+  animation: subtle-shimmer 3s ease-in-out;
+  animation-iteration-count: 1;
+  animation-delay: 0s;
+}
+
 @keyframes shimmer {
   0% {
     opacity: 0.6;

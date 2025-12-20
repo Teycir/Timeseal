@@ -342,7 +342,12 @@ export default function HomePage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="text-sm text-neon-green/50"
+            className="text-sm text-neon-green/50 animate-subtle-shimmer"
+            style={{
+              animationDelay: '0s',
+              animationIterationCount: 'infinite',
+              animationDuration: '30s'
+            }}
           >
             &quot;If I go silent, this speaks for me.&quot;
           </motion.p>
