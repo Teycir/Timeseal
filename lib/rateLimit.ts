@@ -34,6 +34,32 @@ export class RateLimiter {
   }
 }
 
+// Singleton pattern for rate limiters
+class RateLimiterRegistry {
+  private static instance: RateLimiterRegistry;
+  private limiters = new Map<string, RateLimiter>();
+
+  private constructor() {}
+
+  static getInstance(): RateLimiterRegistry {
+    if (!RateLimiterRegistry.instance) {
+      RateLimiterRegistry.instance = new RateLimiterRegistry();
+    }
+    return RateLimiterRegistry.instance;
+  }
+
+  getLimiter(key: string, config: RateLimitConfig): RateLimiter {
+    if (!this.limiters.has(key)) {
+      this.limiters.set(key, new RateLimiter(config));
+    }
+    return this.limiters.get(key)!;
+  }
+
+  clear(): void {
+    this.limiters.clear();
+  }
+}
+
 // Usage in API routes
 export async function withRateLimit(
   request: Request,
@@ -41,7 +67,10 @@ export async function withRateLimit(
   config: RateLimitConfig = { limit: 10, window: 60000 }
 ): Promise<Response> {
   const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
-  const limiter = new RateLimiter(config);
+  
+  const key = `${config.limit}:${config.window}`;
+  const limiter = RateLimiterRegistry.getInstance().getLimiter(key, config);
+  
   const { allowed, remaining } = await limiter.check(ip);
 
   if (!allowed) {

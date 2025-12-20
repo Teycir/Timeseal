@@ -10,15 +10,21 @@ export class R2Storage implements StorageProvider {
   constructor(private bucket: R2Bucket) {}
 
   async uploadBlob(sealId: string, data: ArrayBuffer, unlockTime: number): Promise<void> {
-    const retentionSeconds = Math.floor((unlockTime - Date.now()) / 1000);
+    const retentionUntil = new Date(unlockTime);
     
     await this.bucket.put(sealId, data, {
+      httpMetadata: {
+        contentType: 'application/octet-stream',
+        cacheControl: 'no-cache',
+      },
       customMetadata: {
         unlockTime: unlockTime.toString(),
+        retentionUntil: retentionUntil.toISOString(),
+        sealId: sealId,
       },
-      // R2 Object Lock - WORM compliance
-      httpMetadata: {
-        cacheControl: 'no-cache',
+      retention: {
+        mode: 'COMPLIANCE',
+        retainUntilDate: retentionUntil,
       },
     });
   }
@@ -38,7 +44,7 @@ export class R2Storage implements StorageProvider {
 export class MockStorage implements StorageProvider {
   private storage = new Map<string, ArrayBuffer>();
 
-  async uploadBlob(sealId: string, data: ArrayBuffer): Promise<void> {
+  async uploadBlob(sealId: string, data: ArrayBuffer, unlockTime: number): Promise<void> {
     this.storage.set(sealId, data);
   }
 

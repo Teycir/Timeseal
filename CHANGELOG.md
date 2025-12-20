@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Professional test suite with Jest, Playwright, and Testing Library
 - Unit tests for crypto library (key generation, encryption/decryption)
 - Integration tests for API endpoints (seal creation, status checks)
-- E2E tests for complete seal workflows
+- E2E tests for complete seal workflows with fixtures
 - Mock fixtures for Cloudflare services (D1, R2)
 - GitHub Actions CI/CD workflow for automated testing
 - Test coverage thresholds (80% across all metrics)
@@ -24,20 +24,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Input validation with size and time constraints
 - Structured logging for audit trails
 - Key encryption for keyB database storage
-- Metrics endpoint for monitoring
+- Metrics endpoint for monitoring (/api/metrics)
+- Health check endpoint (/api/health)
 - Circuit breaker pattern with retry logic
 - Reusable UI components (Button, Input, Countdown)
 - .env.example documenting required configuration
+- Database schema (schema.sql) for D1
+
+### Refactoring
+- Service layer abstraction (SealService) for business logic
+- Database abstraction layer with factory pattern
+- API handler abstraction with composable middleware
+- Custom React hooks for reusable UI logic
+- Utility functions library for common operations
+- Configuration management with validation
+- Dependency injection container for testability
+- ARCHITECTURE.md documenting design patterns
+
+### Implemented
+- ✅ Rate limiting integrated into API routes (10-20 req/min)
+- ✅ Cryptographically random seal IDs (16-byte)
+- ✅ R2 Object Lock metadata configuration
+- ✅ E2E test fixtures and mocking
+- ✅ Metrics and health check endpoints
 
 ### Fixed
 - Tailwind border color definition added
 - Crypto tests now test actual encryption/decryption functions
 - Mock storage separated from production code
+- API routes refactored with service layer
+- E2E tests fixed with proper fixtures
 
 ### Security
 - keyB now encrypted before database storage
 - Master key derived from environment secrets
 - Audit logging for all seal operations
+- Rate limiting prevents DOS attacks
+- Input validation prevents malicious uploads
 
 ### Known Issues
 - No rate limiting on API endpoints (implementation ready, needs deployment)

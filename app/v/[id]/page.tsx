@@ -13,7 +13,11 @@ interface SealStatus {
   iv?: string;
 }
 
-export default async function VaultPage({ params }: { params: Promise<{ id: string }> }) {
+export default function VaultPage({ params }: { params: Promise<{ id: string }> }) {
+  return <VaultPageWrapper params={params} />;
+}
+
+async function VaultPageWrapper({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   return <VaultPageClient id={id} />;
 }
@@ -23,6 +27,56 @@ function VaultPageClient({ id }: { id: string }) {
   const [decryptedContent, setDecryptedContent] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<number>(0);
+
+  const decryptMessage = useCallback(async (keyB: string, iv: string) => {
+    try {
+      const keyA = window.location.hash.substring(1);
+      if (!keyA) {
+        setError('Key A not found in URL. Invalid vault link.');
+        return;
+      }
+
+      const response = await fetch(`/api/seal/${id}`);
+      const data = await response.json();
+
+      if (!data.encryptedBlob) {
+        setError('Encrypted content not found');
+        return;
+      }
+
+      const binary = atob(data.encryptedBlob);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      const encryptedBuffer = bytes.buffer;
+
+      const decrypted = await decryptData(encryptedBuffer, { keyA, keyB, iv });
+      const content = new TextDecoder().decode(decrypted);
+      setDecryptedContent(content);
+    } catch (err) {
+      setError('Failed to decrypt message');
+    }
+  }, [id]);
+
+  const fetchSealStatus = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/seal/${id}`);
+      const data = await response.json();
+
+      if (response.ok) {
+        setStatus(data);
+
+        if (!data.isLocked && data.keyB && data.iv) {
+          await decryptMessage(data.keyB, data.iv);
+        }
+      } else {
+        setError(data.error || 'Seal not found');
+      }
+    } catch (err) {
+      setError('Failed to fetch seal status');
+    }
+  }, [id, decryptMessage]);
 
   useEffect(() => {
     fetchSealStatus();
@@ -46,69 +100,6 @@ function VaultPageClient({ id }: { id: string }) {
       return () => clearInterval(interval);
     }
   }, [status, fetchSealStatus]);
-
-  const fetchSealStatus = useCallback(async () => {
-    try {
-      const response = await fetch(`/api/seal/${id}`);
-      const data = await response.json();
-
-      if (response.ok) {
-        setStatus(data);
-
-        // If unlocked and we have Key A in URL hash, decrypt immediately
-        if (!data.isLocked && data.keyB && data.iv) {
-          await decryptMessage(data.keyB, data.iv);
-        }
-      } else {
-        setError(data.error || 'Seal not found');
-      }
-    } catch (err) {
-      console.error('Fetch seal error:', err);
-      setError('Failed to fetch seal status');
-    }
-  }, [id]);
-
-  const decryptMessage = useCallback(async (keyB: string, iv: string) => {
-    try {
-      // Get Key A from URL hash
-      const keyA = window.location.hash.substring(1);
-      if (!keyA) {
-        setError('Key A not found in URL. Invalid vault link.');
-        return;
-      }
-
-      // In production: const blob = await fetch(`/api/blob/${params.id}`);
-      // Prototype: Blob is likely passed in data (if we modified the API)
-      // We need to fetch the blob content. For this prototype, let's assume the API returns it
-      // or we fetch it from a new endpoint.
-      // Since I modified the API to return `encryptedBlob` (base64) in the validation step:
-
-      let encryptedBuffer: ArrayBuffer;
-
-      // Re-fetch status to get the blob if it wasn't passed to this function
-      // (Optimization: Pass it in args)
-      const response = await fetch(`/api/seal/${id}`);
-      const data = await response.json();
-
-      if (data.encryptedBlob) {
-        const binary = atob(data.encryptedBlob);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) {
-          bytes[i] = binary.charCodeAt(i);
-        }
-        encryptedBuffer = bytes.buffer;
-      } else {
-        encryptedBuffer = new ArrayBuffer(0); // Fallback
-      }
-
-      const decrypted = await decryptData(encryptedBuffer, { keyA, keyB, iv });
-      const content = new TextDecoder().decode(decrypted);
-      setDecryptedContent(content);
-    } catch (err) {
-      console.error('Decrypt error:', err);
-      setError('Failed to decrypt message');
-    }
-  }, [id]);
 
   const formatTimeLeft = (ms: number) => {
     const days = Math.floor(ms / (1000 * 60 * 60 * 24));
@@ -162,9 +153,12 @@ function VaultPageClient({ id }: { id: string }) {
           </div>
 
           <div className="cyber-border p-6 mb-8">
-            <pre className="whitespace-pre-wrap text-sm leading-relaxed">
+            <div 
+              className="whitespace-pre-wrap text-sm leading-relaxed break-words"
+              style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
+            >
               {decryptedContent}
-            </pre>
+            </div>
           </div>
 
           <div className="text-center">

@@ -3,6 +3,7 @@ export enum ErrorCode {
   SEAL_NOT_FOUND = 'SEAL_NOT_FOUND',
   SEAL_LOCKED = 'SEAL_LOCKED',
   INVALID_KEY = 'INVALID_KEY',
+  INVALID_INPUT = 'INVALID_INPUT',
   DECRYPTION_FAILED = 'DECRYPTION_FAILED',
   RATE_LIMIT_EXCEEDED = 'RATE_LIMIT_EXCEEDED',
   INVALID_UNLOCK_TIME = 'INVALID_UNLOCK_TIME',
@@ -34,6 +35,12 @@ export const ErrorMessages: Record<ErrorCode, AppError> = {
     code: ErrorCode.INVALID_KEY,
     message: 'Invalid decryption key',
     userMessage: 'The decryption key is invalid. Make sure you have the correct link.',
+    statusCode: 400,
+  },
+  [ErrorCode.INVALID_INPUT]: {
+    code: ErrorCode.INVALID_INPUT,
+    message: 'Invalid input provided',
+    userMessage: 'The provided input is invalid. Please check and try again.',
     statusCode: 400,
   },
   [ErrorCode.DECRYPTION_FAILED]: {

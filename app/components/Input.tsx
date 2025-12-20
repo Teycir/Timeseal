@@ -22,7 +22,7 @@ export function Input({
   return (
     <div className="flex flex-col gap-2">
       {label && (
-        <label className="text-neon-green font-mono text-sm">{label}</label>
+        <label className="text-neon-green font-mono text-sm tracking-wide">{label}</label>
       )}
       <input
         type={type}
@@ -30,10 +30,10 @@ export function Input({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         data-testid={testId}
-        className="bg-dark-surface border border-border text-white px-4 py-3 rounded font-mono focus:border-neon-green focus:outline-none"
+        className={`cyber-input ${error ? 'border-red-500 focus:shadow-[0_0_15px_rgba(239,68,68,0.2)]' : ''}`}
       />
       {error && (
-        <span className="text-red-500 text-sm font-mono">{error}</span>
+        <span className="text-red-500 text-xs font-mono tracking-wider">{error}</span>
       )}
     </div>
   );

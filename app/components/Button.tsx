@@ -9,6 +9,8 @@ interface ButtonProps {
   className?: string;
 }
 
+import { motion } from 'framer-motion';
+
 export function Button({
   children,
   onClick,
@@ -17,21 +19,25 @@ export function Button({
   type = 'button',
   className = '',
 }: ButtonProps) {
-  const baseStyles = 'px-6 py-3 font-mono font-bold rounded transition-all';
-  const variants = {
-    primary: 'bg-neon-green text-dark-bg hover:bg-neon-green/80',
-    secondary: 'bg-dark-surface text-neon-green border border-neon-green hover:bg-neon-green/10',
-    danger: 'bg-red-500 text-white hover:bg-red-600',
+  // Base classes provided by globals.css .cyber-button
+  // We can add variant-specific overrides if needed, but the main style is consistent
+
+  const variantStyles = {
+    primary: '', // Standard cyber-button
+    secondary: 'bg-transparent border-neon-green/30 hover:bg-neon-green/10', // Override for secondary
+    danger: 'border-red-500 text-red-500 hover:bg-red-500/10 hover:text-red-500 hover:shadow-[0_0_20px_rgba(239,68,68,0.4)]',
   };
 
   return (
-    <button
+    <motion.button
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`${baseStyles} ${variants[variant]} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
+      whileHover={!disabled ? { scale: 1.02 } : {}}
+      whileTap={!disabled ? { scale: 0.98 } : {}}
+      className={`cyber-button ${variantStyles[variant]} ${className}`}
     >
       {children}
-    </button>
+    </motion.button>
   );
 }

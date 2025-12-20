@@ -29,25 +29,42 @@ export async function generateKeys(): Promise<{ keyA: CryptoKey; keyB: CryptoKey
   return { keyA, keyB };
 }
 
-// Derive master key from Key A + Key B
+// Derive master key from Key A + Key B using HKDF
 async function deriveMasterKey(keyA: CryptoKey, keyB: CryptoKey): Promise<CryptoKey> {
   const keyABuffer = await crypto.subtle.exportKey('raw', keyA);
   const keyBBuffer = await crypto.subtle.exportKey('raw', keyB);
   
-  // XOR the keys to create master key material
-  const masterKeyMaterial = new Uint8Array(32);
-  const keyAArray = new Uint8Array(keyABuffer);
-  const keyBArray = new Uint8Array(keyBBuffer);
-  
-  for (let i = 0; i < 32; i++) {
-    masterKeyMaterial[i] = keyAArray[i] ^ keyBArray[i];
-  }
+  // Concatenate keys for HKDF input
+  const combinedKey = new Uint8Array(64);
+  combinedKey.set(new Uint8Array(keyABuffer), 0);
+  combinedKey.set(new Uint8Array(keyBBuffer), 32);
+
+  // Import combined key for HKDF
+  const hkdfKey = await crypto.subtle.importKey(
+    'raw',
+    combinedKey,
+    { name: 'HKDF' },
+    false,
+    ['deriveBits']
+  );
+
+  // Derive 256-bit key using HKDF
+  const derivedBits = await crypto.subtle.deriveBits(
+    {
+      name: 'HKDF',
+      hash: 'SHA-256',
+      salt: new Uint8Array(32), // Static salt for deterministic derivation
+      info: new TextEncoder().encode('timeseal-master-key'),
+    },
+    hkdfKey,
+    256
+  );
 
   return await crypto.subtle.importKey(
     'raw',
-    masterKeyMaterial,
+    derivedBits,
     { name: 'AES-GCM' },
-    true,
+    false, // NOT extractable
     ['encrypt', 'decrypt']
   );
 }
@@ -60,7 +77,7 @@ export async function encryptData(data: string | File): Promise<EncryptionResult
   // Convert input to ArrayBuffer
   let dataBuffer: ArrayBuffer;
   if (typeof data === 'string') {
-    dataBuffer = new TextEncoder().encode(data);
+    dataBuffer = new TextEncoder().encode(data).buffer;
   } else {
     dataBuffer = await data.arrayBuffer();
   }
@@ -73,7 +90,7 @@ export async function encryptData(data: string | File): Promise<EncryptionResult
     { name: 'AES-GCM', iv },
     masterKey,
     dataBuffer
-  );
+  ) as ArrayBuffer;
 
   // Export keys as base64 strings
   const keyABuffer = await crypto.subtle.exportKey('raw', keyA);
@@ -83,7 +100,7 @@ export async function encryptData(data: string | File): Promise<EncryptionResult
     encryptedBlob,
     keyA: arrayBufferToBase64(keyABuffer),
     keyB: arrayBufferToBase64(keyBBuffer),
-    iv: arrayBufferToBase64(iv)
+    iv: arrayBufferToBase64(iv.buffer),
   };
 }
 
@@ -118,7 +135,7 @@ export async function decryptData(
     { name: 'AES-GCM', iv },
     masterKey,
     encryptedBlob
-  );
+  ) as ArrayBuffer;
 }
 
 // Utility functions

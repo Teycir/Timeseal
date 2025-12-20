@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { generateKeys, encryptData, decryptData } from './crypto';
+import { describe, it, expect } from '@jest/globals';
+import { generateKeys, encryptData, decryptData } from '../lib/crypto';
 
 describe('Time-Seal Crypto Engine', () => {
 
@@ -72,7 +72,7 @@ describe('Time-Seal Crypto Engine', () => {
 
         await expect(decryptData(result.encryptedBlob, {
             keyA: result.keyA,
-            keyB: fakeKeyB, // Wrong key
+            keyB: fakeKeyB,
             iv: result.iv
         })).rejects.toThrow();
     });

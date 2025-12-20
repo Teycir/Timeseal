@@ -1,13 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Button } from '@/app/components/Button';
+import { Card } from '@/app/components/Card';
+import { ErrorMessage, PageHeader, CenteredContainer } from '@/app/components/Common';
+import { formatTimeShort, fetchJSON } from '@/lib/clientUtils';
+import { TIME_CONSTANTS } from '@/lib/constants';
 
-export default async function PulsePage({ params }: { params: Promise<{ token: string }> }) {
-  const { token } = await params;
-  return <PulsePageClient token={token} />;
+export default function PulsePage() {
+  return <PulsePageClient />;
 }
 
-function PulsePageClient({ token }: { token: string }) {
+function PulsePageClient() {
+  const [pulseToken, setPulseToken] = useState('');
   const [isPulsing, setIsPulsing] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -15,176 +20,189 @@ function PulsePageClient({ token }: { token: string }) {
   const [pulseDuration, setPulseDuration] = useState<number>(0);
   const [showBurnConfirm, setShowBurnConfirm] = useState(false);
   const [isBurning, setIsBurning] = useState(false);
+  const [hasToken, setHasToken] = useState(false);
+
+  const fetchPulseStatus = async () => {
+    if (!pulseToken) return;
+    try {
+      const data = await fetchJSON<{ timeRemaining: number; pulseInterval: number }>(
+        '/api/pulse/status',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pulseToken }),
+        }
+      );
+      setTimeRemaining(data.timeRemaining);
+      setPulseDuration(data.pulseInterval);
+      setHasToken(true);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch pulse status');
+    }
+  };
 
   useEffect(() => {
-    fetchPulseStatus();
-    const interval = setInterval(fetchPulseStatus, 30000);
-    return () => clearInterval(interval);
-  }, []);
+    if (pulseToken && hasToken) {
+      fetchPulseStatus();
+      const interval = setInterval(fetchPulseStatus, TIME_CONSTANTS.PULSE_CHECK_INTERVAL);
+      return () => clearInterval(interval);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pulseToken, hasToken]);
 
   useEffect(() => {
     if (timeRemaining > 0) {
       const interval = setInterval(() => {
-        setTimeRemaining(prev => Math.max(0, prev - 1000));
-      }, 1000);
+        setTimeRemaining(prev => Math.max(0, prev - TIME_CONSTANTS.COUNTDOWN_INTERVAL));
+      }, TIME_CONSTANTS.COUNTDOWN_INTERVAL);
       return () => clearInterval(interval);
     }
   }, [timeRemaining]);
 
-  const fetchPulseStatus = async () => {
-    try {
-      const response = await fetch(`/api/pulse/${token}`);
-      const data = await response.json();
-      if (response.ok) {
-        setTimeRemaining(data.timeRemaining);
-        setPulseDuration(data.pulseDuration);
-      }
-    } catch (err) {
-      console.error('Failed to fetch pulse status:', err);
-    }
-  };
-
   const handlePulse = async () => {
+    if (!pulseToken) return;
     setIsPulsing(true);
     setError(null);
     try {
-      const response = await fetch(`/api/pulse/${token}`, { method: 'POST' });
-      const data = await response.json();
-      
-      if (data.success) {
-        setSuccess(true);
-        setTimeout(() => setSuccess(false), 3000);
-        fetchPulseStatus();
-      } else {
-        setError(data.error || 'Failed to pulse');
-      }
+      await fetchJSON('/api/pulse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pulseToken }),
+      });
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), TIME_CONSTANTS.SUCCESS_MESSAGE_DURATION);
+      fetchPulseStatus();
     } catch (err) {
-      setError('Failed to pulse');
+      setError(err instanceof Error ? err.message : 'Failed to pulse');
     } finally {
       setIsPulsing(false);
     }
   };
 
   const handleBurn = async () => {
+    if (!pulseToken) return;
     setIsBurning(true);
     setError(null);
     try {
-      const response = await fetch('/api/burn', {
+      await fetchJSON('/api/burn', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pulseToken: token }),
+        body: JSON.stringify({ pulseToken }),
       });
-      const data = await response.json();
-      
-      if (data.success) {
-        window.location.href = '/?burned=true';
-      } else {
-        setError(data.error || 'Failed to burn seal');
-      }
+      window.location.href = '/?burned=true';
     } catch (err) {
-      setError('Failed to burn seal');
+      setError(err instanceof Error ? err.message : 'Failed to burn seal');
     } finally {
       setIsBurning(false);
     }
   };
 
-  const formatTime = (ms: number) => {
-    const days = Math.floor(ms / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-    if (days > 0) return `${days}d ${hours}h ${minutes}m`;
-    if (hours > 0) return `${hours}h ${minutes}m`;
-    return `${minutes}m`;
-  };
-
   const isUrgent = timeRemaining < pulseDuration * 0.2;
+
+  if (!hasToken) {
+    return (
+      <CenteredContainer>
+        <PageHeader 
+          icon="💓" 
+          title="DEAD MAN'S SWITCH" 
+          subtitle="Enter your pulse token to manage your seal."
+        />
+        
+        <Card>
+          <label className="block text-sm mb-2">PULSE TOKEN</label>
+          <input
+            type="text"
+            value={pulseToken}
+            onChange={(e) => setPulseToken(e.target.value)}
+            placeholder="Enter your pulse token..."
+            className="cyber-input w-full font-mono mb-4"
+          />
+          
+          <Button onClick={fetchPulseStatus} disabled={!pulseToken.trim()} className="w-full">
+            CONTINUE
+          </Button>
+          
+          {error && <ErrorMessage message={error} />}
+        </Card>
+      </CenteredContainer>
+    );
+  }
 
   if (showBurnConfirm) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="max-w-md w-full text-center">
-          <div className="text-6xl mb-4">🔥</div>
-          <h1 className="text-3xl font-bold text-red-500 mb-4">BURN SEAL?</h1>
-          <p className="text-neon-green/70 mb-8">
-            This will permanently destroy the seal. The encrypted content will be unrecoverable.
-            This action cannot be undone.
-          </p>
+      <CenteredContainer>
+        <div className="text-center">
+          <PageHeader 
+            icon="🔥" 
+            title="BURN SEAL?" 
+            subtitle="This will permanently destroy the seal. The encrypted content will be unrecoverable. This action cannot be undone."
+          />
+          
           <div className="space-y-4">
-            <button
-              onClick={handleBurn}
-              disabled={isBurning}
-              className="cyber-button w-full bg-red-500/20 border-red-500 hover:bg-red-500/30 disabled:opacity-50"
-            >
+            <Button onClick={handleBurn} disabled={isBurning} variant="danger" className="w-full">
               {isBurning ? 'BURNING...' : '🔥 YES, BURN IT'}
-            </button>
-            <button
-              onClick={() => setShowBurnConfirm(false)}
-              className="cyber-button w-full"
-            >
+            </Button>
+            <Button onClick={() => setShowBurnConfirm(false)} className="w-full">
               CANCEL
-            </button>
+            </Button>
           </div>
-          {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
+          {error && <ErrorMessage message={error} />}
         </div>
-      </div>
+      </CenteredContainer>
     );
   }
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="max-w-md w-full text-center">
-          <div className="text-6xl mb-4">✅</div>
-          <h1 className="text-3xl font-bold glow-text mb-4">PULSE CONFIRMED</h1>
-          <p className="text-neon-green/70 mb-8">
-            Your seal remains locked. Next pulse needed in {formatTime(pulseDuration)}.
-          </p>
+      <CenteredContainer>
+        <div className="text-center">
+          <PageHeader 
+            icon="✅" 
+            title="PULSE CONFIRMED" 
+            subtitle={`Your seal remains locked. Next pulse needed in ${formatTimeShort(pulseDuration)}.`}
+          />
         </div>
-      </div>
+      </CenteredContainer>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="max-w-md w-full text-center">
+    <CenteredContainer>
+      <div className="text-center">
         <div className={`text-6xl mb-4 ${isUrgent ? 'animate-pulse' : ''}`}>💓</div>
-        <h1 className="text-3xl font-bold glow-text mb-4">DEAD MAN'S SWITCH</h1>
+        <h1 className="text-3xl font-bold glow-text mb-4">DEAD MAN&apos;S SWITCH</h1>
         
         {timeRemaining > 0 && (
-          <div className="cyber-border p-6 mb-6">
+          <Card className="mb-6">
             <p className="text-sm text-neon-green/70 mb-2">TIME UNTIL AUTO-UNLOCK</p>
             <div className={`text-4xl font-mono ${isUrgent ? 'text-red-500 pulse-glow' : ''}`}>
-              {formatTime(timeRemaining)}
+              {formatTimeShort(timeRemaining)}
             </div>
             {isUrgent && (
               <p className="text-red-500 text-sm mt-2">⚠️ URGENT: Pulse soon or seal will unlock!</p>
             )}
-          </div>
+          </Card>
         )}
         
         <p className="text-neon-green/70 mb-8">
-          Click to confirm you're still active and reset the countdown.
+          Click to confirm you&apos;re still active and reset the countdown.
         </p>
         
-        <button
-          onClick={handlePulse}
-          disabled={isPulsing}
-          className="cyber-button w-full text-xl py-6 disabled:opacity-50"
-        >
+        <Button onClick={handlePulse} disabled={isPulsing} className="w-full text-xl py-6 mb-4">
           {isPulsing ? 'PULSING...' : '💓 SEND PULSE'}
-        </button>
+        </Button>
         
-        <button
-          onClick={() => setShowBurnConfirm(true)}
-          className="cyber-button w-full mt-4 text-sm border-red-500/30 text-red-500/70 hover:border-red-500 hover:text-red-500"
+        <Button 
+          onClick={() => setShowBurnConfirm(true)} 
+          variant="danger"
+          className="w-full text-sm"
         >
           🔥 BURN SEAL (PERMANENT)
-        </button>
+        </Button>
         
-        {error && (
-          <p className="text-red-500 text-sm mt-4">{error}</p>
-        )}
+        {error && <ErrorMessage message={error} />}
       </div>
-    </div>
+    </CenteredContainer>
   );
 }

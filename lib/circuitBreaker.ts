@@ -33,10 +33,17 @@ export class CircuitBreaker {
   }
 
   private async withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-    const timeout = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Operation timeout')), ms)
-    );
-    return Promise.race([promise, timeout]);
+    let timeoutId: NodeJS.Timeout | number;
+    
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error('Operation timeout')), ms);
+    });
+    
+    try {
+      return await Promise.race([promise, timeoutPromise]);
+    } finally {
+      clearTimeout(timeoutId!);
+    }
   }
 
   private onSuccess(): void {

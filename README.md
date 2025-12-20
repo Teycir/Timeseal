@@ -184,7 +184,15 @@ Open [http://localhost:3000](http://localhost:3000) to create your first seal.
 
 ---
 
-## 📄 License
+## 📚 Documentation
+
+- [Architecture Guide](ARCHITECTURE.md) - Design patterns and abstractions
+- [Deployment Guide](DEPLOYMENT.md) - Cloudflare setup instructions
+- [Security Documentation](SECURITY.md) - Threat model and security controls
+- [Security Testing](SECURITY-TESTING.md) - Penetration testing guide
+- [Testing Guide](TESTING.md) - Complete testing documentation
+- [Changelog](CHANGELOG.md) - Version history and changes
+- [TODO](TODO.md) - Remaining tasks and roadmap
 
 This project is licensed under the **Business Source License (BSL)**.
 
