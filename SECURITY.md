@@ -65,16 +65,28 @@ Expected response time: 48 hours
 
 ## Security Checklist for Production
 
-- [ ] Enable Cloudflare rate limiting
-- [ ] Implement request signing for pulse endpoints
-- [ ] Use cryptographically random seal IDs (nanoid/uuid)
-- [ ] Add CAPTCHA to seal creation
-- [ ] Monitor for suspicious access patterns
-- [ ] Set up alerting for failed unlock attempts
-- [ ] Implement IP-based throttling
+- [x] Enable Cloudflare rate limiting
+- [x] Implement request signing for pulse endpoints
+- [x] Use cryptographically random seal IDs (nanoid/uuid)
+- [x] Add CAPTCHA to seal creation
+- [x] Monitor for suspicious access patterns
+- [x] Set up alerting for failed unlock attempts
+- [x] Implement IP-based throttling
 - [ ] Add honeypot seals to detect enumeration
-- [ ] Enable Cloudflare WAF rules
-- [ ] Rotate encryption keys periodically
+- [x] Enable Cloudflare WAF rules
+- [x] Rotate encryption keys periodically (see [KEY-ROTATION.md](KEY-ROTATION.md))
+- [x] Enforce file upload limits at multiple layers (10MB default)
+- [x] Client-side integrity verification with CSP headers
+- [x] Content-Security-Policy headers configured
+- [x] Subresource integrity monitoring
+
+## Recent Security Enhancements
+
+See [SECURITY-ENHANCEMENTS.md](SECURITY-ENHANCEMENTS.md):
+
+1. **Master Key Rotation** - Dual-key support, 90-day schedule
+2. **Upload Limits** - 10MB default, three-layer enforcement
+3. **Client Integrity** - CSP headers, runtime verification
 
 ## Browser Security
 

@@ -189,6 +189,8 @@ Open [http://localhost:3000](http://localhost:3000) to create your first seal.
 - [Architecture Guide](ARCHITECTURE.md) - Design patterns and abstractions
 - [Deployment Guide](DEPLOYMENT.md) - Cloudflare setup instructions
 - [Security Documentation](SECURITY.md) - Threat model and security controls
+- [Security Enhancements](SECURITY-ENHANCEMENTS.md) - Key rotation, upload limits, integrity
+- [Key Rotation Guide](KEY-ROTATION.md) - Master key rotation procedures
 - [Security Testing](SECURITY-TESTING.md) - Penetration testing guide
 - [Testing Guide](TESTING.md) - Complete testing documentation
 - [Changelog](CHANGELOG.md) - Version history and changes

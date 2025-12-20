@@ -1,4 +1,6 @@
 // Storage Abstraction Layer
+const MAX_UPLOAD_SIZE = parseInt(process.env.MAX_FILE_SIZE_MB || '10') * 1024 * 1024;
+
 export interface StorageProvider {
   uploadBlob(sealId: string, data: ArrayBuffer, unlockTime: number): Promise<void>;
   downloadBlob(sealId: string): Promise<ArrayBuffer>;
@@ -10,6 +12,11 @@ export class R2Storage implements StorageProvider {
   constructor(private bucket: R2Bucket) {}
 
   async uploadBlob(sealId: string, data: ArrayBuffer, unlockTime: number): Promise<void> {
+    // Enforce size limit at R2 level
+    if (data.byteLength > MAX_UPLOAD_SIZE) {
+      throw new Error(`File exceeds maximum size of ${MAX_UPLOAD_SIZE / 1024 / 1024}MB`);
+    }
+    
     const retentionUntil = new Date(unlockTime);
     
     await this.bucket.put(sealId, data, {
@@ -45,6 +52,10 @@ export class MockStorage implements StorageProvider {
   private storage = new Map<string, ArrayBuffer>();
 
   async uploadBlob(sealId: string, data: ArrayBuffer, unlockTime: number): Promise<void> {
+    // Enforce size limit in mock storage too
+    if (data.byteLength > MAX_UPLOAD_SIZE) {
+      throw new Error(`File exceeds maximum size of ${MAX_UPLOAD_SIZE / 1024 / 1024}MB`);
+    }
     this.storage.set(sealId, data);
   }
 

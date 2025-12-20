@@ -70,10 +70,34 @@ export async function decryptKeyB(encryptedKeyB: string, masterKey: string, seal
   return new TextDecoder().decode(decrypted);
 }
 
+export async function decryptKeyBWithFallback(encryptedKeyB: string, sealId: string): Promise<string> {
+  const keys = getMasterKeys();
+  
+  for (const key of keys) {
+    try {
+      return await decryptKeyB(encryptedKeyB, key, sealId);
+    } catch (e) {
+      // Try next key
+      continue;
+    }
+  }
+  
+  throw new Error('Failed to decrypt with any available key');
+}
+
 export function getMasterKey(): string {
   const key = process.env.MASTER_ENCRYPTION_KEY;
   if (!key) {
     throw new Error('MASTER_ENCRYPTION_KEY not configured');
   }
   return key;
+}
+
+export function getMasterKeys(): string[] {
+  const current = process.env.MASTER_ENCRYPTION_KEY;
+  const previous = process.env.MASTER_ENCRYPTION_KEY_PREVIOUS;
+  if (!current) {
+    throw new Error('MASTER_ENCRYPTION_KEY not configured');
+  }
+  return previous ? [current, previous] : [current];
 }

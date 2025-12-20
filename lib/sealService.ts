@@ -1,7 +1,7 @@
 // Seal Service - Business Logic Layer
 import { StorageProvider } from './storage';
 import { DatabaseProvider } from './database';
-import { encryptKeyB, decryptKeyB, getMasterKey } from './keyEncryption';
+import { encryptKeyB, decryptKeyBWithFallback, getMasterKey } from './keyEncryption';
 import { validateFileSize, validateUnlockTime, validatePulseInterval } from './validation';
 import { logger, auditSealCreated, auditSealAccessed } from './logger';
 import { metrics } from './metrics';
@@ -94,7 +94,7 @@ export class SealService {
 
     let decryptedKeyB: string | undefined;
     if (isUnlocked) {
-      decryptedKeyB = await decryptKeyB(seal.keyB, getMasterKey(), sealId);
+      decryptedKeyB = await decryptKeyBWithFallback(seal.keyB, sealId);
       metrics.incrementSealUnlocked();
     }
 

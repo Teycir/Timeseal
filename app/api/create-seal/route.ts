@@ -10,6 +10,16 @@ export const runtime = 'edge';
 export async function POST(request: NextRequest) {
   const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
   
+  // Enforce Worker body size limit (10MB default)
+  const contentLength = request.headers.get('content-length');
+  const maxSize = parseInt(process.env.MAX_FILE_SIZE_MB || '10') * 1024 * 1024;
+  
+  if (contentLength && parseInt(contentLength) > maxSize) {
+    return jsonResponse({ 
+      error: `Request body exceeds maximum size of ${maxSize / 1024 / 1024}MB` 
+    }, 413);
+  }
+  
   return withRateLimit(
     request,
     async () => {

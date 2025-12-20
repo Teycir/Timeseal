@@ -1,4 +1,15 @@
 // Shared utility functions
+import { ensureIntegrity, detectTampering } from './clientIntegrity';
+
+// Run integrity check on module load
+if (typeof window !== 'undefined') {
+  ensureIntegrity().catch(console.error);
+  
+  const warnings = detectTampering();
+  if (warnings.length > 0) {
+    console.warn('Security warnings detected:', warnings);
+  }
+}
 
 export function formatTime(ms: number): string {
   const days = Math.floor(ms / (1000 * 60 * 60 * 24));

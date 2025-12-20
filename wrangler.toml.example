@@ -19,9 +19,12 @@ database_id = "your-database-id"
 NODE_ENV = "production"
 RATE_LIMIT_ENABLED = "true"
 ENABLE_AUDIT_LOGS = "true"
+MAX_FILE_SIZE_MB = "10"
+MAX_SEAL_DURATION_DAYS = "365"
 
 # Secrets (set via: wrangler secret put MASTER_ENCRYPTION_KEY)
 # MASTER_ENCRYPTION_KEY
+# MASTER_ENCRYPTION_KEY_PREVIOUS  # Optional: For zero-downtime rotation
 
 # Development
 [env.development]

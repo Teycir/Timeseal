@@ -4,7 +4,7 @@ export interface ValidationResult {
   error?: string;
 }
 
-const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE_MB || '100') * 1024 * 1024;
+const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE_MB || '10') * 1024 * 1024;
 const MAX_DURATION_DAYS = parseInt(process.env.MAX_SEAL_DURATION_DAYS || '365');
 const MIN_UNLOCK_DELAY = 60 * 1000; // 1 minute
 
