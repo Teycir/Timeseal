@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import { MockDatabase, SealRecord } from '../lib/database';
+import { MockDatabase, SealRecord } from '../../lib/database';
 
 describe('Database - Extended Tests', () => {
   let db: MockDatabase;

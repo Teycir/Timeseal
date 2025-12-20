@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import { createDatabase, DatabaseProvider, SealRecord } from '../lib/database';
+import { createDatabase, DatabaseProvider, SealRecord } from '../../lib/database';
 
 describe('Time-Seal Database Logic', () => {
     let db: DatabaseProvider;

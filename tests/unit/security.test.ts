@@ -7,7 +7,7 @@ import {
   validateCSRF,
   validateContentType,
   checkAndStoreNonce,
-} from '../lib/security';
+} from '../../lib/security';
 
 describe('Security Utilities', () => {
   const testSecret = 'test-secret-key-12345';

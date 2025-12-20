@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import { encryptData, decryptData } from '../lib/crypto';
-import { MockDatabase } from '../lib/database';
-import { MockStorage } from '../lib/storage';
-import { SealService } from '../lib/sealService';
+import { encryptData, decryptData } from '../../lib/crypto';
+import { MockDatabase } from '../../lib/database';
+import { MockStorage } from '../../lib/storage';
+import { SealService } from '../../lib/sealService';
 
 describe('Integration Tests - End-to-End Flows', () => {
   let db: MockDatabase;

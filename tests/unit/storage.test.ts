@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import { MockStorage } from '../lib/storage';
+import { MockStorage } from '../../lib/storage';
 
 describe('Storage', () => {
   let storage: MockStorage;

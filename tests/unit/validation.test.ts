@@ -4,7 +4,7 @@ import {
   validateUnlockTime,
   validatePulseInterval,
   sanitizeInput,
-} from '../lib/validation';
+} from '../../lib/validation';
 
 describe('Validation', () => {
   describe('validateFileSize', () => {

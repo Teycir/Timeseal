@@ -9,10 +9,10 @@
     "lint": "next lint",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
-    "test:unit": "jest __tests__/unit",
-    "test:integration": "jest __tests__/integration",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
+    "test:unit": "jest tests/unit",
+    "test:integration": "jest tests/integration",
+    "test:e2e": "playwright test -c tests/config/playwright.config.ts",
+    "test:e2e:ui": "playwright test -c tests/config/playwright.config.ts --ui",
     "test:all": "npm run test && npm run test:e2e"
   },
   "dependencies": {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { generateKeys, encryptData, decryptData } from '../lib/crypto';
+import { generateKeys, encryptData, decryptData } from '../../lib/crypto';
 
 describe('Time-Seal Crypto Engine', () => {
 
