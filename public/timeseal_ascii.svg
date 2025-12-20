@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 150" width="800" height="150">
+  <style>
+    @font-face {
+      font-family: 'Courier New';
+      src: local('Courier New');
+    }
+    .ascii-text {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      fill: #00ff00;
+      font-weight: bold;
+      white-space: pre;
+      text-anchor: middle;
+    }
+    .scanline {
+      fill: url(#grad);
+      animation: scan 3s linear infinite;
+      opacity: 0.3;
+    }
+    @keyframes scan {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(100%); }
+    }
+    @keyframes flicker {
+        0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+            opacity: 0.99;
+            filter: drop-shadow(0 0 0 transparent);
+        }
+        20%, 24%, 55% {
+            opacity: 0.5;
+            filter: drop-shadow(0 0 5px #00ff00);
+        }
+    }
+    .container {
+        animation: flicker 4s infinite;
+    }
+  </style>
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00ff00" stop-opacity="0" />
+      <stop offset="50%" stop-color="#00ff00" stop-opacity="1" />
+      <stop offset="100%" stop-color="#00ff00" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="#0d1117" />
+  <g class="container">
+    <text x="400.0" y="43.0" class="ascii-text">████████╗██╗███╗   ███╗███████╗    ███████╗███████╗ █████╗ ██╗</text>
+    <text x="400.0" y="59.0" class="ascii-text">╚══██╔══╝██║████╗ ████║██╔════╝    ██╔════╝██╔════╝██╔══██╗██║</text>
+    <text x="400.0" y="75.0" class="ascii-text">   ██║   ██║██╔████╔██║█████╗      ███████╗█████╗  ███████║██║</text>
+    <text x="400.0" y="91.0" class="ascii-text">   ██║   ██║██║╚██╔╝██║██╔══╝      ╚════██║██╔══╝  ██╔══██║██║</text>
+    <text x="400.0" y="107.0" class="ascii-text">   ██║   ██║██║ ╚═╝ ██║███████╗    ███████║███████╗██║  ██║███████╗</text>
+    <text x="400.0" y="123.0" class="ascii-text">   ╚═╝   ╚═╝╚═╝     ╚═╝╚══════╝    ╚══════╝╚══════╝╚═╝  ╚═╝╚══════╝</text>
+
+  </g>
+  <rect width="100%" height="20" class="scanline" />
+</svg>
