@@ -14,7 +14,6 @@ export function ShareButtons({ url, text = 'Check out my TimeSeal vault!' }: Sha
   const shareLinks = {
     twitter: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`,
     linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
-    github: `https://github.com/teycir/timeseal#readme`,
   };
 
   const handleNativeShare = async () => {
@@ -39,7 +38,7 @@ export function ShareButtons({ url, text = 'Check out my TimeSeal vault!' }: Sha
         target="_blank"
         rel="noopener noreferrer"
         className="cyber-border px-3 py-1 text-xs text-neon-green/70 hover:text-neon-green hover:bg-neon-green/10 transition-all font-mono"
-        title="Share on X"
+        title="Share on 𝕏"
       >
         𝕏
       </a>
@@ -49,19 +48,21 @@ export function ShareButtons({ url, text = 'Check out my TimeSeal vault!' }: Sha
         target="_blank"
         rel="noopener noreferrer"
         className="cyber-border px-3 py-1 text-xs text-neon-green/70 hover:text-neon-green hover:bg-neon-green/10 transition-all font-mono"
-        title="Share on LinkedIn"
+        title="LinkedIn"
       >
         IN
       </a>
 
+      <span className="text-neon-green/30">|</span>
+
       <a
-        href={shareLinks.github}
+        href="https://github.com/teycir/timeseal#readme"
         target="_blank"
         rel="noopener noreferrer"
         className="cyber-border px-3 py-1 text-xs text-neon-green/70 hover:text-neon-green hover:bg-neon-green/10 transition-all font-mono"
-        title="View on GitHub"
+        title="Open Source"
       >
-        GH
+        Open Source
       </a>
 
       {typeof navigator !== 'undefined' && 'share' in navigator && (

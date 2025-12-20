@@ -16,6 +16,7 @@ import { Button } from './components/Button';
 import { Input } from './components/Input';
 import { ShareButtons } from './components/ShareButtons';
 import DecryptedText from './components/DecryptedText';
+import { TextScramble } from './components/TextScramble';
 import { BackgroundBeams } from './components/ui/background-beams';
 
 interface Template {
@@ -308,15 +309,15 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative w-full overflow-x-hidden pb-32">
+    <div className="min-h-screen flex items-center justify-center p-4 relative w-full overflow-x-hidden pb-12">
       <BackgroundBeams className="absolute top-0 left-0 w-full h-full z-0" />
-      <div className="max-w-2xl w-full space-y-8 relative z-10">
+      <div className="max-w-2xl w-full space-y-4 relative z-10">
 
         <div className="text-center">
           <motion.h1
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-6xl font-bold glow-text mb-4"
+            className="text-5xl font-bold glow-text mb-4"
           >
             <DecryptedText
               text="TIME-SEAL"
@@ -333,13 +334,9 @@ export default function HomePage() {
             transition={{ delay: 0.2 }}
             className="text-xl text-neon-green/70 mb-2"
           >
-            <DecryptedText
-              text="The Unbreakable Protocol"
-              animateOn="view"
-              speed={50}
-              maxIterations={30}
-              sequential={true}
-            />
+            <TextScramble className="text-neon-green/90 tracking-widest font-bold">
+              The Unbreakable Protocol
+            </TextScramble>
           </motion.p>
           <motion.p
             initial={{ opacity: 0 }}
@@ -379,7 +376,7 @@ export default function HomePage() {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Enter your secret message..."
-              className="cyber-input w-full h-32 resize-none font-mono mb-4"
+              className="cyber-input w-full h-24 resize-none font-mono mb-2"
               disabled={!!file}
             />
 
@@ -497,7 +494,7 @@ export default function HomePage() {
             </AnimatePresence>
           </div>
 
-          <div className="flex justify-center pt-4">
+          <div className="flex justify-center pt-2" style={{ filter: 'sepia(1) hue-rotate(80deg) saturate(2)' }}>
             <Turnstile
               siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'}
               onSuccess={setTurnstileToken}

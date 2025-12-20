@@ -5,6 +5,8 @@ import { Toaster } from 'sonner'
 import { CommandPalette } from './components/CommandPalette'
 import { StructuredData } from './components/StructuredData'
 import { Footer } from './components/Footer'
+import { BackgroundAudio } from './components/BackgroundAudio'
+import { IdleBlur } from './components/IdleBlur'
 
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'] })
 
@@ -96,6 +98,8 @@ export default function RootLayout({
         {children}
         <Footer />
         <CommandPalette />
+        <BackgroundAudio />
+        <IdleBlur />
         <Toaster
           position="top-center"
           toastOptions={{
