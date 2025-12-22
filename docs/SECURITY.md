@@ -189,6 +189,10 @@ Expected response time: 48 hours
 - [x] Key rotation procedures documented
 - [x] File upload limits (25MB Cloudflare Pages limit)
 - [x] Content-Security-Policy headers
+- [x] Memory protection for Key A (v0.6.0)
+- [x] Browser extension detection (v0.6.0)
+- [x] Warrant canary at /canary (v0.6.0)
+- [x] Security dashboard (v0.6.0)
 - [ ] Cloudflare WAF rules (optional)
 - [ ] IP reputation filtering (optional)
 - [ ] Geographic restrictions (optional)
@@ -196,7 +200,15 @@ Expected response time: 48 hours
 
 ## Recent Security Enhancements
 
-**v0.5.1 (2025-12-22):**
+**v0.6.0 (2025-01-15):**
+- Memory protection for Key A (XOR obfuscation)
+- Browser extension detection and warnings
+- Built-in warrant canary at /canary
+- Security dashboard with real-time alerts
+- Multi-party time attestation
+- Self-hosting guide for infrastructure independence
+
+**v0.5.1 (2025-12-22):****
 - CRITICAL FIX: HKDF deterministic salt (all seals now decryptable)
 - Server-only pulse token generation (removed client UUID)
 - Time check ordering (prevents timing attacks)

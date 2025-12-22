@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2025-01-15
+
+### Added
+- Memory protection for Key A (XOR obfuscation in browser memory)
+- Browser extension detection and warnings
+- Built-in warrant canary at /canary (auto-updating)
+- Security dashboard with real-time alerts
+- Self-hosting guide for infrastructure independence
+- Multi-party time attestation (external time source verification)
+- Comprehensive hardening documentation
+- Admin interface for canary management
+- GitHub Actions workflow for monthly canary reminders
+- Transparency report template
+
+### Security
+- Key A now obfuscated in memory to prevent casual inspection
+- Extension detection warns users about potential memory access
+- Warrant canary provides legal coercion detection
+- Time attestation verifies Cloudflare time against external sources
+- Self-hosting option eliminates infrastructure trust dependency
+
+### Documentation
+- HARDENING.md - Complete threat mitigation guide
+- SELF-HOSTING.md - Deployment instructions for own infrastructure
+- TRANSPARENCY-REPORT-TEMPLATE.md - Quarterly legal disclosure template
+- HARDENING-SETUP.md - Quick setup guide
+
+### Threat Mitigation
+- Browser extension/malware memory access (detection + obfuscation)
+- Cloudflare infrastructure compromise (canary + time attestation)
+- Legal coercion (warrant canary + transparency)
+
 ## [0.5.1] - 2025-12-22
 
 ### Fixed
