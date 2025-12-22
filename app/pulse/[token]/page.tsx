@@ -1,261 +1,241 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Button } from '@/app/components/Button';
-import { Card } from '@/app/components/Card';
-import { ErrorMessage } from '@/app/components/Common';
-import { formatTimeShort, fetchJSON } from '@/lib/clientUtils';
-import { TIME_CONSTANTS } from '@/lib/constants';
-import DecryptedText from '@/app/components/DecryptedText';
-import { BackgroundBeams } from '@/app/components/ui/background-beams';
-import { Heart, Flame, CheckCircle, AlertTriangle } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { BackgroundBeams } from "@/app/components/ui/background-beams";
+import { Card } from "@/app/components/Card";
+import { CheckCircle, XCircle, Loader2, Clock } from "lucide-react";
+import { toast } from "sonner";
 
-export default function PulsePage() {
-  return <PulsePageClient />;
-}
+export default function PulsePage({ params }: { params: { token: string } }) {
+  const [status, setStatus] = useState<
+    "loading" | "confirm" | "success" | "error"
+  >("loading");
+  const [message, setMessage] = useState("");
+  const [sealInfo, setSealInfo] = useState<any>(null);
+  const [pulseInterval, setPulseInterval] = useState(10);
+  const [pulseUnit, setPulseUnit] = useState<"minutes" | "days">("days");
+  const [isUpdating, setIsUpdating] = useState(false);
 
-function PulsePageClient() {
-  const [pulseToken, setPulseToken] = useState('');
-  const [isPulsing, setIsPulsing] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [timeRemaining, setTimeRemaining] = useState<number>(0);
-  const [pulseDuration, setPulseDuration] = useState<number>(0);
-  const [showBurnConfirm, setShowBurnConfirm] = useState(false);
-  const [isBurning, setIsBurning] = useState(false);
-  const [hasToken, setHasToken] = useState(false);
+  useEffect(() => {
+    const fetchSealInfo = async () => {
+      try {
+        const token = decodeURIComponent(params.token);
+        const sealId = token.split(":")[0];
 
-  const fetchPulseStatus = async () => {
-    if (!pulseToken) return;
-    try {
-      const data = await fetchJSON<{ timeRemaining: number; pulseInterval: number }>(
-        '/api/pulse/status',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pulseToken }),
+        const res = await fetch(`/api/seal/${sealId}`);
+        const data = await res.json();
+
+        if (res.ok && data.isDMS) {
+          setSealInfo(data);
+          const daysRemaining = Math.max(
+            1,
+            Math.floor((data.unlockTime - Date.now()) / (1000 * 60 * 60 * 24)),
+          );
+          setPulseInterval(daysRemaining);
+          setPulseUnit("days");
+          setStatus("confirm");
+        } else {
+          setStatus("error");
+          setMessage("Invalid pulse link or seal not found");
         }
-      );
-      setTimeRemaining(data.timeRemaining);
-      setPulseDuration(data.pulseInterval);
-      setHasToken(true);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch pulse status');
-    }
-  };
+      } catch (err) {
+        setStatus("error");
+        setMessage("Failed to load seal information");
+      }
+    };
 
-  useEffect(() => {
-    if (pulseToken && hasToken) {
-      fetchPulseStatus();
-      const interval = setInterval(fetchPulseStatus, TIME_CONSTANTS.PULSE_CHECK_INTERVAL);
-      return () => clearInterval(interval);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pulseToken, hasToken]);
+    fetchSealInfo();
+  }, [params.token]);
 
-  useEffect(() => {
-    if (timeRemaining > 0) {
-      const interval = setInterval(() => {
-        setTimeRemaining(prev => Math.max(0, prev - TIME_CONSTANTS.COUNTDOWN_INTERVAL));
-      }, TIME_CONSTANTS.COUNTDOWN_INTERVAL);
-      return () => clearInterval(interval);
-    }
-  }, [timeRemaining]);
-
-  const handlePulse = async () => {
-    if (!pulseToken) return;
-    setIsPulsing(true);
-    setError(null);
+  const handleAction = async (action: "renew" | "unlock") => {
+    setIsUpdating(true);
     try {
-      await fetchJSON('/api/pulse', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pulseToken }),
-      });
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), TIME_CONSTANTS.SUCCESS_MESSAGE_DURATION);
-      fetchPulseStatus();
+      if (action === "unlock") {
+        const res = await fetch("/api/burn", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            pulseToken: decodeURIComponent(params.token),
+          }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setStatus("success");
+          setMessage("Seal unlocked and burned permanently");
+          toast.success("Seal unlocked!");
+        } else {
+          setStatus("error");
+          const errorMsg =
+            typeof data.error === "string"
+              ? data.error
+              : data.error?.message || "Failed to unlock seal";
+          setMessage(errorMsg);
+          toast.error("Unlock failed");
+        }
+      } else {
+        const res = await fetch("/api/pulse", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            pulseToken: decodeURIComponent(params.token),
+            newInterval:
+              pulseUnit === "minutes"
+                ? pulseInterval / (24 * 60)
+                : pulseInterval,
+          }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setStatus("success");
+          setMessage(data.message || "Pulse renewed successfully");
+          toast.success("Pulse renewed!");
+        } else {
+          setStatus("error");
+          const errorMsg =
+            typeof data.error === "string"
+              ? data.error
+              : data.error?.message || "Failed to renew pulse";
+          setMessage(errorMsg);
+          toast.error("Renewal failed");
+        }
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to pulse');
+      setStatus("error");
+      setMessage("Network error occurred");
+      toast.error("Network error");
     } finally {
-      setIsPulsing(false);
+      setIsUpdating(false);
     }
   };
-
-  const handleBurn = async () => {
-    if (!pulseToken) return;
-    setIsBurning(true);
-    setError(null);
-    try {
-      await fetchJSON('/api/burn', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pulseToken }),
-      });
-      globalThis.window.location.href = '/?burned=true';
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to burn seal');
-    } finally {
-      setIsBurning(false);
-    }
-  };
-
-  const isUrgent = timeRemaining < pulseDuration * 0.2;
-
-  if (!hasToken) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4 relative w-full overflow-x-hidden pb-32">
-        <BackgroundBeams className="absolute top-0 left-0 w-full h-full z-0" />
-        <div className="max-w-md w-full relative z-10 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <Heart className="w-16 h-16 text-neon-green mx-auto mb-4 animate-pulse" />
-            <h1 className="text-2xl sm:text-3xl font-bold glow-text mb-2 px-2">
-              <DecryptedText text="DEAD MAN'S SWITCH" animateOn="view" className="text-neon-green" />
-            </h1>
-            <p className="text-neon-green/70 mb-8 text-sm sm:text-base px-4">Enter your pulse token to manage your seal.</p>
-          </motion.div>
-
-          <Card className="p-4 sm:p-6 border-neon-green/30">
-            <label htmlFor="pulse-token-input" className="block text-sm mb-2 text-neon-green/80 font-bold">PULSE TOKEN</label>
-            <input
-              id="pulse-token-input"
-              type="text"
-              value={pulseToken}
-              onChange={(e) => setPulseToken(e.target.value)}
-              placeholder="x-x-x-x"
-              className="cyber-input w-full font-mono mb-6 text-center tracking-widest"
-            />
-
-            <Button onClick={fetchPulseStatus} disabled={!pulseToken.trim()} className="w-full">
-              CONTINUE
-            </Button>
-
-            {error && <ErrorMessage message={error} />}
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
-  if (showBurnConfirm) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4 relative w-full overflow-x-hidden pb-32">
-        <BackgroundBeams className="absolute top-0 left-0 w-full h-full z-0" />
-        <div className="max-w-md w-full relative z-10 text-center">
-          <Flame className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h1 className="text-2xl sm:text-3xl font-bold glow-text mb-4 text-red-500 px-2">CONFIRM BURN</h1>
-
-          <Card className="mb-8 border-red-500/30 bg-red-950/10">
-            <div className="flex items-start gap-3 mb-4">
-              <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-              <div className="text-left">
-                <p className="font-bold text-red-500 mb-2">WARNING: IRREVERSIBLE ACTION</p>
-                <p className="text-red-400/90 mb-4">
-                  This will <span className="font-bold underline">permanently destroy</span> the seal and all encrypted content.
-                </p>
-              </div>
-            </div>
-            <ul className="text-left text-red-400/80 text-sm space-y-2 mb-4">
-              <li>• Encrypted data will be deleted from the database</li>
-              <li>• The vault link will become invalid</li>
-              <li>• Content cannot be recovered by anyone</li>
-            </ul>
-            <p className="text-red-500 font-bold uppercase text-sm border-t border-red-500/30 pt-4">This action cannot be undone.</p>
-          </Card>
-
-          <div className="space-y-4">
-            <Button onClick={handleBurn} disabled={isBurning} variant="danger" className="w-full shadow-[0_0_20px_rgba(255,0,0,0.3)] flex items-center justify-center gap-2">
-              <Flame className="w-4 h-4" />
-              {isBurning ? 'BURNING...' : 'YES, BURN IT PERMANENTLY'}
-            </Button>
-            <Button onClick={() => setShowBurnConfirm(false)} className="w-full border-neon-green/30 hover:bg-neon-green/10">
-              CANCEL
-            </Button>
-          </div>
-          {error && <ErrorMessage message={error} />}
-        </div>
-      </div>
-    );
-  }
-
-  if (success) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4 relative w-full overflow-x-hidden pb-32">
-        <BackgroundBeams className="absolute top-0 left-0 w-full h-full z-0" />
-        <div className="max-w-md w-full relative z-10 text-center">
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-          >
-            <CheckCircle className="w-16 h-16 text-neon-green mx-auto mb-4" />
-          </motion.div>
-          <h1 className="text-2xl sm:text-3xl font-bold glow-text mb-4 px-2">
-            <DecryptedText text="PULSE CONFIRMED" animateOn="view" className="text-neon-green" />
-          </h1>
-          <Card className="border-neon-green/40 p-4 sm:p-6">
-            <p className="text-neon-green/70">
-              Your seal remains locked. Next pulse needed in <span className="text-neon-green font-mono font-bold">{formatTimeShort(pulseDuration)}</span>.
-            </p>
-          </Card>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative w-full overflow-x-hidden pb-20">
+    <div className="min-h-screen flex items-center justify-center p-4 relative w-full overflow-x-hidden">
       <BackgroundBeams className="absolute top-0 left-0 w-full h-full z-0" />
-      <div className="max-w-md w-full relative z-10 text-center">
-        <Heart className={`w-12 h-12 mx-auto mb-3 ${isUrgent ? 'text-red-500 animate-pulse' : 'text-neon-green'}`} />
-        <h1 className="text-2xl sm:text-3xl font-bold glow-text mb-4 px-2">
-          <DecryptedText text="DEAD MAN'S SWITCH" animateOn="view" className="text-neon-green" />
-        </h1>
-
-        {timeRemaining > 0 && (
-          <Card className={`mb-6 p-4 ${isUrgent ? 'border-red-500/50 shadow-[0_0_20px_rgba(255,0,0,0.2)]' : ''}`}>
-            <p className="text-xs text-neon-green/50 mb-2 uppercase tracking-widest">TIME UNTIL AUTO-UNLOCK</p>
-            <div className={`text-3xl sm:text-4xl font-mono mb-2 ${isUrgent ? 'text-red-500 pulse-glow' : 'text-neon-green pulse-glow'}`}>
-              {formatTimeShort(timeRemaining)}
-            </div>
-            {isUrgent && (
-              <div className="flex items-center justify-center gap-2 text-red-500 text-sm font-bold animate-pulse">
-                <AlertTriangle className="w-4 h-4" />
-                <p>URGENT: PULSE REQUIRED</p>
-              </div>
-            )}
-          </Card>
+      <div className="max-w-md w-full text-center relative z-10">
+        {status === "loading" && (
+          <>
+            <Loader2 className="w-16 h-16 text-neon-green mx-auto mb-6 animate-spin" />
+            <h1 className="text-3xl font-bold mb-4 glow-text">LOADING PULSE</h1>
+          </>
         )}
 
-        <p className="text-neon-green/70 mb-6 text-sm px-4">
-          Click below to confirm you are active and reset the countdown timer.
-        </p>
+        {status === "confirm" && (
+          <>
+            <Clock className="w-16 h-16 text-yellow-500 mx-auto mb-6" />
+            <h1 className="text-3xl font-bold mb-4 glow-text text-yellow-500">
+              PULSE CONTROL
+            </h1>
+            <Card className="mb-6 border-yellow-500/30">
+              <p className="text-yellow-400/90 font-mono text-sm mb-4">
+                Renew to keep sealed or unlock immediately
+              </p>
+              <div className="mb-4">
+                <label className="block text-neon-green/70 text-sm mb-2">
+                  Next Pulse Interval
+                </label>
+                <div className="flex gap-2 mb-2">
+                  <input
+                    type="number"
+                    min={pulseUnit === "minutes" ? 5 : 1}
+                    max={pulseUnit === "minutes" ? 60 : 30}
+                    value={pulseInterval}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value) || 1;
+                      const min = pulseUnit === "minutes" ? 5 : 1;
+                      const max = pulseUnit === "minutes" ? 60 : 30;
+                      setPulseInterval(Math.max(min, Math.min(max, val)));
+                    }}
+                    className="w-24 bg-black/50 border border-neon-green/30 rounded px-4 py-3 text-neon-green font-mono text-center text-xl focus:outline-none focus:border-neon-green/60"
+                  />
+                  <select
+                    value={pulseUnit}
+                    onChange={(e) => {
+                      const newUnit = e.target.value as "minutes" | "days";
+                      setPulseUnit(newUnit);
+                      if (newUnit === "minutes" && pulseInterval < 5)
+                        setPulseInterval(5);
+                      if (newUnit === "days" && pulseInterval > 30)
+                        setPulseInterval(30);
+                    }}
+                    className="flex-1 bg-black/50 border border-neon-green/30 rounded px-4 py-3 text-neon-green font-mono focus:outline-none focus:border-neon-green/60 [&>option]:bg-black [&>option]:text-neon-green"
+                  >
+                    <option value="minutes">Minutes</option>
+                    <option value="days">Days</option>
+                  </select>
+                </div>
+                <p className="text-neon-green/50 text-xs mt-2">
+                  Seal will unlock in {pulseInterval} {pulseUnit} if not renewed
+                </p>
+              </div>
+            </Card>
+            <div className="flex gap-3 mb-4">
+              <button
+                onClick={() => handleAction("renew")}
+                disabled={isUpdating}
+                className="cyber-button flex-1 bg-neon-green/20 hover:bg-neon-green/30 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isUpdating ? "PROCESSING..." : "RENEW"}
+              </button>
+              <button
+                onClick={() => handleAction("unlock")}
+                disabled={isUpdating}
+                className="cyber-button flex-1 bg-red-500/20 hover:bg-red-500/30 border-red-500/50 text-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isUpdating ? "PROCESSING..." : "UNLOCK NOW"}
+              </button>
+            </div>
+            <div className="flex gap-3 mb-2">
+              <a
+                href={`/v/${sealInfo?.id || ""}`}
+                className="cyber-button flex-1 bg-neon-green/10"
+              >
+                GO TO VAULT
+              </a>
+              <a href="/" className="cyber-button flex-1 bg-neon-green/10">
+                CREATE NEW SEAL
+              </a>
+            </div>
+            <a
+              href="/"
+              className="text-neon-green/50 text-sm hover:text-neon-green/70"
+            >
+              Cancel
+            </a>
+          </>
+        )}
 
-        <div className="space-y-3">
-          <Button
-            onClick={handlePulse}
-            disabled={isPulsing}
-            className="w-full text-lg py-4 shadow-[0_0_20px_rgba(0,255,65,0.3)] hover:shadow-[0_0_40px_rgba(0,255,65,0.5)] flex items-center justify-center gap-2"
-          >
-            <Heart className="w-5 h-5" />
-            {isPulsing ? 'PULSING...' : 'SEND PULSE'}
-          </Button>
+        {status === "success" && (
+          <>
+            <CheckCircle className="w-16 h-16 text-neon-green mx-auto mb-6" />
+            <h1 className="text-3xl font-bold mb-4 glow-text text-neon-green">
+              PULSE UPDATED
+            </h1>
+            <Card className="mb-8 border-neon-green/30">
+              <p className="text-neon-green/90 font-mono">{message}</p>
+              <p className="text-neon-green/60 text-sm mt-2">
+                Next pulse required in {pulseInterval} {pulseUnit}
+              </p>
+            </Card>
+            <a href="/" className="cyber-button inline-block">
+              RETURN HOME
+            </a>
+          </>
+        )}
 
-          <Button
-            onClick={() => setShowBurnConfirm(true)}
-            variant="danger"
-            className="w-full text-sm opacity-80 hover:opacity-100 flex items-center justify-center gap-2"
-          >
-            <Flame className="w-4 h-4" />
-            BURN SEAL (PERMANENT)
-          </Button>
-        </div>
-
-        {error && <ErrorMessage message={error} />}
+        {status === "error" && (
+          <>
+            <XCircle className="w-16 h-16 text-red-500 mx-auto mb-6" />
+            <h1 className="text-3xl font-bold mb-4 glow-text text-red-500">
+              PULSE FAILED
+            </h1>
+            <Card className="mb-8 border-red-500/30">
+              <p className="text-red-400/90 font-mono">{message}</p>
+            </Card>
+            <a href="/" className="cyber-button inline-block">
+              RETURN HOME
+            </a>
+          </>
+        )}
       </div>
     </div>
   );

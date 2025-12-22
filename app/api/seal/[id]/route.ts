@@ -55,13 +55,16 @@ export async function GET(
           const jitter = Math.floor(Math.random() * 100);
           await new Promise(resolve => setTimeout(resolve, jitter));
           
+          const pulseToken = metadata.isDMS ? (await container.database.getSeal(sealId))?.pulseToken : undefined;
+          const pulseUrl = pulseToken ? `${new URL(request.url).origin}/pulse/${pulseToken}` : undefined;
+          
           return jsonResponse({
             id: sealId,
             isLocked: true,
             unlockTime: metadata.unlockTime,
             timeRemaining: metadata.unlockTime - Date.now(),
             isDMS: metadata.isDMS,
-            pulseToken: metadata.isDMS ? (await container.database.getSeal(sealId))?.pulseToken : undefined,
+            pulseUrl,
           });
         }
 

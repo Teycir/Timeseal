@@ -187,7 +187,7 @@ export class SealService {
     );
   }
 
-  async pulseSeal(pulseToken: string, ip: string): Promise<{ newUnlockTime: number }> {
+  async pulseSeal(pulseToken: string, ip: string, newInterval?: number): Promise<{ newUnlockTime: number }> {
     const parts = pulseToken.split(':');
     if (parts.length !== 4) {
       throw new Error(ErrorCode.INVALID_INPUT);
@@ -211,7 +211,8 @@ export class SealService {
     }
 
     const now = Date.now();
-    const newUnlockTime = now + (seal.pulseInterval || 0);
+    const intervalToUse = newInterval ? newInterval * 24 * 60 * 60 * 1000 : (seal.pulseInterval || 0);
+    const newUnlockTime = now + intervalToUse;
 
     await this.db.updatePulse(seal.id, now);
     await this.db.updateUnlockTime(seal.id, newUnlockTime);

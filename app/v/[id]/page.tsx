@@ -18,7 +18,7 @@ interface SealStatus {
   keyB?: string;
   iv?: string;
   isDMS?: boolean;
-  pulseToken?: string;
+  pulseUrl?: string;
 }
 
 export default function VaultPage({ params }: { params: { id: string } }) {
@@ -304,14 +304,14 @@ function VaultPageClient({ id }: { id: string }) {
           </div>
         )}
         
-        {status.isDMS && status.pulseToken && (
+        {status.isDMS && status.pulseUrl && (
           <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
             <p className="text-yellow-500 text-sm font-bold mb-2">⚠️ PULSE REQUIRED</p>
             <p className="text-yellow-400/80 text-xs mb-3">
               This seal will auto-unlock if not pulsed. Click below to keep it locked.
             </p>
             <a
-              href={`/pulse/${status.pulseToken}`}
+              href={status.pulseUrl}
               className="cyber-button inline-flex items-center justify-center gap-2 bg-yellow-500/20 hover:bg-yellow-500/30 border-yellow-500/50 text-yellow-500 w-full text-sm"
             >
               SEND PULSE NOW →
