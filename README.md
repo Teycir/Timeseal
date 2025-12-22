@@ -175,6 +175,17 @@ sequenceDiagram
 
 ## 🛡️ Security: Attack Scenarios
 
+### 🔒 Hardening Features (v0.6.0)
+
+**✅ Memory Protection** - Key A obfuscated in browser memory to prevent casual inspection  
+**✅ Extension Detection** - Warns users about browser extensions that could access keys  
+**✅ Warrant Canary** - Live transparency status at [/canary](https://timeseal.dev/canary)  
+**✅ Self-Hosting** - Deploy your own instance to eliminate infrastructure trust  
+
+See [HARDENING.md](docs/HARDENING.md) for full details.
+
+---
+
 ### "Can I just change my computer's clock to unlock it early?"
 **❌ NO.** The unlock time is checked on the **server**, not your computer. Your local clock is irrelevant.
 
@@ -286,12 +297,15 @@ wrangler secret put MASTER_ENCRYPTION_KEY
 - [Deployment Guide](docs/DEPLOYMENT.md) - Cloudflare setup instructions
 - [Security Documentation](docs/SECURITY.md) - Threat model and security controls
 - [Trust Assumptions](docs/TRUST-ASSUMPTIONS.md) - What you must trust to use TimeSeal
+- [Hardening Guide](docs/HARDENING.md) - **NEW:** Mitigations for highest-priority threats
+- [Self-Hosting Guide](docs/SELF-HOSTING.md) - **NEW:** Deploy your own instance
 - [Security Enhancements](docs/SECURITY-ENHANCEMENTS.md) - Key rotation, upload limits, integrity
 - [Key Rotation Guide](docs/KEY-ROTATION.md) - Master key rotation procedures
 - [Security Testing](docs/SECURITY-TESTING.md) - Penetration testing guide
 - [Audit Logging](docs/AUDIT-LOGGING.md) - Immutable audit trail for all operations
 - [Testing Guide](docs/TESTING.md) - Complete testing documentation
 - [Testing Infrastructure](docs/TESTING-INFRASTRUCTURE.md) - Test setup and configuration
+- [Transparency Reports](docs/TRANSPARENCY-REPORT-TEMPLATE.md) - **NEW:** Quarterly legal disclosure
 - [Changelog](docs/CHANGELOG.md) - Version history and changes
 - [TODO](docs/TODO.md) - Production readiness checklist
 
@@ -307,6 +321,13 @@ See [LICENSE](LICENSE) for full terms.
 ---
 
 ## 🔮 Roadmap
+
+**Recently Implemented (v0.6.0):**
+- ✅ Security Hardening - Memory protection, extension detection, warrant canary
+- ✅ Built-in Warrant Canary - Auto-updating transparency at /canary
+- ✅ Security Dashboard - Real-time browser extension warnings
+- ✅ Memory Obfuscation - Key A protected from casual inspection
+- ✅ Self-Hosting Guide - Complete deployment instructions
 
 **Recently Implemented (v0.5.1):**
 - ✅ CRITICAL FIX: HKDF deterministic salt (decryption now works)

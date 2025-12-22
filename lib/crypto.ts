@@ -1,4 +1,6 @@
 // Time-Seal Crypto Library - Split-Key AES-GCM Encryption
+import { SecureMemory } from './memoryProtection';
+
 export interface EncryptionResult {
   encryptedBlob: ArrayBuffer;
   keyA: string;
@@ -70,42 +72,58 @@ async function deriveMasterKey(keyA: CryptoKey, keyB: CryptoKey): Promise<Crypto
   );
 }
 
-// Encrypt data with split-key system
+// Encrypt data with split-key system (with memory protection)
 export async function encryptData(data: string | File): Promise<EncryptionResult> {
-  const { keyA, keyB } = await generateKeys();
-  const masterKey = await deriveMasterKey(keyA, keyB);
+  const memory = new SecureMemory();
   
-  // Convert input to ArrayBuffer
-  let dataBuffer: ArrayBuffer;
-  if (typeof data === 'string') {
-    dataBuffer = new TextEncoder().encode(data).buffer;
-  } else {
-    dataBuffer = await data.arrayBuffer();
+  try {
+    const { keyA, keyB } = await generateKeys();
+    const masterKey = await deriveMasterKey(keyA, keyB);
+    
+    // Convert input to ArrayBuffer
+    let dataBuffer: ArrayBuffer;
+    if (typeof data === 'string') {
+      dataBuffer = new TextEncoder().encode(data).buffer;
+    } else {
+      dataBuffer = await data.arrayBuffer();
+    }
+
+    // Generate random IV
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    
+    // Encrypt with master key
+    const encryptedBlob = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv },
+      masterKey,
+      dataBuffer
+    ) as ArrayBuffer;
+
+    // Export keys as base64 strings
+    const keyABuffer = await crypto.subtle.exportKey('raw', keyA);
+    const keyBBuffer = await crypto.subtle.exportKey('raw', keyB);
+    
+    // Obfuscate keys in memory
+    const keyABase64 = arrayBufferToBase64(keyABuffer);
+    const keyBBase64 = arrayBufferToBase64(keyBBuffer);
+    const keyAProtected = memory.protect(keyABase64);
+    const keyBProtected = memory.protect(keyBBase64);
+    
+    // Zero original buffers
+    new Uint8Array(keyABuffer).fill(0);
+    new Uint8Array(keyBBuffer).fill(0);
+    
+    const ivBase64 = arrayBufferToBase64(iv.buffer);
+    
+    // Retrieve keys only when needed for return
+    return {
+      encryptedBlob,
+      keyA: memory.retrieve(keyAProtected),
+      keyB: memory.retrieve(keyBProtected),
+      iv: ivBase64,
+    };
+  } finally {
+    memory.destroy();
   }
-
-  // Generate random IV
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  console.log('[ENCRYPT] IV length:', iv.length, 'bytes');
-  
-  // Encrypt with master key
-  const encryptedBlob = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv },
-    masterKey,
-    dataBuffer
-  ) as ArrayBuffer;
-
-  // Export keys as base64 strings
-  const keyABuffer = await crypto.subtle.exportKey('raw', keyA);
-  const keyBBuffer = await crypto.subtle.exportKey('raw', keyB);
-  const ivBase64 = arrayBufferToBase64(iv.buffer);
-  console.log('[ENCRYPT] IV base64 length:', ivBase64.length, 'value:', ivBase64);
-  
-  return {
-    encryptedBlob,
-    keyA: arrayBufferToBase64(keyABuffer),
-    keyB: arrayBufferToBase64(keyBBuffer),
-    iv: ivBase64,
-  };
 }
 
 // Decrypt data with both keys
@@ -135,9 +153,7 @@ export async function decryptData(
     const masterKey = await deriveMasterKey(keyA, keyB);
     
     // Decrypt
-    console.log('[DECRYPT] IV base64 received:', keys.iv, 'length:', keys.iv.length);
     const iv = base64ToArrayBuffer(keys.iv);
-    console.log('[DECRYPT] IV ArrayBuffer byteLength:', iv.byteLength);
     return await crypto.subtle.decrypt(
       { name: 'AES-GCM', iv },
       masterKey,

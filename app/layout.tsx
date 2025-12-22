@@ -8,6 +8,7 @@ import { Footer } from './components/Footer'
 import { ScrollProgress } from './components/ScrollProgress'
 
 import { IdleBlur } from './components/IdleBlur'
+import { SecurityDashboard } from '@/components/SecurityDashboard'
 
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'] })
 
@@ -110,6 +111,7 @@ export default function RootLayout({
         <CommandPalette />
 
         <IdleBlur />
+        <SecurityDashboard />
         <Toaster
           position="top-center"
           toastOptions={{

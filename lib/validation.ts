@@ -91,15 +91,15 @@ export function validateUnlockTime(unlockTime: number): ValidationResult {
 }
 
 export function validatePulseInterval(interval: number): ValidationResult {
-  const minInterval = 3600 * 1000; // 1 hour in ms
-  const maxInterval = 90 * 24 * 3600 * 1000; // 90 days in ms
+  const minInterval = 5 * 60 * 1000; // 5 minutes in ms
+  const maxInterval = 100 * 24 * 3600 * 1000; // 100 days in ms
 
   if (interval < minInterval) {
-    return { valid: false, error: 'Pulse interval must be at least 1 hour' };
+    return { valid: false, error: 'Pulse interval must be at least 5 minutes' };
   }
 
   if (interval > maxInterval) {
-    return { valid: false, error: 'Pulse interval cannot exceed 90 days' };
+    return { valid: false, error: 'Pulse interval cannot exceed 100 days' };
   }
 
   return { valid: true };

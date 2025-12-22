@@ -1,0 +1,5 @@
+TimeSeal Warrant Canary - See /canary for live status
+
+This file is deprecated. Visit https://timeseal.dev/canary for current status.
+
+The canary is now built-in and auto-updates.

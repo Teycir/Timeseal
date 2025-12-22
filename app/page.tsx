@@ -97,7 +97,8 @@ export default function HomePage() {
   const [unlockDate, setUnlockDate] = useState('');
 
   const [sealType, setSealType] = useState<'timed' | 'deadman'>('timed');
-  const [pulseDays, setPulseDays] = useState(7);
+  const [pulseValue, setPulseValue] = useState(7);
+  const [pulseUnit, setPulseUnit] = useState<'minutes' | 'days'>('days');
   const [isCreating, setIsCreating] = useState(false);
   const [encryptionProgress, setEncryptionProgress] = useState(0);
   const [qrCode, setQrCode] = useState<string>('');
@@ -216,7 +217,10 @@ export default function HomePage() {
   const applyTemplate = (template: Template) => {
     setSealType(template.type);
     setMessage(template.placeholder);
-    if (template.pulseDays) setPulseDays(template.pulseDays);
+    if (template.pulseDays) {
+      setPulseValue(template.pulseDays);
+      setPulseUnit('days');
+    }
     toast.info(`Applied template: ${template.name}`);
   };
 
@@ -313,9 +317,10 @@ export default function HomePage() {
 
     // Validate pulse interval for dead man's switch
     if (sealType === 'deadman') {
-      if (pulseDays < 1 || pulseDays > 90) {
-        toast.error('Pulse interval must be between 1 and 90 days');
-        const pulseInput = document.getElementById('pulse-days');
+      const pulseMinutes = pulseUnit === 'minutes' ? pulseValue : pulseValue * 24 * 60;
+      if (pulseMinutes < 5 || pulseMinutes > 100 * 24 * 60) {
+        toast.error('Pulse interval must be between 5 minutes and 100 days');
+        const pulseInput = document.getElementById('pulse-value');
         if (pulseInput) {
           pulseInput.classList.add('input-error');
           setTimeout(() => pulseInput.classList.remove('input-error'), 500);
@@ -346,8 +351,9 @@ export default function HomePage() {
       if (sealType === 'timed') {
         unlockTime = new Date(unlockDate).getTime();
       } else {
-        // Dead man's switch - server generates pulse token
-        pulseDuration = pulseDays * 24 * 60 * 60 * 1000;
+        // Dead man's switch - convert to milliseconds
+        const pulseMinutes = pulseUnit === 'minutes' ? pulseValue : pulseValue * 24 * 60;
+        pulseDuration = pulseMinutes * 60 * 1000;
         unlockTime = Date.now() + pulseDuration;
       }
 
@@ -457,7 +463,7 @@ export default function HomePage() {
 
               <Card className="space-y-6">
                 {qrCode && (
-                  <div className="qr-print-container">
+                  <div className="qr-print-container flex justify-center">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={qrCode} alt="QR Code" className="border-2 border-neon-green/30 rounded" />
                     <p className="qr-print-label print-only hidden">TimeSeal Vault - Scan to Access</p>
@@ -496,7 +502,7 @@ export default function HomePage() {
                           onChange={() => { }}
                           testId="pulse-token-input"
                         />
-                        <span className="tooltip-text">PRIVATE token for Dead Man&apos;s Switch. Visit pulse page every {pulseDays} days. Press Ctrl+Shift+K to copy.</span>
+                        <span className="tooltip-text">PRIVATE token for Dead Man&apos;s Switch. Visit pulse page to check in. Press Ctrl+Shift+K to copy.</span>
                       </div>
                       <Button
                         onClick={() => copyToClipboard(result.pulseToken!, 'Token')}
@@ -508,7 +514,7 @@ export default function HomePage() {
                       </Button>
                     </div>
                     <p className="text-xs text-neon-green/50 mt-1">
-                      Visit {result.pulseUrl} and enter this token every {pulseDays} days.
+                      Visit {result.pulseUrl} and enter this token to reset the countdown. Pinging is done via web (works from any device/location).
                     </p>
                   </div>
                 )}
@@ -530,7 +536,7 @@ export default function HomePage() {
                       variant="secondary"
                     >
                       <Download className="w-4 h-4" />
-                      DOWNLOAD CRYPTOGRAPHIC RECEIPT
+                      DOWNLOAD RECEIPT
                     </Button>
                     <p className="text-xs text-neon-green/50 mt-2 text-center">
                       Proof of seal creation with HMAC signature
@@ -548,7 +554,8 @@ export default function HomePage() {
                   setTurnstileToken(null);
                   setUnlockDate('');
                   setSealType('timed');
-                  setPulseDays(7);
+                  setPulseValue(7);
+                  setPulseUnit('days');
                 }}
                 className="w-full"
               >
@@ -747,34 +754,40 @@ export default function HomePage() {
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
                       >
-                        <label htmlFor="pulse-days" className="block text-sm mb-2 text-neon-green/80 tooltip">
-                          PULSE INTERVAL (DAYS)
-                          <span className="tooltip-text">How often you must &quot;pulse&quot; to keep the seal locked. If you miss a pulse, the seal unlocks automatically.</span>
+                        <label htmlFor="pulse-value" className="block text-sm mb-2 text-neon-green/80 tooltip">
+                          PULSE INTERVAL
+                          <span className="tooltip-text">How often you must check in to keep the seal locked. Pinging is done via web from ANY device/location - just visit the pulse URL with your token.</span>
                         </label>
-                        <div className="flex gap-4 items-center">
+                        <div className="flex gap-2 items-center mb-2">
                           <input
-                            id="pulse-days"
+                            id="pulse-value"
                             type="number"
-                            value={pulseDays}
-                            onChange={(e) => setPulseDays(Number.parseInt(e.target.value) || 7)}
-                            min="1"
-                            max="90"
+                            value={pulseValue}
+                            onChange={(e) => setPulseValue(Number.parseInt(e.target.value) || 1)}
+                            min={pulseUnit === 'minutes' ? 5 : 1}
+                            max={pulseUnit === 'minutes' ? 60 : 100}
                             className="cyber-input w-24 text-center"
                           />
-                          <div className="flex-1">
-                            <input
-                              type="range"
-                              min="1"
-                              max="90"
-                              value={pulseDays}
-                              onChange={(e) => setPulseDays(Number.parseInt(e.target.value))}
-                              className="w-full h-2 bg-dark-bg rounded-xl appearance-none cursor-pointer accent-neon-green"
-                              aria-label="Pulse Days Slider"
-                            />
-                          </div>
+                          <select
+                            value={pulseUnit}
+                            onChange={(e) => {
+                              const newUnit = e.target.value as 'minutes' | 'days';
+                              setPulseUnit(newUnit);
+                              // Adjust value to stay within limits
+                              if (newUnit === 'minutes' && pulseValue < 5) setPulseValue(5);
+                              if (newUnit === 'days' && pulseValue > 100) setPulseValue(100);
+                            }}
+                            className="cyber-input w-32"
+                          >
+                            <option value="minutes">Minutes</option>
+                            <option value="days">Days</option>
+                          </select>
                         </div>
-                        <p className="text-xs text-neon-green/50 mt-2">
-                          You must &quot;pulse&quot; every <strong className="text-neon-green">{pulseDays} days</strong> to keep the seal locked.
+                        <p className="text-xs text-neon-green/50 mb-2">
+                          You must check in every <strong className="text-neon-green">{pulseValue} {pulseUnit}</strong> to keep the seal locked.
+                        </p>
+                        <p className="text-xs text-neon-green/40 border-l-2 border-neon-green/20 pl-2">
+                          💡 Pinging works from any device with internet - just visit the pulse URL. No local storage or specific device required.
                         </p>
                       </motion.div>
                     )}

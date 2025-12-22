@@ -19,16 +19,8 @@ interface SealStatus {
   iv?: string;
 }
 
-export default function VaultPage({ params }: { params: Promise<{ id: string }> }) {
-  const [id, setId] = useState<string | null>(null);
-
-  useEffect(() => {
-    params.then(p => setId(p.id));
-  }, [params]);
-
-  if (!id) return null;
-
-  return <VaultPageClient id={id} />;
+export default function VaultPage({ params }: { params: { id: string } }) {
+  return <VaultPageClient id={params.id} />;
 }
 
 function VaultPageClient({ id }: { id: string }) {
@@ -229,7 +221,7 @@ function VaultPageClient({ id }: { id: string }) {
               <span className="text-xs font-mono text-neon-green border border-neon-green/30 px-2 py-1 rounded">DECRYPTED</span>
             </div>
             <div
-              className="whitespace-pre-wrap text-sm leading-relaxed break-words font-mono text-neon-green/90"
+              className="whitespace-pre-wrap text-sm leading-relaxed break-words font-mono text-neon-green/90 select-text cursor-text"
               style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
             >
               {decryptedContent}
