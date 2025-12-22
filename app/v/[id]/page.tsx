@@ -55,8 +55,14 @@ function VaultPageClient({ id }: { id: string }) {
       const encryptedBuffer = bytes.buffer;
 
       const decrypted = await decryptData(encryptedBuffer, { keyA, keyB, iv });
-      const content = new TextDecoder().decode(decrypted);
-      setDecryptedContent(content);
+      
+      // Validate decrypted content is valid UTF-8
+      try {
+        const content = new TextDecoder('utf-8', { fatal: true }).decode(decrypted);
+        setDecryptedContent(content);
+      } catch {
+        setError('Decryption succeeded but content is corrupted');
+      }
     } catch (err) {
       console.error('Decryption failed:', err);
       setError('Failed to decrypt message');

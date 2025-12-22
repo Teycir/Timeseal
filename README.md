@@ -178,6 +178,9 @@ sequenceDiagram
 ### "Can I bypass rate limits by rotating IPs or using VPNs?"
 **⚠️ HARDER.** Rate limiting uses browser fingerprinting (IP + User-Agent + Language), making simple IP rotation ineffective. You'd need to change your entire browser signature.
 
+### "Can I use timing attacks to detect the exact unlock time?"
+**❌ NO.** Server responses include random jitter (0-100ms delay) to prevent timing-based information leakage.
+
 ### "Why is there no user authentication?"
 **✅ BY DESIGN.** Authentication adds attack vectors (credential theft, phishing, password breaches, session hijacking). TimeSeal uses cryptography-only security: possession of the vault link (Key A) is the authentication. No passwords to steal, no accounts to hack.
 
@@ -192,6 +195,9 @@ sequenceDiagram
 
 ### "What if I lose the vault link?"
 **💀 LOST FOREVER.** Key A is in the URL hash. No Key A = No decryption. **Save your links securely.**
+
+### "Is Key A in the URL hash secure?"
+**✅ YES, BY DESIGN.** The URL hash is never sent to the server (unlike query parameters). HTTPS protects it in transit. Browser history/bookmarks are your responsibility—treat vault links like passwords. This is the tradeoff for zero-trust, no-authentication security. Alternative approaches (server-side key storage, password protection) would defeat the entire architecture.
 
 ### "Can I delete or cancel a seal after creating it?"
 - **Timed Release:** ❌ NO. WORM storage prevents deletion.

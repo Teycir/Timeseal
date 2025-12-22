@@ -49,6 +49,10 @@ export async function GET(
       const metadata = await sealService.getSeal(sealId, ip);
 
       if (metadata.status === 'locked') {
+        // Add jitter to prevent timing attacks
+        const jitter = Math.floor(Math.random() * 100);
+        await new Promise(resolve => setTimeout(resolve, jitter));
+        
         return jsonResponse({
           id: sealId,
           isLocked: true,

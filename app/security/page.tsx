@@ -116,6 +116,7 @@ export default function SecurityPage() {
                 <li>Data tampering (WORM storage + AEAD)</li>
                 <li>Brute force attacks (256-bit keys + fingerprinted rate limiting)</li>
                 <li>IP rotation bypass (browser fingerprinting)</li>
+                <li>Timing attacks (response jitter)</li>
                 <li>Automated abuse (Turnstile CAPTCHA)</li>
                 <li>Replay attacks (nonce validation on pulse tokens)</li>
               </ul>
@@ -123,7 +124,8 @@ export default function SecurityPage() {
             <div>
               <p className="text-neon-green font-bold mb-2">Not Protected Against:</p>
               <ul className="list-disc list-inside ml-4 space-y-1">
-                <li>Loss of vault link (Key A is in URL hash)</li>
+                <li>Loss of vault link (Key A is in URL hash - treat like a password)</li>
+                <li>Browser history/bookmark exposure (inherent to client-side crypto)</li>
                 <li>Compromised recipient device after unlock</li>
                 <li>Cloudflare infrastructure failure</li>
                 <li>Quantum computing attacks (future threat)</li>
