@@ -35,9 +35,33 @@
   <h3>Zero-Trust • Edge-Native • Unbreakable</h3>
 </div>
 
-### 🔒 Layer 1: The Vault (D1 Database Storage)
-> **Encrypted Storage**
-Files are stored encrypted in Cloudflare D1 database. The encrypted blobs are stored alongside metadata, with cryptographic enforcement preventing early access.
+### 🔒 Layer 1: The Vault (Encrypted D1 Database Storage)
+> **Triple-Layer Encryption**
+
+**All seals are encrypted in the database with multiple security layers:**
+
+1. **Client-Side Encryption (AES-GCM-256)**
+   - Your content is encrypted in your browser BEFORE sending to server
+   - Uses split-key architecture: Key A (client) + Key B (server)
+   - Encrypted blob stored as base64 in D1 database
+
+2. **Server-Side Key Encryption**
+   - Key B is encrypted with `MASTER_ENCRYPTION_KEY` before database storage
+   - Master key stored as environment secret (never in database)
+   - Uses HKDF key derivation for additional security
+
+3. **Database Contents (All Encrypted)**
+   - ✅ Encrypted blob (AES-GCM-256 ciphertext)
+   - ✅ Encrypted Key B (AES-GCM-256 with master key)
+   - ✅ IV (public, needed for decryption)
+   - ✅ Metadata (unlock time, timestamps)
+   - ❌ NO plaintext content ever stored
+
+**What an attacker with database access CANNOT do:**
+- Decrypt without Key A (in URL hash, never sent to server)
+- Decrypt without master encryption key (environment secret)
+- Modify unlock time (cryptographically signed)
+- Access content before unlock time (server enforces time-lock)
 
 ### 🤝 Layer 2: The Handshake (Split-Key Crypto)
 > **Trust-Minimized**
@@ -162,10 +186,12 @@ sequenceDiagram
 **❌ NO.** The unlock time is stored in the database when you create the seal. API requests can't modify it.
 
 ### "What if I steal Key B from the database?"
-**⚠️ PARTIAL.** Key B is encrypted with a master key. Even if you steal it, you still need:
-1. The master encryption key (environment secret)
+**❌ NO.** Key B is encrypted with a master key before storage. Even if you steal the encrypted Key B from the database, you still need:
+1. The master encryption key (environment secret, not in database)
 2. Key A (stored in the URL hash, never sent to server)
-3. Both keys to decrypt
+3. Both decrypted keys to decrypt the content
+
+**Database breach impact:** Attacker gets encrypted blobs and encrypted keys, but cannot decrypt without master key and Key A.
 
 ### "Can I brute-force the encryption?"
 **❌ NO.** AES-GCM-256 with cryptographically random keys. Would take billions of years with current technology.

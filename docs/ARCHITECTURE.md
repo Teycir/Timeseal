@@ -30,6 +30,38 @@ Time-Seal follows a layered architecture with clear separation of concerns and d
 
 ## Core Abstractions
 
+### 0. Encryption & Security (`lib/crypto.ts`, `lib/keyEncryption.ts`)
+**Purpose**: Triple-layer encryption for all seals
+
+**Architecture**:
+```typescript
+// Layer 1: Client-side split-key encryption
+const { keyA, keyB } = await generateKeys();
+const masterKey = await deriveMasterKey(keyA, keyB);
+const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, masterKey, data);
+
+// Layer 2: Server-side key encryption
+const encryptedKeyB = await encryptKeyB(keyB, MASTER_KEY, sealId);
+
+// Layer 3: Database storage (all encrypted)
+// - encrypted_blob: AES-GCM-256 ciphertext
+// - key_b: Encrypted with master key
+// - iv: Public (needed for decryption)
+```
+
+**Security Properties**:
+- ✅ Zero plaintext in database
+- ✅ Split-key architecture (Key A never sent to server)
+- ✅ Master key encryption for Key B
+- ✅ HKDF key derivation with deterministic salt
+- ✅ AES-GCM-256 authenticated encryption
+
+**Benefits**:
+- Database breach cannot decrypt content
+- Server compromise cannot decrypt without Key A
+- URL interception cannot decrypt without Key B
+- Defense-in-depth security model
+
 ### 1. Service Layer (`lib/sealService.ts`)
 **Purpose**: Encapsulates all business logic for seal operations
 

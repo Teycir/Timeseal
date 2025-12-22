@@ -24,20 +24,47 @@ export default function SecurityPage() {
 
         <Card className="p-4 sm:p-6 md:p-8 space-y-6">
           <h2 className="text-xl sm:text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
-            <Lock className="w-6 h-6" /> Encryption Implementation
+            <Lock className="w-6 h-6" /> Triple-Layer Encryption
           </h2>
           <div className="space-y-4 text-neon-green/60 text-sm">
-            <div>
-              <p className="text-neon-green font-bold mb-2">AES-GCM 256-bit Encryption</p>
-              <p>All content is encrypted using AES-GCM with 256-bit keys, providing authenticated encryption with associated data (AEAD).</p>
+            <div className="border-l-2 border-neon-green/30 pl-4">
+              <p className="text-neon-green font-bold mb-2">Layer 1: Client-Side Encryption (AES-GCM-256)</p>
+              <p className="mb-2">Your content is encrypted in your browser BEFORE sending to the server using split-key architecture.</p>
+              <ul className="list-disc list-inside ml-4 space-y-1 text-xs">
+                <li>Key A: Stored in URL hash (never sent to server)</li>
+                <li>Key B: Sent to server (encrypted before storage)</li>
+                <li>Master Key: Derived from Key A + Key B using HKDF</li>
+                <li>Result: AES-GCM-256 encrypted ciphertext</li>
+              </ul>
             </div>
-            <div>
-              <p className="text-neon-green font-bold mb-2">Split-Key Architecture</p>
-              <p>Encryption uses two keys: Key A (client-side, in URL hash) and Key B (server-side, time-locked). Both are required for decryption.</p>
+            <div className="border-l-2 border-neon-green/30 pl-4">
+              <p className="text-neon-green font-bold mb-2">Layer 2: Server-Side Key Encryption</p>
+              <p className="mb-2">Key B is encrypted with MASTER_ENCRYPTION_KEY before database storage.</p>
+              <ul className="list-disc list-inside ml-4 space-y-1 text-xs">
+                <li>Master key stored as environment secret (not in database)</li>
+                <li>Uses HKDF key derivation with seal ID as salt</li>
+                <li>Even database breach cannot decrypt Key B</li>
+              </ul>
             </div>
-            <div>
-              <p className="text-neon-green font-bold mb-2">Cryptographically Secure Random Number Generation</p>
-              <p>All keys and IVs are generated using the Web Crypto API&apos;s CSPRNG, ensuring unpredictability.</p>
+            <div className="border-l-2 border-neon-green/30 pl-4">
+              <p className="text-neon-green font-bold mb-2">Layer 3: Encrypted Database Storage</p>
+              <p className="mb-2">All seals stored encrypted in Cloudflare D1 database:</p>
+              <ul className="list-disc list-inside ml-4 space-y-1 text-xs">
+                <li>✅ Encrypted blob (AES-GCM-256 ciphertext as base64)</li>
+                <li>✅ Encrypted Key B (AES-GCM-256 with master key)</li>
+                <li>✅ IV (public, needed for decryption)</li>
+                <li>✅ Metadata (unlock time, timestamps)</li>
+                <li>❌ NO plaintext content EVER stored</li>
+              </ul>
+            </div>
+            <div className="bg-neon-green/5 p-4 rounded border border-neon-green/20">
+              <p className="text-neon-green font-bold mb-2">🛡️ What an Attacker with Database Access CANNOT Do:</p>
+              <ul className="list-disc list-inside ml-4 space-y-1 text-xs">
+                <li>Decrypt content (needs Key A from URL hash)</li>
+                <li>Decrypt Key B (needs master encryption key)</li>
+                <li>Modify unlock time (cryptographically signed)</li>
+                <li>Access content early (server enforces time-lock)</li>
+              </ul>
             </div>
           </div>
         </Card>
@@ -48,8 +75,8 @@ export default function SecurityPage() {
           </h2>
           <div className="space-y-4 text-neon-green/60 text-sm">
             <div>
-              <p className="text-neon-green font-bold mb-2">Cloudflare D1 Database Storage</p>
-              <p>Encrypted blobs and metadata are stored in Cloudflare&apos;s edge database with automatic replication and encryption at rest.</p>
+              <p className="text-neon-green font-bold mb-2">Cloudflare D1 Encrypted Database Storage</p>
+              <p>All seals are stored encrypted in Cloudflare&apos;s edge database with triple-layer encryption: client-side AES-GCM-256, server-side key encryption, and database encryption at rest. NO plaintext content is ever stored.</p>
             </div>
             <div>
               <p className="text-neon-green font-bold mb-2">Edge Runtime</p>
@@ -84,8 +111,8 @@ export default function SecurityPage() {
               <p>Split-key architecture means neither the server alone nor the client alone can decrypt content.</p>
             </div>
             <div>
-              <p className="text-neon-green font-bold mb-2 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Encrypted Storage</p>
-              <p>All data stored in D1 database with encryption at rest and cryptographic access controls.</p>
+              <p className="text-neon-green font-bold mb-2 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Triple-Layer Encrypted Storage</p>
+              <p>All seals encrypted with AES-GCM-256 client-side, Key B encrypted with master key server-side, and database encryption at rest. Zero plaintext storage.</p>
             </div>
             <div>
               <p className="text-neon-green font-bold mb-2 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Client-Side Decryption</p>

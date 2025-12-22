@@ -3,11 +3,87 @@
 ## Threat Model
 
 Time-Seal is designed to protect against:
-- ✅ Server compromise (split-key architecture)
-- ✅ Early access attempts (R2 Object Lock + time validation)
+- ✅ Server compromise (split-key architecture + encrypted storage)
+- ✅ Database breach (triple-layer encryption)
+- ✅ Early access attempts (time validation + encrypted keys)
 - ✅ Admin deletion (WORM compliance)
 - ✅ Man-in-the-middle (HTTPS + client-side crypto)
 - ✅ Client-side time manipulation (server-side validation)
+
+## Encryption Architecture
+
+### Triple-Layer Encryption
+
+**All seals are encrypted in the database with three security layers:**
+
+#### Layer 1: Client-Side Encryption (AES-GCM-256)
+```typescript
+// User's browser encrypts content BEFORE sending to server
+const { keyA, keyB } = await generateKeys();
+const masterKey = await deriveMasterKey(keyA, keyB);
+const encryptedBlob = await crypto.subtle.encrypt(
+  { name: 'AES-GCM', iv },
+  masterKey,
+  dataBuffer
+);
+```
+
+**Result:** Encrypted ciphertext that requires BOTH keys to decrypt
+
+#### Layer 2: Server-Side Key Encryption
+```typescript
+// Key B is encrypted with master key before database storage
+const encryptedKeyB = await encryptKeyB(keyB, MASTER_ENCRYPTION_KEY, sealId);
+```
+
+**Result:** Even if database is breached, Key B is encrypted
+
+#### Layer 3: Database Storage
+```sql
+-- What's actually stored in D1 database:
+CREATE TABLE seals (
+  id TEXT PRIMARY KEY,
+  encrypted_blob TEXT,      -- AES-GCM-256 ciphertext (base64)
+  key_b TEXT NOT NULL,      -- Encrypted with master key
+  iv TEXT NOT NULL,         -- Public (needed for decryption)
+  unlock_time INTEGER       -- Metadata
+);
+```
+
+**Database contents:**
+- ✅ Encrypted blob (AES-GCM-256 ciphertext)
+- ✅ Encrypted Key B (AES-GCM-256 with master key)
+- ✅ IV (public, needed for decryption)
+- ✅ Metadata (unlock time, timestamps)
+- ❌ NO plaintext content EVER stored
+
+### What an Attacker with Database Access CANNOT Do:
+
+1. **Decrypt content** - Needs Key A (in URL hash, never sent to server)
+2. **Decrypt Key B** - Needs master encryption key (environment secret)
+3. **Modify unlock time** - Cryptographically signed
+4. **Access content early** - Server enforces time-lock
+
+### Decryption Flow (Only After Unlock Time)
+
+```typescript
+// 1. Server checks time
+if (Date.now() >= unlockTime) {
+  // 2. Server decrypts Key B with master key
+  const keyB = await decryptKeyB(encryptedKeyB, MASTER_KEY, sealId);
+  
+  // 3. Server sends Key B to client
+  return { keyB, encryptedBlob };
+}
+
+// 4. Client combines keys and decrypts
+const masterKey = await deriveMasterKey(keyA, keyB);
+const decrypted = await crypto.subtle.decrypt(
+  { name: 'AES-GCM', iv },
+  masterKey,
+  encryptedBlob
+);
+```
 
 ## Time-Lock Security
 
