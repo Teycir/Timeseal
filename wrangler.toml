@@ -1,9 +1,0 @@
-name = "time-seal"
-compatibility_date = "2024-01-01"
-compatibility_flags = ["nodejs_compat"]
-pages_build_output_dir = ".vercel/output/static"
-
-[[d1_databases]]
-binding = "DB"
-database_name = "time-seal-db"
-database_id = "07ad5c32-1de4-410f-aa5d-82366405fe66"
