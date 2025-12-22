@@ -21,6 +21,8 @@
 
 **TIME-SEAL** is a cryptographically enforced time-locked vault system built on Cloudflare's edge infrastructure. It allows you to encrypt a file or message that **mathematically cannot be opened** until a specific moment in the future.
 
+**⚠️ Retention Policy:** All seals are automatically deleted 30 days after their unlock time to protect database resources. Maximum seal lifetime is 60 days (30 days until unlock + 30 days retention).
+
 ![Time-Seal Architecture](public/explainerimage.png)
 
 ### Why is this different?
@@ -72,6 +74,14 @@ We use a Split-Key architecture to ensure no single party can decrypt the data e
 ### 💓 Layer 3: The Pulse (Dead Man's Switch)
 > **Automated Release**
 If used as a Dead Man's Switch, the user must click a private "Pulse Link" periodically. If they fail to check in, the seal unlocks automatically for the recipient.
+
+### 🗑️ Layer 4: Auto-Cleanup (Database Protection)
+> **30-Day Retention**
+Seals are automatically deleted 30 days after unlock time via scheduled cron job. This ensures:
+- Maximum seal duration: 30 days (configurable limit)
+- Post-unlock retention: 30 days
+- Total maximum lifetime: 60 days
+- Prevents database overflow and ensures compliance
 
 ---
 

@@ -46,36 +46,43 @@ export async function GET(
       }
 
       const sealService = container.sealService;
-      const metadata = await sealService.getSeal(sealId, ip);
+      
+      try {
+        const metadata = await sealService.getSeal(sealId, ip);
 
-      if (metadata.status === 'locked') {
-        // Add jitter to prevent timing attacks
-        const jitter = Math.floor(Math.random() * 100);
-        await new Promise(resolve => setTimeout(resolve, jitter));
-        
+        if (metadata.status === 'locked') {
+          // Add jitter to prevent timing attacks
+          const jitter = Math.floor(Math.random() * 100);
+          await new Promise(resolve => setTimeout(resolve, jitter));
+          
+          return jsonResponse({
+            id: sealId,
+            isLocked: true,
+            unlockTime: metadata.unlockTime,
+            timeRemaining: metadata.unlockTime - Date.now(),
+            isDMS: metadata.isDMS,
+            pulseToken: metadata.isDMS ? (await container.database.getSeal(sealId))?.pulseToken : undefined,
+          });
+        }
+
+        const blob = await sealService.getBlob(sealId);
+        const bytes = new Uint8Array(blob);
+        const blobBase64 = btoa(String.fromCharCode(...bytes));
+
         return jsonResponse({
           id: sealId,
-          isLocked: true,
+          isLocked: false,
           unlockTime: metadata.unlockTime,
-          timeRemaining: metadata.unlockTime - Date.now(),
+          keyB: metadata.keyB,
+          iv: metadata.iv,
+          encryptedBlob: blobBase64,
           isDMS: metadata.isDMS,
-          pulseToken: metadata.isDMS ? (await container.db.getSeal(sealId))?.pulseToken : undefined,
         });
+      } catch (error) {
+        console.error('[SEAL-API] Error:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        return jsonResponse({ error: `Seal retrieval failed: ${errorMessage}` }, 500);
       }
-
-      const blob = await sealService.getBlob(sealId);
-      const bytes = new Uint8Array(blob);
-      const blobBase64 = btoa(String.fromCharCode(...bytes));
-
-      return jsonResponse({
-        id: sealId,
-        isLocked: false,
-        unlockTime: metadata.unlockTime,
-        keyB: metadata.keyB,
-        iv: metadata.iv,
-        encryptedBlob: blobBase64,
-        isDMS: metadata.isDMS,
-      });
     } finally {
       concurrentTracker.release(ip);
     }

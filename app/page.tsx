@@ -121,10 +121,10 @@ export default function HomePage() {
         e.preventDefault();
         copyToClipboard(result.publicUrl, 'Link');
       }
-      // Ctrl/Cmd + Shift + K for copy pulse token
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'K' && result?.pulseToken) {
+      // Ctrl/Cmd + Shift + K for copy pulse link
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'K' && result?.pulseToken && result?.pulseUrl) {
         e.preventDefault();
-        copyToClipboard(result.pulseToken, 'Token');
+        copyToClipboard(`${result.pulseUrl}/${result.pulseToken}`, 'Pulse Link');
       }
     };
     window.addEventListener('keydown', handleKeyboard);
@@ -152,14 +152,15 @@ export default function HomePage() {
         toast.warning(`File size: ${formatFileSize(selectedFile.size)} (approaching 5MB limit)`);
       }
       setFile(selectedFile);
-      setMessage('');
+      setMessage(''); // Clear message when file is selected
       toast.success(`Selected: ${selectedFile.name} (${formatFileSize(selectedFile.size)})`);
     }
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    multiple: false
+    multiple: false,
+    maxSize: 5 * 1024 * 1024, // 5MB hard limit
   });
 
   // Confetti effect
@@ -292,7 +293,7 @@ export default function HomePage() {
       const selectedTime = new Date(unlockDate).getTime();
       const now = Date.now();
       const minTime = now + 60000;
-      const maxTime = now + (20 * 365 * 24 * 60 * 60 * 1000);
+      const maxTime = now + (30 * 24 * 60 * 60 * 1000); // 30 days
 
       if (Number.isNaN(selectedTime)) {
         toast.error('Invalid date format');
@@ -310,7 +311,7 @@ export default function HomePage() {
       }
 
       if (selectedTime > maxTime) {
-        toast.error('Unlock time cannot be more than 20 years in the future');
+        toast.error('Unlock time cannot be more than 30 days in the future');
         return;
       }
     }
@@ -318,8 +319,10 @@ export default function HomePage() {
     // Validate pulse interval for dead man's switch
     if (sealType === 'deadman') {
       const pulseMinutes = pulseUnit === 'minutes' ? pulseValue : pulseValue * 24 * 60;
-      if (pulseMinutes < 5 || pulseMinutes > 100 * 24 * 60) {
-        toast.error('Pulse interval must be between 5 minutes and 100 days');
+      const maxDays = 30;
+      const maxMinutes = maxDays * 24 * 60;
+      if (pulseMinutes < 5 || pulseMinutes > maxMinutes) {
+        toast.error(`Pulse interval must be between 5 minutes and ${maxDays} days`);
         const pulseInput = document.getElementById('pulse-value');
         if (pulseInput) {
           pulseInput.classList.add('input-error');
@@ -338,7 +341,18 @@ export default function HomePage() {
       setEncryptionProgress(20);
       await new Promise(resolve => setTimeout(resolve, 200));
       
-      // Encrypt the message or file
+      // Validate combined size if both message and file
+      if (message.trim() && file) {
+        const combinedSize = message.length + file.size;
+        if (combinedSize > 5 * 1024 * 1024) {
+          toast.error(`Combined size too large: ${formatFileSize(combinedSize)} (max 5MB)`);
+          toast.dismiss(loadingToast);
+          setIsCreating(false);
+          return;
+        }
+      }
+      
+      // Encrypt file if present, otherwise message
       setEncryptionProgress(40);
       const encrypted = await encryptData(file || message);
       setEncryptionProgress(60);
@@ -376,7 +390,7 @@ export default function HomePage() {
       });
       setEncryptionProgress(90);
 
-      const data = await response.json() as { success: boolean; publicUrl: string; pulseToken?: string; receipt?: any; error?: string };
+      const data = await response.json() as { success: boolean; publicUrl: string; pulseToken?: string; receipt?: any; error?: string | { code: string; message: string } };
 
       console.log('[CREATE-SEAL] Response:', response.status, data);
 
@@ -401,11 +415,22 @@ export default function HomePage() {
         triggerConfetti();
       } else {
         toast.dismiss(loadingToast);
-        toast.error(data.error || 'Failed to create seal');
+        // Handle both string and nested error object formats
+        let errorMsg = 'Failed to create seal';
+        if (data.error) {
+          if (typeof data.error === 'string') {
+            errorMsg = data.error;
+          } else if (typeof data.error === 'object' && data.error.message) {
+            errorMsg = data.error.message;
+          }
+        }
+        toast.error(errorMsg);
       }
     } catch (error) {
       toast.dismiss(loadingToast);
-      toast.error('Failed to create seal: Internal Error');
+      console.error('[CREATE-SEAL] Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      toast.error(`Failed to create seal: ${errorMessage}`);
     } finally {
       setIsCreating(false);
       setEncryptionProgress(0);
@@ -493,28 +518,28 @@ export default function HomePage() {
                 </div>
 
                 {result.pulseUrl && result.pulseToken && (
-                  <div>
+                  <div className="mt-4">
                     <div className="flex gap-2 items-end">
                       <div className="flex-1 tooltip">
                         <Input
-                          label="PULSE TOKEN (KEEP SECRET)"
-                          value={result.pulseToken}
+                          label="PULSE LINK (KEEP SECRET)"
+                          value={`${result.pulseUrl}/${result.pulseToken}`}
                           onChange={() => { }}
                           testId="pulse-token-input"
                         />
-                        <span className="tooltip-text">PRIVATE token for Dead Man&apos;s Switch. Visit pulse page to check in. Press Ctrl+Shift+K to copy.</span>
+                        <span className="tooltip-text">PRIVATE link for Dead Man&apos;s Switch. Visit this URL to check in. Press Ctrl+Shift+K to copy.</span>
                       </div>
                       <Button
-                        onClick={() => copyToClipboard(result.pulseToken!, 'Token')}
+                        onClick={() => copyToClipboard(`${result.pulseUrl}/${result.pulseToken}`, 'Link')}
                         className="bg-neon-green/20 mb-[2px]"
-                        title="Copy token (Ctrl+Shift+K)"
+                        title="Copy link (Ctrl+Shift+K)"
                         variant="secondary"
                       >
                         COPY
                       </Button>
                     </div>
                     <p className="text-xs text-neon-green/50 mt-1">
-                      Visit {result.pulseUrl} and enter this token to reset the countdown. Pinging is done via web (works from any device/location).
+                      Visit this link to reset the countdown. Works from any device/location.
                     </p>
                   </div>
                 )}
@@ -588,6 +613,7 @@ export default function HomePage() {
                 </h1>
                 <AnimatedTagline text='"If I go silent, this speaks for me."' />
                 <p className="text-xs text-neon-green/30 max-w-md mx-auto">Encrypt messages that unlock at a future date or after inactivity</p>
+                <p className="text-xs text-yellow-500/50 max-w-md mx-auto mt-2">⚠️ Seals auto-delete 30 days after unlock</p>
               </motion.div>
 
               <Card className="space-y-6">
@@ -635,7 +661,7 @@ export default function HomePage() {
                   {/* Text Area */}
                   <label htmlFor="message-input" className="block text-sm mb-2 text-neon-green/80 tooltip">
                     MESSAGE OR FILE
-                    <span className="tooltip-text">Enter text message or upload a file (max 5MB). Only one can be used at a time.</span>
+                    <span className="tooltip-text">Enter text message or upload a file (max 5MB). File takes priority if both provided.</span>
                   </label>
                   <textarea
                     id="message-input"
@@ -643,7 +669,6 @@ export default function HomePage() {
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="Enter your secret message..."
                     className="cyber-input w-full h-24 resize-none font-mono mb-2 placeholder:text-neon-green/40"
-                    disabled={!!file}
                   />
 
                   {/* React Dropzone */}
@@ -736,7 +761,7 @@ export default function HomePage() {
                         <label htmlFor="unlock-date" className="block text-sm mb-2 text-neon-green/80 font-bold">
                           UNLOCK DATE & TIME
                         </label>
-                        <p className="text-xs text-neon-green/50 mb-2">Select when the seal will automatically unlock. Must be at least 1 minute in the future.</p>
+                        <p className="text-xs text-neon-green/50 mb-2">Select when the seal will automatically unlock. Must be within 30 days.</p>
                         <input
                           id="unlock-date"
                           type="datetime-local"
@@ -763,9 +788,14 @@ export default function HomePage() {
                             id="pulse-value"
                             type="number"
                             value={pulseValue}
-                            onChange={(e) => setPulseValue(Number.parseInt(e.target.value) || 1)}
+                            onChange={(e) => {
+                              const val = Number.parseInt(e.target.value) || 1;
+                              const min = pulseUnit === 'minutes' ? 5 : 1;
+                              const max = pulseUnit === 'minutes' ? 60 : 30;
+                              setPulseValue(Math.max(min, Math.min(max, val)));
+                            }}
                             min={pulseUnit === 'minutes' ? 5 : 1}
-                            max={pulseUnit === 'minutes' ? 60 : 100}
+                            max={pulseUnit === 'minutes' ? 60 : 30}
                             className="cyber-input w-24 text-center"
                           />
                           <select
@@ -775,7 +805,7 @@ export default function HomePage() {
                               setPulseUnit(newUnit);
                               // Adjust value to stay within limits
                               if (newUnit === 'minutes' && pulseValue < 5) setPulseValue(5);
-                              if (newUnit === 'days' && pulseValue > 100) setPulseValue(100);
+                              if (newUnit === 'days' && pulseValue > 30) setPulseValue(30);
                             }}
                             className="cyber-input w-32"
                           >

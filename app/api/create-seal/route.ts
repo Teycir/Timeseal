@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
         sealId: result.sealId,
         iv: result.iv,
         publicUrl: `/v/${result.sealId}`,
-        pulseUrl: result.pulseToken ? `/pulse/${result.pulseToken}` : undefined,
+        pulseToken: result.pulseToken,
         receipt: result.receipt,
       });
     },

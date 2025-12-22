@@ -102,15 +102,18 @@ function VaultPageClient({ id }: { id: string }) {
         setError('Decryption succeeded but content is corrupted');
       }
     } catch (err) {
-      console.error('Decryption failed:', err);
-      setError('Failed to decrypt message');
+      console.error('[VAULT] Decryption failed:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      setError(`Failed to decrypt message: ${errorMessage}`);
     }
   }, [id]);
 
   const fetchSealStatus = useCallback(async () => {
     try {
       const response = await fetch(`/api/seal/${id}`);
-      const data = await response.json() as SealStatus & { encryptedBlob?: string; error?: string };
+      const data = await response.json() as SealStatus & { encryptedBlob?: string; error?: string | { code: string; message: string } };
+
+      console.log('[VAULT] API Response:', response.status, data);
 
       if (response.ok) {
         setStatus(data);
@@ -120,11 +123,22 @@ function VaultPageClient({ id }: { id: string }) {
           await decryptMessage(data.keyB, data.iv, data.encryptedBlob);
         }
       } else {
-        setError(data.error || 'Seal not found');
+        // Handle both string and nested error object formats
+        let errorMsg = 'Seal not found';
+        if (data.error) {
+          if (typeof data.error === 'string') {
+            errorMsg = data.error;
+          } else if (typeof data.error === 'object' && data.error.message) {
+            errorMsg = data.error.message;
+          }
+        }
+        console.error('[VAULT] Error:', errorMsg, data);
+        setError(errorMsg);
       }
     } catch (err) {
-      console.error('Fetch status failed:', err);
-      setError('Failed to fetch seal status');
+      console.error('[VAULT] Fetch failed:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      setError(`Failed to fetch seal: ${errorMessage}`);
     }
   }, [id, decryptMessage]);
 
@@ -279,6 +293,16 @@ function VaultPageClient({ id }: { id: string }) {
         <h1 className="text-2xl sm:text-3xl font-bold glow-text mb-3 px-2">
           <DecryptedText text={status.isDMS ? "DEAD MAN'S SWITCH ACTIVE" : "VAULT SEALED"} animateOn="view" className="text-neon-green" />
         </h1>
+        
+        {/* Urgent warning for less than 24h remaining (both DMS and timed) */}
+        {timeLeft > 0 && timeLeft < 24 * 60 * 60 * 1000 && (
+          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg animate-pulse">
+            <p className="text-red-500 text-sm font-bold mb-1">🚨 LESS THAN 24H REMAINING</p>
+            <p className="text-red-400/80 text-xs">
+              {status.isDMS ? 'Seal will unlock soon! Pulse immediately to prevent auto-unlock.' : 'This seal will unlock in less than 24 hours.'}
+            </p>
+          </div>
+        )}
         
         {status.isDMS && status.pulseToken && (
           <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">

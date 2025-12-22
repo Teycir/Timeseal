@@ -6,7 +6,7 @@ export interface ValidationResult {
 
 // D1 TEXT column limit: 1MB. Base64 adds ~33% overhead, so max binary is 5MB
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const MAX_DURATION_DAYS = Number.parseInt(process.env.MAX_SEAL_DURATION_DAYS || '365');
+const MAX_DURATION_DAYS = 30; // 30 days max for all seals
 const MIN_UNLOCK_DELAY = 60 * 1000; // 1 minute
 const MAX_REQUEST_SIZE = 7 * 1024 * 1024; // 7MB (5MB file + overhead)
 
@@ -92,14 +92,14 @@ export function validateUnlockTime(unlockTime: number): ValidationResult {
 
 export function validatePulseInterval(interval: number): ValidationResult {
   const minInterval = 5 * 60 * 1000; // 5 minutes in ms
-  const maxInterval = 100 * 24 * 3600 * 1000; // 100 days in ms
+  const maxInterval = 30 * 24 * 3600 * 1000; // 30 days in ms
 
   if (interval < minInterval) {
     return { valid: false, error: 'Pulse interval must be at least 5 minutes' };
   }
 
   if (interval > maxInterval) {
-    return { valid: false, error: 'Pulse interval cannot exceed 100 days' };
+    return { valid: false, error: 'Pulse interval cannot exceed 30 days' };
   }
 
   return { valid: true };

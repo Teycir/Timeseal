@@ -1,0 +1,8 @@
+# Cloudflare Cron Triggers Configuration
+# Add this to your wrangler.toml
+
+[triggers]
+crons = ["0 2 * * *"]  # Run daily at 2 AM UTC
+
+# Set CRON_SECRET in Cloudflare dashboard:
+# wrangler secret put CRON_SECRET

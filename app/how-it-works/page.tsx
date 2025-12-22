@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { BackgroundBeams } from '../components/ui/background-beams';
 import { Card } from '../components/Card';
 import DecryptedText from '../components/DecryptedText';
-import { Lock, Handshake, Activity, ShieldCheck, ClipboardList } from 'lucide-react';
+import { Lock, Handshake, Activity, ShieldCheck, ClipboardList, Trash2 } from 'lucide-react';
 
 export default function HowItWorksPage() {
   return (
@@ -58,6 +58,22 @@ export default function HowItWorksPage() {
               If used as a Dead Man&apos;s Switch, the user must click a private &quot;Pulse Link&quot; periodically.
               If they fail to check in, the seal unlocks automatically for the recipient.
             </p>
+          </div>
+
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
+              <Trash2 className="w-6 h-6" /> Layer 4: Auto-Cleanup (Database Protection)
+            </h2>
+            <p className="text-neon-green/80 mb-2 text-sm sm:text-base">30-Day Retention Policy</p>
+            <p className="text-neon-green/60 text-sm leading-relaxed mb-3">
+              To protect database resources, seals are automatically deleted 30 days after unlock:
+            </p>
+            <ul className="text-neon-green/60 text-sm space-y-2 list-disc list-inside">
+              <li><strong className="text-neon-green">Max Duration:</strong> 30 days until unlock</li>
+              <li><strong className="text-neon-green">Retention:</strong> 30 days after unlock</li>
+              <li><strong className="text-neon-green">Total Lifetime:</strong> Maximum 60 days</li>
+              <li><strong className="text-neon-green">Cleanup:</strong> Automated via cron job</li>
+            </ul>
           </div>
         </Card>
 
