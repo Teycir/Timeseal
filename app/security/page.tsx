@@ -4,13 +4,14 @@ import { motion } from 'framer-motion';
 import { BackgroundBeams } from '../components/ui/background-beams';
 import { Card } from '../components/Card';
 import DecryptedText from '../components/DecryptedText';
+import { Lock, Server, ShieldCheck, AlertTriangle, BookOpen, CheckCircle2 } from 'lucide-react';
 
 export default function SecurityPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative w-full overflow-hidden pb-20">
       <BackgroundBeams className="absolute top-0 left-0 w-full h-full z-0" />
       <div className="max-w-4xl w-full space-y-8 relative z-10">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
@@ -22,7 +23,9 @@ export default function SecurityPage() {
         </motion.div>
 
         <Card className="p-8 space-y-6">
-          <h2 className="text-2xl font-bold text-neon-green mb-4">🔐 Encryption Implementation</h2>
+          <h2 className="text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
+            <Lock className="w-6 h-6" /> Encryption Implementation
+          </h2>
           <div className="space-y-4 text-neon-green/60 text-sm">
             <div>
               <p className="text-neon-green font-bold mb-2">AES-GCM 256-bit Encryption</p>
@@ -40,7 +43,9 @@ export default function SecurityPage() {
         </Card>
 
         <Card className="p-8 space-y-6">
-          <h2 className="text-2xl font-bold text-neon-green mb-4">🏗️ Infrastructure Security</h2>
+          <h2 className="text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
+            <Server className="w-6 h-6" /> Infrastructure Security
+          </h2>
           <div className="space-y-4 text-neon-green/60 text-sm">
             <div>
               <p className="text-neon-green font-bold mb-2">Cloudflare R2 Object Lock (WORM)</p>
@@ -62,29 +67,33 @@ export default function SecurityPage() {
         </Card>
 
         <Card className="p-8 space-y-6">
-          <h2 className="text-2xl font-bold text-neon-green mb-4">🛡️ Security Guarantees</h2>
+          <h2 className="text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
+            <ShieldCheck className="w-6 h-6" /> Security Guarantees
+          </h2>
           <div className="space-y-4 text-neon-green/60 text-sm">
             <div>
-              <p className="text-neon-green font-bold mb-2">✅ Time-Lock Enforcement</p>
+              <p className="text-neon-green font-bold mb-2 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Time-Lock Enforcement</p>
               <p>The server will not release Key B before the unlock time. This is enforced at the API level with timestamp validation.</p>
             </div>
             <div>
-              <p className="text-neon-green font-bold mb-2">✅ No Single Point of Failure</p>
+              <p className="text-neon-green font-bold mb-2 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> No Single Point of Failure</p>
               <p>Split-key architecture means neither the server alone nor the client alone can decrypt content.</p>
             </div>
             <div>
-              <p className="text-neon-green font-bold mb-2">✅ Immutable Storage</p>
+              <p className="text-neon-green font-bold mb-2 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Immutable Storage</p>
               <p>R2 Object Lock prevents premature deletion or modification of encrypted content.</p>
             </div>
             <div>
-              <p className="text-neon-green font-bold mb-2">✅ Client-Side Decryption</p>
+              <p className="text-neon-green font-bold mb-2 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Client-Side Decryption</p>
               <p>Decryption happens in your browser. The server never sees the decrypted content.</p>
             </div>
           </div>
         </Card>
 
         <Card className="p-8 space-y-6">
-          <h2 className="text-2xl font-bold text-neon-green mb-4">⚠️ Threat Model</h2>
+          <h2 className="text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
+            <AlertTriangle className="w-6 h-6" /> Threat Model
+          </h2>
           <div className="space-y-4 text-neon-green/60 text-sm">
             <div>
               <p className="text-neon-green font-bold mb-2">Protected Against:</p>
@@ -108,13 +117,15 @@ export default function SecurityPage() {
         </Card>
 
         <Card className="p-8 space-y-4 border-neon-green/40">
-          <h2 className="text-2xl font-bold text-neon-green mb-4">📖 Open Source</h2>
+          <h2 className="text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
+            <BookOpen className="w-6 h-6" /> Open Source
+          </h2>
           <p className="text-neon-green/60 text-sm">
             TimeSeal is open source under the Business Source License. The code is available for inspection and audit on GitHub.
           </p>
-          <a 
-            href="https://github.com/teycir/timeseal" 
-            target="_blank" 
+          <a
+            href="https://github.com/teycir/timeseal"
+            target="_blank"
             rel="noopener noreferrer"
             className="cyber-button inline-block text-sm"
           >

@@ -4,13 +4,14 @@ import { motion } from 'framer-motion';
 import { BackgroundBeams } from '../components/ui/background-beams';
 import { Card } from '../components/Card';
 import DecryptedText from '../components/DecryptedText';
+import { Lock, Handshake, Activity, ShieldCheck, ClipboardList } from 'lucide-react';
 
 export default function HowItWorksPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative w-full overflow-hidden pb-20">
       <BackgroundBeams className="absolute top-0 left-0 w-full h-full z-0" />
       <div className="max-w-4xl w-full space-y-8 relative z-10">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
@@ -23,16 +24,20 @@ export default function HowItWorksPage() {
 
         <Card className="p-8 space-y-6">
           <div>
-            <h2 className="text-2xl font-bold text-neon-green mb-4">🔒 Layer 1: The Vault (R2 Object Lock)</h2>
+            <h2 className="text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
+              <Lock className="w-6 h-6" /> Layer 1: The Vault (R2 Object Lock)
+            </h2>
             <p className="text-neon-green/80 mb-2">Immutable Storage</p>
             <p className="text-neon-green/60 text-sm leading-relaxed">
-              Files are stored in Cloudflare R2 with WORM Compliance (Write Once, Read Many). 
+              Files are stored in Cloudflare R2 with WORM Compliance (Write Once, Read Many).
               This prevents deletion—even by the admin—until the unlock time expires.
             </p>
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold text-neon-green mb-4">🤝 Layer 2: The Handshake (Split-Key Crypto)</h2>
+            <h2 className="text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
+              <Handshake className="w-6 h-6" /> Layer 2: The Handshake (Split-Key Crypto)
+            </h2>
             <p className="text-neon-green/80 mb-2">Trust-Minimized</p>
             <p className="text-neon-green/60 text-sm leading-relaxed mb-3">
               We use a Split-Key architecture to ensure no single party can decrypt the data early:
@@ -45,17 +50,21 @@ export default function HowItWorksPage() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold text-neon-green mb-4">💓 Layer 3: The Pulse (Dead Man&apos;s Switch)</h2>
+            <h2 className="text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
+              <Activity className="w-6 h-6" /> Layer 3: The Pulse (Dead Man&apos;s Switch)
+            </h2>
             <p className="text-neon-green/80 mb-2">Automated Release</p>
             <p className="text-neon-green/60 text-sm leading-relaxed">
-              If used as a Dead Man&apos;s Switch, the user must click a private &quot;Pulse Link&quot; periodically. 
+              If used as a Dead Man&apos;s Switch, the user must click a private &quot;Pulse Link&quot; periodically.
               If they fail to check in, the seal unlocks automatically for the recipient.
             </p>
           </div>
         </Card>
 
         <Card className="p-8 space-y-4">
-          <h2 className="text-2xl font-bold text-neon-green mb-4">🔐 Encryption Standards</h2>
+          <h2 className="text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
+            <ShieldCheck className="w-6 h-6" /> Encryption Standards
+          </h2>
           <ul className="text-neon-green/60 text-sm space-y-2">
             <li><strong className="text-neon-green">Algorithm:</strong> AES-GCM (256-bit)</li>
             <li><strong className="text-neon-green">Key Generation:</strong> Web Crypto API (CSPRNG)</li>
@@ -66,7 +75,9 @@ export default function HowItWorksPage() {
         </Card>
 
         <Card className="p-8 space-y-4">
-          <h2 className="text-2xl font-bold text-neon-green mb-4">📋 What Happens After Creation</h2>
+          <h2 className="text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
+            <ClipboardList className="w-6 h-6" /> What Happens After Creation
+          </h2>
           <div className="space-y-4 text-neon-green/60 text-sm">
             <div>
               <p className="text-neon-green font-bold mb-1">1. You receive two links:</p>
