@@ -64,10 +64,7 @@ export class SealService {
 
     const encryptedKeyB = await encryptKeyB(request.keyB, this.masterKey, sealId);
 
-    await r2CircuitBreaker.execute(() =>
-      withRetry(() => this.storage.uploadBlob(sealId, request.encryptedBlob, request.unlockTime), 3, 1000)
-    );
-
+    // Create seal record first
     await this.db.createSeal({
       id: sealId,
       unlockTime: request.unlockTime,
@@ -79,6 +76,11 @@ export class SealService {
       pulseToken,
       createdAt: Date.now(),
     });
+
+    // Then upload blob (D1BlobStorage needs the row to exist)
+    await r2CircuitBreaker.execute(() =>
+      withRetry(() => this.storage.uploadBlob(sealId, request.encryptedBlob, request.unlockTime), 3, 1000)
+    );
 
     auditSealCreated(sealId, ip, request.isDMS || false);
     this.auditLogger?.log({
