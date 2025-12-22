@@ -124,7 +124,7 @@ function VaultPageClient({ id }: { id: string }) {
         <BackgroundBeams className="absolute top-0 left-0 w-full h-full z-0" />
         <div className="max-w-md w-full text-center relative z-10">
           <div className="text-6xl mb-6">⚠️</div>
-          <h1 className="text-3xl font-bold mb-4 glow-text text-red-500">VAULT ERROR</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-4 glow-text text-red-500 px-2">VAULT ERROR</h1>
           <Card className="mb-8 border-red-500/30">
             <p className="text-red-400/90 font-mono">{error}</p>
           </Card>
@@ -160,13 +160,13 @@ function VaultPageClient({ id }: { id: string }) {
           className="max-w-2xl w-full relative z-10"
         >
           <div className="text-center mb-8">
-            <h1 className="text-5xl font-bold glow-text mb-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold glow-text mb-4 px-2">
               <DecryptedText text="VAULT UNLOCKED" animateOn="view" className="text-neon-green" />
             </h1>
-            <p className="text-neon-green/70">The seal has been broken. Here is your message:</p>
+            <p className="text-neon-green/70 text-sm sm:text-base px-4">The seal has been broken. Here is your message:</p>
           </div>
 
-          <Card className="p-8 mb-8 relative group">
+          <Card className="p-4 sm:p-6 md:p-8 mb-8 relative group">
             <div className="absolute top-0 right-0 p-2 opacity-50 group-hover:opacity-100 transition-opacity">
               <span className="text-xs font-mono text-neon-green border border-neon-green/30 px-2 py-1 rounded">DECRYPTED</span>
             </div>
@@ -179,7 +179,7 @@ function VaultPageClient({ id }: { id: string }) {
           </Card>
 
           <div className="text-center">
-            <a href="/" className="cyber-button text-lg px-8 py-4">
+            <a href="/" className="cyber-button text-sm sm:text-base md:text-lg px-4 sm:px-6 md:px-8 py-3 sm:py-4">
               CREATE YOUR OWN TIME-SEAL
             </a>
           </div>
@@ -210,24 +210,24 @@ function VaultPageClient({ id }: { id: string }) {
           </svg>
         </motion.div>
 
-        <h1 className="text-4xl font-bold glow-text mb-3">
+        <h1 className="text-3xl sm:text-4xl font-bold glow-text mb-3 px-2">
           <DecryptedText text="VAULT SEALED" animateOn="view" className="text-neon-green" />
         </h1>
-        <p className="text-neon-green/70 mb-6">
+        <p className="text-neon-green/70 mb-6 text-sm sm:text-base px-4">
           This message is cryptographically locked until:
         </p>
 
-        <Card className="p-6 mb-6 border-neon-green/40 shadow-[0_0_30px_rgba(0,255,65,0.1)]">
-          <div className="text-xl font-bold mb-4 text-neon-green/80 uppercase tracking-widest border-b border-neon-green/20 pb-2">
+        <Card className="p-4 sm:p-6 mb-6 border-neon-green/40 shadow-[0_0_30px_rgba(0,255,65,0.1)]">
+          <div className="text-base sm:text-lg md:text-xl font-bold mb-4 text-neon-green/80 uppercase tracking-widest border-b border-neon-green/20 pb-2">
             Protocol Unlock Time
           </div>
-          <div className="text-2xl font-bold mb-6 text-white font-mono">
+          <div className="text-lg sm:text-xl md:text-2xl font-bold mb-6 text-white font-mono break-words">
             {new Date(status.unlockTime).toLocaleString()}
           </div>
 
           <div className="text-xs text-neon-green/50 mb-2 uppercase tracking-abovet">Time Remaining</div>
           {timeLeft > 0 ? (
-            <div className="text-4xl font-mono pulse-glow text-neon-green tabular-nums">
+            <div className="text-2xl sm:text-3xl md:text-4xl font-mono pulse-glow text-neon-green tabular-nums">
               <DecryptedText
                 text={formatTimeLeft(timeLeft)}
                 speed={0}

@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-12-22
+
 ### Added
+
+- Mobile-responsive UI across all pages
+- Responsive typography with Tailwind breakpoints (sm/md/lg)
+- Adaptive padding and spacing for mobile devices
 - Professional test suite with Jest, Playwright, and Testing Library
 - Unit tests for crypto library (key generation, encryption/decryption)
 - Integration tests for API endpoints (seal creation, status checks)
@@ -32,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Database schema (schema.sql) for D1
 
 ### Refactoring
+
 - Service layer abstraction (SealService) for business logic
 - Database abstraction layer with factory pattern
 - API handler abstraction with composable middleware
@@ -42,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ARCHITECTURE.md documenting design patterns
 
 ### Implemented
+
 - ✅ Rate limiting integrated into API routes (10-20 req/min)
 - ✅ Cryptographically random seal IDs (16-byte)
 - ✅ R2 Object Lock metadata configuration
@@ -49,6 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✅ Metrics and health check endpoints
 
 ### Fixed
+
 - Tailwind border color definition added
 - Crypto tests now test actual encryption/decryption functions
 - Mock storage separated from production code
@@ -56,6 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - E2E tests fixed with proper fixtures
 
 ### Security
+
 - keyB now encrypted before database storage
 - Master key derived from environment secrets
 - Audit logging for all seal operations
@@ -63,6 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Input validation prevents malicious uploads
 
 ### Known Issues
+
 - No rate limiting on API endpoints (implementation ready, needs deployment)
 - No authentication required for seal access
 - Key A visible in browser history via URL hash
@@ -70,9 +81,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - R2 Object Lock integration incomplete
 - Playwright E2E tests need debugging
 
-## [0.1.0] - 2024-01-XX
+## [0.1.0] - 2025-12-15
 
 ### Added
+
 - Initial release of Time-Seal
 - Cryptographically enforced time-locked vault system
 - Split-key architecture (Key A + Key B)
@@ -88,11 +100,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Private pulse links for DMS resets
 
 ### Security
+
 - Zero-trust architecture
 - Client-side encryption
 - Server cannot decrypt without user's Key A
 - Immutable storage prevents early access
 - No single point of failure
 
-[Unreleased]: https://github.com/teycir/timeseal/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/teycir/timeseal/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/teycir/timeseal/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/teycir/timeseal/releases/tag/v0.1.0

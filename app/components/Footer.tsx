@@ -3,7 +3,7 @@
 export function Footer() {
   return (
     <footer className="fixed bottom-0 left-0 right-0 p-4 bg-dark-bg/90 backdrop-blur-sm border-t border-neon-green/10 z-50">
-      <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-neon-green/50 font-mono">
+      <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-neon-green/50 font-mono px-2">
         <div className="flex items-center gap-2 flex-wrap justify-center">
           <span className="text-neon-green/70">Built with 💚 and 🔒 by <a href="https://teycirbensoltane.tn" target="_blank" rel="noopener noreferrer" className="hover:text-neon-green transition-colors underline">Teycir Ben Soltane</a></span>
           <span>•</span>

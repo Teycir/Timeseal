@@ -259,8 +259,8 @@ export default function HomePage() {
             animate={{ opacity: 1, scale: 1 }}
             className="text-center"
           >
-            <h1 className="text-4xl font-bold glow-text mb-4">SEAL CREATED</h1>
-            <p className="text-neon-green/70">Your message is now cryptographically locked</p>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold glow-text mb-4 px-2">SEAL CREATED</h1>
+            <p className="text-neon-green/70 text-sm sm:text-base px-4">Your message is now cryptographically locked</p>
           </motion.div>
 
           <Card className="space-y-6">
@@ -346,7 +346,7 @@ export default function HomePage() {
           <motion.h1
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-5xl font-bold glow-text mb-4"
+            className="text-4xl sm:text-5xl md:text-6xl font-bold glow-text mb-4 px-2"
           >
             <DecryptedText
               text="TIME-SEAL"
@@ -361,7 +361,7 @@ export default function HomePage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="text-xl text-neon-green/70 mb-2"
+            className="text-base sm:text-lg md:text-xl text-neon-green/70 mb-2 px-4"
           >
             <TextScramble className="text-neon-green/90 tracking-widest font-bold">
               The Unbreakable Protocol

@@ -16,18 +16,18 @@ export default function HowItWorksPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <h1 className="text-5xl font-bold glow-text mb-4">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold glow-text mb-4 px-2">
             <DecryptedText text="HOW IT WORKS" animateOn="view" className="text-neon-green" speed={75} maxIterations={20} />
           </h1>
-          <p className="text-neon-green/70">Zero-Trust • Edge-Native • Unbreakable</p>
+          <p className="text-neon-green/70 text-sm sm:text-base px-4">Zero-Trust • Edge-Native • Unbreakable</p>
         </motion.div>
 
-        <Card className="p-8 space-y-6">
+        <Card className="p-4 sm:p-6 md:p-8 space-y-6">
           <div>
-            <h2 className="text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
               <Lock className="w-6 h-6" /> Layer 1: The Vault (R2 Object Lock)
             </h2>
-            <p className="text-neon-green/80 mb-2">Immutable Storage</p>
+            <p className="text-neon-green/80 mb-2 text-sm sm:text-base">Immutable Storage</p>
             <p className="text-neon-green/60 text-sm leading-relaxed">
               Files are stored in Cloudflare R2 with WORM Compliance (Write Once, Read Many).
               This prevents deletion—even by the admin—until the unlock time expires.
@@ -35,10 +35,10 @@ export default function HowItWorksPage() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
               <Handshake className="w-6 h-6" /> Layer 2: The Handshake (Split-Key Crypto)
             </h2>
-            <p className="text-neon-green/80 mb-2">Trust-Minimized</p>
+            <p className="text-neon-green/80 mb-2 text-sm sm:text-base">Trust-Minimized</p>
             <p className="text-neon-green/60 text-sm leading-relaxed mb-3">
               We use a Split-Key architecture to ensure no single party can decrypt the data early:
             </p>
@@ -50,10 +50,10 @@ export default function HowItWorksPage() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
               <Activity className="w-6 h-6" /> Layer 3: The Pulse (Dead Man&apos;s Switch)
             </h2>
-            <p className="text-neon-green/80 mb-2">Automated Release</p>
+            <p className="text-neon-green/80 mb-2 text-sm sm:text-base">Automated Release</p>
             <p className="text-neon-green/60 text-sm leading-relaxed">
               If used as a Dead Man&apos;s Switch, the user must click a private &quot;Pulse Link&quot; periodically.
               If they fail to check in, the seal unlocks automatically for the recipient.
@@ -61,8 +61,8 @@ export default function HowItWorksPage() {
           </div>
         </Card>
 
-        <Card className="p-8 space-y-4">
-          <h2 className="text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
+        <Card className="p-4 sm:p-6 md:p-8 space-y-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
             <ShieldCheck className="w-6 h-6" /> Encryption Standards
           </h2>
           <ul className="text-neon-green/60 text-sm space-y-2">
@@ -74,8 +74,8 @@ export default function HowItWorksPage() {
           </ul>
         </Card>
 
-        <Card className="p-8 space-y-4">
-          <h2 className="text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
+        <Card className="p-4 sm:p-6 md:p-8 space-y-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
             <ClipboardList className="w-6 h-6" /> What Happens After Creation
           </h2>
           <div className="space-y-4 text-neon-green/60 text-sm">

@@ -113,13 +113,13 @@ function PulsePageClient() {
             animate={{ opacity: 1, y: 0 }}
           >
             <div className="text-6xl mb-4 animate-pulse">💓</div>
-            <h1 className="text-3xl font-bold glow-text mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold glow-text mb-2 px-2">
               <DecryptedText text="DEAD MAN'S SWITCH" animateOn="view" className="text-neon-green" />
             </h1>
-            <p className="text-neon-green/70 mb-8">Enter your pulse token to manage your seal.</p>
+            <p className="text-neon-green/70 mb-8 text-sm sm:text-base px-4">Enter your pulse token to manage your seal.</p>
           </motion.div>
 
-          <Card className="p-6 border-neon-green/30">
+          <Card className="p-4 sm:p-6 border-neon-green/30">
             <label htmlFor="pulse-token-input" className="block text-sm mb-2 text-neon-green/80 font-bold">PULSE TOKEN</label>
             <input
               id="pulse-token-input"
@@ -147,7 +147,7 @@ function PulsePageClient() {
         <BackgroundBeams className="absolute top-0 left-0 w-full h-full z-0" />
         <div className="max-w-md w-full relative z-10 text-center">
           <div className="text-6xl mb-4">🔥</div>
-          <h1 className="text-3xl font-bold glow-text mb-4 text-red-500">BURN SEAL?</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold glow-text mb-4 text-red-500 px-2">BURN SEAL?</h1>
 
           <Card className="mb-8 border-red-500/30">
             <p className="text-red-400/90 mb-4">
@@ -183,10 +183,10 @@ function PulsePageClient() {
           >
             ✅
           </motion.div>
-          <h1 className="text-3xl font-bold glow-text mb-4">
+          <h1 className="text-2xl sm:text-3xl font-bold glow-text mb-4 px-2">
             <DecryptedText text="PULSE CONFIRMED" animateOn="view" className="text-neon-green" />
           </h1>
-          <Card className="border-neon-green/40">
+          <Card className="border-neon-green/40 p-4 sm:p-6">
             <p className="text-neon-green/70">
               Your seal remains locked. Next pulse needed in <span className="text-neon-green font-mono font-bold">{formatTimeShort(pulseDuration)}</span>.
             </p>
@@ -201,14 +201,14 @@ function PulsePageClient() {
       <BackgroundBeams className="absolute top-0 left-0 w-full h-full z-0" />
       <div className="max-w-md w-full relative z-10 text-center">
         <div className={`text-6xl mb-4 ${isUrgent ? 'animate-pulse' : ''}`}>💓</div>
-        <h1 className="text-3xl font-bold glow-text mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold glow-text mb-6 px-2">
           <DecryptedText text="DEAD MAN'S SWITCH" animateOn="view" className="text-neon-green" />
         </h1>
 
         {timeRemaining > 0 && (
           <Card className={`mb-8 ${isUrgent ? 'border-red-500/50 shadow-[0_0_20px_rgba(255,0,0,0.2)]' : ''}`}>
             <p className="text-xs text-neon-green/50 mb-2 uppercase tracking-widest">TIME UNTIL AUTO-UNLOCK</p>
-            <div className={`text-5xl font-mono mb-2 ${isUrgent ? 'text-red-500 pulse-glow' : 'text-neon-green pulse-glow'}`}>
+            <div className={`text-3xl sm:text-4xl md:text-5xl font-mono mb-2 ${isUrgent ? 'text-red-500 pulse-glow' : 'text-neon-green pulse-glow'}`}>
               {formatTimeShort(timeRemaining)}
             </div>
             {isUrgent && (

@@ -16,14 +16,14 @@ export default function SecurityPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <h1 className="text-5xl font-bold glow-text mb-4">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold glow-text mb-4 px-2">
             <DecryptedText text="SECURITY" animateOn="view" className="text-neon-green" speed={75} maxIterations={20} />
           </h1>
-          <p className="text-neon-green/70">Cryptographically Enforced at the Edge</p>
+          <p className="text-neon-green/70 text-sm sm:text-base px-4">Cryptographically Enforced at the Edge</p>
         </motion.div>
 
-        <Card className="p-8 space-y-6">
-          <h2 className="text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
+        <Card className="p-4 sm:p-6 md:p-8 space-y-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
             <Lock className="w-6 h-6" /> Encryption Implementation
           </h2>
           <div className="space-y-4 text-neon-green/60 text-sm">
@@ -42,8 +42,8 @@ export default function SecurityPage() {
           </div>
         </Card>
 
-        <Card className="p-8 space-y-6">
-          <h2 className="text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
+        <Card className="p-4 sm:p-6 md:p-8 space-y-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
             <Server className="w-6 h-6" /> Infrastructure Security
           </h2>
           <div className="space-y-4 text-neon-green/60 text-sm">
@@ -66,8 +66,8 @@ export default function SecurityPage() {
           </div>
         </Card>
 
-        <Card className="p-8 space-y-6">
-          <h2 className="text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
+        <Card className="p-4 sm:p-6 md:p-8 space-y-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
             <ShieldCheck className="w-6 h-6" /> Security Guarantees
           </h2>
           <div className="space-y-4 text-neon-green/60 text-sm">
@@ -90,8 +90,8 @@ export default function SecurityPage() {
           </div>
         </Card>
 
-        <Card className="p-8 space-y-6">
-          <h2 className="text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
+        <Card className="p-4 sm:p-6 md:p-8 space-y-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
             <AlertTriangle className="w-6 h-6" /> Threat Model
           </h2>
           <div className="space-y-4 text-neon-green/60 text-sm">
@@ -116,8 +116,8 @@ export default function SecurityPage() {
           </div>
         </Card>
 
-        <Card className="p-8 space-y-4 border-neon-green/40">
-          <h2 className="text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
+        <Card className="p-4 sm:p-6 md:p-8 space-y-4 border-neon-green/40">
+          <h2 className="text-xl sm:text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
             <BookOpen className="w-6 h-6" /> Open Source
           </h2>
           <p className="text-neon-green/60 text-sm">
