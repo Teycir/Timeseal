@@ -34,7 +34,8 @@ export function validateOrigin(request: Request): boolean {
   const allowedOrigins = [
     process.env.NEXT_PUBLIC_APP_URL,
     'http://localhost:3000',
-    'http://127.0.0.1:3000'
+    'http://127.0.0.1:3000',
+    'https://timeseal.teycir-932.workers.dev'
   ].filter(Boolean);
   return allowedOrigins.some(allowed => origin.startsWith(allowed as string));
 }
@@ -139,7 +140,8 @@ export function validateCSRF(request: Request): boolean {
   const allowedOrigins = [
     process.env.NEXT_PUBLIC_APP_URL,
     'http://localhost:3000',
-    'http://127.0.0.1:3000'
+    'http://127.0.0.1:3000',
+    'https://timeseal.teycir-932.workers.dev'
   ].filter(Boolean);
   
   return allowedOrigins.some(allowed => 

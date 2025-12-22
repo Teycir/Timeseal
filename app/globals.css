@@ -124,17 +124,17 @@ body {
 
 /* Cyber Button */
 .cyber-button {
-  @apply px-6 py-3 border-2 border-neon-green text-neon-green font-bold uppercase tracking-wider transition-all duration-300 hover:bg-neon-green hover:text-dark-bg hover:shadow-[0_0_20px_rgba(0,255,65,0.5)] active:scale-95 rounded-lg;
+  @apply px-6 py-3 border-2 border-neon-green text-neon-green font-bold uppercase tracking-wider transition-all duration-300 hover:bg-neon-green hover:text-dark-bg hover:shadow-[0_0_20px_rgba(0,255,65,0.5)] active:scale-95 rounded-xl;
 }
 
 /* Cyber Input */
 .cyber-input {
-  @apply w-full px-4 py-3 bg-dark-bg border-2 border-neon-green/30 text-neon-green font-mono focus:border-neon-green focus:outline-none focus:shadow-[0_0_15px_rgba(0,255,65,0.3)] transition-all rounded-lg;
+  @apply w-full px-4 py-3 bg-dark-bg border-2 border-neon-green/30 text-neon-green font-mono focus:border-neon-green focus:outline-none focus:shadow-[0_0_15px_rgba(0,255,65,0.3)] transition-all rounded-xl;
 }
 
 /* Cyber Border */
 .cyber-border {
-  @apply border-2 border-neon-green/30 p-4 transition-all hover:border-neon-green/50 rounded-lg;
+  @apply border-2 border-neon-green/30 p-4 transition-all hover:border-neon-green/50 rounded-xl;
 }
 
 /* Cyber Card */

@@ -28,10 +28,10 @@ export function Card({ children, className = '', title }: Readonly<CardProps>) {
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 1, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ y: -4, transition: { duration: 0.2 } }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.3 }}
             onMouseMove={handleMouseMove}
             onMouseEnter={handleMouseEnter}
             className={`cyber-card p-6 group relative ${className}`}

@@ -41,7 +41,7 @@ export function CommandPalette() {
                         <Command.Input
                             autoFocus
                             placeholder="Type a command or search..."
-                            className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-neon-green/40 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="flex h-11 w-full rounded-xl bg-transparent py-3 text-sm outline-none placeholder:text-neon-green/40 disabled:cursor-not-allowed disabled:opacity-50"
                         />
                     </div>
 
@@ -93,7 +93,7 @@ function CommandItem({ children, onSelect }: { children: React.ReactNode, onSele
     return (
         <Command.Item
             onSelect={onSelect}
-            className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-2.5 text-sm outline-none data-[selected=true]:bg-neon-green/10 data-[selected=true]:text-neon-green transition-colors"
+            className="relative flex cursor-pointer select-none items-center rounded-xl px-2 py-2.5 text-sm outline-none data-[selected=true]:bg-neon-green/10 data-[selected=true]:text-neon-green transition-colors"
         >
             {children}
         </Command.Item>

@@ -419,10 +419,10 @@ export default function HomePage() {
       
       {/* GitHub Source Code Link */}
       <motion.a
-        href="https://github.com/teycir/timeseal"
+        href="https://github.com/teycir/timeseal#readme"
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-2 bg-dark-bg/80 backdrop-blur-sm border-2 border-neon-green/30 rounded-lg hover:border-neon-green transition-all group"
+        className="fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-2 bg-dark-bg/80 backdrop-blur-sm border-2 border-neon-green/30 rounded-xl hover:border-neon-green transition-all group"
         whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(0, 255, 65, 0.3)' }}
         whileTap={{ scale: 0.95 }}
       >
@@ -578,9 +578,7 @@ export default function HomePage() {
                   />
                 </h1>
                 <AnimatedTagline text='"If I go silent, this speaks for me."' />
-                <p className="text-xs text-neon-green/30 max-w-md mx-auto">
-                  Encrypt messages that unlock at a future date or after inactivity
-                </p>
+                <p className="text-xs text-neon-green/30 max-w-md mx-auto">Encrypt messages that unlock at a future date or after inactivity</p>
               </motion.div>
 
               <Card className="space-y-6">
@@ -635,7 +633,7 @@ export default function HomePage() {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="Enter your secret message..."
-                    className="cyber-input w-full h-24 resize-none font-mono mb-2"
+                    className="cyber-input w-full h-24 resize-none font-mono mb-2 placeholder:text-neon-green/40"
                     disabled={!!file}
                   />
 
@@ -694,7 +692,7 @@ export default function HomePage() {
                       <span className="tooltip-text">Timed Release: unlocks at specific date. Dead Man&apos;s Switch: unlocks if you don&apos;t check in</span>
                     </div>
                   </div>
-                  <div className="flex space-x-4 bg-dark-bg/30 p-1 rounded-lg border border-neon-green/10">
+                  <div className="flex space-x-4 bg-dark-bg/30 p-1 rounded-xl border border-neon-green/10">
                     <button
                       onClick={() => setSealType('timed')}
                       className={`flex-1 py-2 rounded text-sm font-bold transition-all tooltip ${sealType === 'timed'
@@ -736,6 +734,7 @@ export default function HomePage() {
                           onChange={(e) => setUnlockDate(e.target.value)}
                           min={new Date().toISOString().slice(0, 16)}
                           className="cyber-input w-full"
+                          lang="en-US"
                         />
                       </motion.div>
                     ) : (
@@ -766,7 +765,7 @@ export default function HomePage() {
                               max="90"
                               value={pulseDays}
                               onChange={(e) => setPulseDays(Number.parseInt(e.target.value))}
-                              className="w-full h-2 bg-dark-bg rounded-lg appearance-none cursor-pointer accent-neon-green"
+                              className="w-full h-2 bg-dark-bg rounded-xl appearance-none cursor-pointer accent-neon-green"
                               aria-label="Pulse Days Slider"
                             />
                           </div>
@@ -779,36 +778,38 @@ export default function HomePage() {
                   </AnimatePresence>
                 </div>
 
-                <div className="flex justify-center pt-2">
-                  <div className="w-full tooltip">
-                    <span className="tooltip-text">Complete this security check to prove you&apos;re human</span>
-                    <Turnstile
-                      siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'}
-                      onSuccess={setTurnstileToken}
-                      onError={() => toast.error('Security verification failed. Please refresh.')}
-                      options={{ theme: 'dark', size: 'flexible', appearance: 'interaction-only' }}
-                      className="w-full"
-                    />
+                <div className="flex justify-center pt-6">
+                  <div className="tooltip">
+                    <span className="tooltip-text">
+                      {isCreating ? 'Encrypting your data with AES-256...' :
+                       !message.trim() && !file ? 'Enter a message or upload a file first' :
+                       sealType === 'timed' && !unlockDate ? 'Select an unlock date and time' :
+                       !turnstileToken ? 'Complete security check below' :
+                       'Click to create your encrypted time-locked seal'}
+                    </span>
+                    <Button
+                      onClick={handleCreateSeal}
+                      disabled={isCreating || (!message.trim() && !file) || (sealType === 'timed' && !unlockDate) || !turnstileToken}
+                      className="text-lg shadow-[0_0_20px_rgba(0,255,65,0.2)]"
+                    >
+                      {isCreating ? 'ENCRYPTING & SEALING...' : 'CREATE TIME-SEAL'}
+                    </Button>
                   </div>
                 </div>
-
-                <div className="tooltip">
-                  <span className="tooltip-text">
-                    {isCreating ? 'Encrypting your data with AES-256...' :
-                     !message.trim() && !file ? 'Enter a message or upload a file first' :
-                     sealType === 'timed' && !unlockDate ? 'Select an unlock date and time' :
-                     !turnstileToken ? 'Complete security check above' :
-                     'Click to create your encrypted time-locked seal'}
-                  </span>
-                  <Button
-                    onClick={handleCreateSeal}
-                    disabled={isCreating || (!message.trim() && !file) || (sealType === 'timed' && !unlockDate) || !turnstileToken}
-                    className="w-full text-lg shadow-[0_0_20px_rgba(0,255,65,0.2)]"
-                  >
-                    {isCreating ? 'ENCRYPTING & SEALING...' : 'CREATE TIME-SEAL'}
-                  </Button>
-                </div>
               </Card>
+
+              <div className="flex justify-center mt-6">
+                <div className="tooltip">
+                  <span className="tooltip-text">Complete this security check to prove you&apos;re human</span>
+                  <Turnstile
+                    siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'}
+                    onSuccess={setTurnstileToken}
+                    onError={() => toast.error('Security verification failed. Please refresh.')}
+                    options={{ theme: 'dark', size: 'flexible', appearance: 'interaction-only' }}
+                    className="w-full"
+                  />
+                </div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
