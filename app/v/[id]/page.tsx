@@ -8,6 +8,7 @@ import DecryptedText from '../../components/DecryptedText';
 import { BackgroundBeams } from '../../components/ui/background-beams';
 import { Card } from '../../components/Card';
 import { toast } from 'sonner';
+import { Lock, AlertTriangle, Hourglass, Copy, Download } from 'lucide-react';
 
 interface SealStatus {
   id: string;
@@ -40,6 +41,28 @@ function VaultPageClient({ id }: { id: string }) {
       setError('Client integrity verification failed');
     });
   }, []);
+
+  const copyVaultLink = async () => {
+    try {
+      const fullUrl = globalThis.window.location.href;
+      await navigator.clipboard.writeText(fullUrl);
+      toast.success('Vault link copied to clipboard');
+    } catch {
+      toast.error('Failed to copy link');
+    }
+  };
+
+  const downloadContent = () => {
+    if (!decryptedContent) return;
+    const blob = new Blob([decryptedContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `timeseal-${id}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('Content downloaded');
+  };
 
   const decryptMessage = useCallback(async (keyB: string, iv: string) => {
     try {
@@ -137,12 +160,19 @@ function VaultPageClient({ id }: { id: string }) {
     return `${seconds}s`;
   };
 
+  const calculateProgress = () => {
+    if (!status?.unlockTime) return 0;
+    const total = status.unlockTime - (status.unlockTime - (status.timeRemaining || 0));
+    const elapsed = total - (status.timeRemaining || 0);
+    return Math.min(100, Math.max(0, (elapsed / total) * 100));
+  };
+
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 relative w-full overflow-x-hidden pb-32">
         <BackgroundBeams className="absolute top-0 left-0 w-full h-full z-0" />
         <div className="max-w-md w-full text-center relative z-10">
-          <div className="text-6xl mb-6">⚠️</div>
+          <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-6" />
           <h1 className="text-2xl sm:text-3xl font-bold mb-4 glow-text text-red-500 px-2">VAULT ERROR</h1>
           <Card className="mb-8 border-red-500/30">
             <p className="text-red-400/90 font-mono">{error}</p>
@@ -160,7 +190,7 @@ function VaultPageClient({ id }: { id: string }) {
       <div className="min-h-screen flex items-center justify-center relative w-full overflow-hidden">
         <BackgroundBeams className="absolute top-0 left-0 w-full h-full z-0" />
         <div className="text-center relative z-10">
-          <div className="animate-spin text-4xl mb-4 text-neon-green">⏳</div>
+          <Hourglass className="w-12 h-12 text-neon-green mx-auto mb-4 animate-spin" />
           <p className="text-neon-green/70 font-mono tracking-widest">
             <DecryptedText text="LOADING VAULT..." speed={30} maxIterations={10} />
           </p>
@@ -197,6 +227,23 @@ function VaultPageClient({ id }: { id: string }) {
             </div>
           </Card>
 
+          <div className="flex flex-col sm:flex-row gap-4 mb-8">
+            <button
+              onClick={downloadContent}
+              className="cyber-button flex items-center justify-center gap-2 flex-1"
+            >
+              <Download className="w-4 h-4" />
+              DOWNLOAD CONTENT
+            </button>
+            <button
+              onClick={copyVaultLink}
+              className="cyber-button flex items-center justify-center gap-2 flex-1 bg-neon-green/10"
+            >
+              <Copy className="w-4 h-4" />
+              COPY LINK
+            </button>
+          </div>
+
           <div className="text-center">
             <a href="/" className="cyber-button text-sm sm:text-base md:text-lg px-4 sm:px-6 md:px-8 py-3 sm:py-4">
               CREATE YOUR OWN TIME-SEAL
@@ -223,10 +270,7 @@ function VaultPageClient({ id }: { id: string }) {
           }}
           className="mb-6 flex justify-center"
         >
-          <svg className="w-16 h-16 text-neon-green" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2C9.243 2 7 4.243 7 7v3H6c-1.103 0-2 .897-2 2v8c0 1.103.897 2 2 2h12c1.103 0 2-.897 2-2v-8c0-1.103-.897-2-2-2h-1V7c0-2.757-2.243-5-5-5zM9 7c0-1.654 1.346-3 3-3s3 1.346 3 3v3H9V7zm9 13H6v-8h12v8z" />
-            <circle cx="12" cy="16" r="1.5" />
-          </svg>
+          <Lock className="w-16 h-16 text-neon-green" />
         </motion.div>
 
         <h1 className="text-3xl sm:text-4xl font-bold glow-text mb-3 px-2">
@@ -246,21 +290,40 @@ function VaultPageClient({ id }: { id: string }) {
 
           <div className="text-xs text-neon-green/50 mb-2 uppercase tracking-abovet">Time Remaining</div>
           {timeLeft > 0 ? (
-            <div className="text-2xl sm:text-3xl md:text-4xl font-mono pulse-glow text-neon-green tabular-nums">
-              <DecryptedText
-                text={formatTimeLeft(timeLeft)}
-                speed={0}
-                maxIterations={0}
-                sequential={true}
-                className="text-shadow-[0_0_10px_rgba(0,255,65,0.5)]"
-              />
-            </div>
+            <>
+              <div className="text-2xl sm:text-3xl md:text-4xl font-mono pulse-glow text-neon-green tabular-nums mb-4">
+                <DecryptedText
+                  text={formatTimeLeft(timeLeft)}
+                  speed={0}
+                  maxIterations={0}
+                  sequential={true}
+                  className="text-shadow-[0_0_10px_rgba(0,255,65,0.5)]"
+                />
+              </div>
+              <div className="w-full bg-black/50 rounded-full h-2 overflow-hidden border border-neon-green/20">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-neon-green/50 to-neon-green rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${calculateProgress()}%` }}
+                  transition={{ duration: 0.5 }}
+                />
+              </div>
+              <p className="text-xs text-neon-green/40 mt-2">{calculateProgress().toFixed(1)}% complete</p>
+            </>
           ) : (
             <div className="text-xl text-neon-green animate-pulse">Decrypting...</div>
           )}
         </Card>
 
         <div className="space-y-4">
+          <button
+            onClick={copyVaultLink}
+            className="cyber-button inline-flex items-center justify-center gap-2 bg-neon-green/10 hover:bg-neon-green/20"
+          >
+            <Copy className="w-4 h-4" />
+            COPY VAULT LINK
+          </button>
+
           <p className="text-xs text-neon-green/40 max-w-xs mx-auto leading-relaxed">
             <span className="block mb-1">SECURITY LEVEL: MAXIMUM</span>
             This vault uses split-key encryption and WORM storage.

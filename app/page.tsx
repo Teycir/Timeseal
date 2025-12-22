@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { encryptData } from '@/lib/crypto';
 import { ensureIntegrity } from '@/lib/clientIntegrity';
 import { usePWA } from '@/lib/usePWA';
@@ -20,7 +20,7 @@ import DecryptedText from './components/DecryptedText';
 import { TextScramble } from './components/TextScramble';
 import { BackgroundBeams } from './components/ui/background-beams';
 
-import { Bitcoin, ShieldAlert, Rocket, Gift, Scale } from 'lucide-react';
+import { Bitcoin, ShieldAlert, Rocket, Gift, Scale, Paperclip, FileText, Trash2, AlertTriangle, Download } from 'lucide-react';
 
 interface Template {
   name: string;
@@ -84,14 +84,50 @@ export default function HomePage() {
     receipt?: any;
   } | null>(null);
 
+  const publicUrlRef = useRef<HTMLInputElement>(null);
+  const pulseTokenRef = useRef<HTMLInputElement>(null);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyboard = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + K for copy public URL
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k' && result?.publicUrl) {
+        e.preventDefault();
+        copyToClipboard(result.publicUrl, 'Link');
+      }
+      // Ctrl/Cmd + Shift + K for copy pulse token
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'K' && result?.pulseToken) {
+        e.preventDefault();
+        copyToClipboard(result.pulseToken, 'Token');
+      }
+    };
+    window.addEventListener('keydown', handleKeyboard);
+    return () => window.removeEventListener('keydown', handleKeyboard);
+  }, [result]);
+
   // Use a ref for file input fallback (kept even if dropzone exists for accessibility/fallback)
 
   // Dropzone hook
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  };
+
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles?.length > 0) {
-      setFile(acceptedFiles[0]);
+      const selectedFile = acceptedFiles[0];
+      const maxSize = 750 * 1024;
+      if (selectedFile.size > maxSize) {
+        toast.error(`File too large: ${formatFileSize(selectedFile.size)} (max 750KB)`);
+        return;
+      }
+      if (selectedFile.size > maxSize * 0.9) {
+        toast.warning(`File size: ${formatFileSize(selectedFile.size)} (approaching 750KB limit)`);
+      }
+      setFile(selectedFile);
       setMessage('');
-      toast.success(`Selected file: ${acceptedFiles[0].name}`);
+      toast.success(`Selected: ${selectedFile.name} (${formatFileSize(selectedFile.size)})`);
     }
   }, []);
 
@@ -131,7 +167,7 @@ export default function HomePage() {
     if (globalThis.window !== undefined) {
       const params = new URLSearchParams(globalThis.window.location.search);
       if (params.get('burned') === 'true') {
-        toast.error('🔥 Seal burned successfully. Content permanently destroyed.');
+        toast.error('Seal burned successfully. Content permanently destroyed.');
         globalThis.window.history.replaceState({}, '', '/');
       }
     }
@@ -186,12 +222,23 @@ export default function HomePage() {
     // Validate content
     if (!message.trim() && !file) {
       toast.error('Please enter a message or upload a file');
+      // Add error animation
+      const textarea = document.getElementById('message-input');
+      if (textarea) {
+        textarea.classList.add('input-error');
+        setTimeout(() => textarea.classList.remove('input-error'), 500);
+      }
       return;
     }
 
     // Validate message length (D1 limit: 750KB)
     if (message.trim() && message.length > 750000) {
       toast.error('Message too large (max 750KB)');
+      const textarea = document.getElementById('message-input');
+      if (textarea) {
+        textarea.classList.add('input-error');
+        setTimeout(() => textarea.classList.remove('input-error'), 500);
+      }
       return;
     }
 
@@ -205,6 +252,11 @@ export default function HomePage() {
     if (sealType === 'timed') {
       if (!unlockDate) {
         toast.error('Please select an unlock date and time');
+        const dateInput = document.querySelector('input[type="datetime-local"]');
+        if (dateInput) {
+          dateInput.classList.add('input-error');
+          setTimeout(() => dateInput.classList.remove('input-error'), 500);
+        }
         return;
       }
 
@@ -238,6 +290,11 @@ export default function HomePage() {
     if (sealType === 'deadman') {
       if (pulseDays < 1 || pulseDays > 90) {
         toast.error('Pulse interval must be between 1 and 90 days');
+        const pulseInput = document.getElementById('pulse-days');
+        if (pulseInput) {
+          pulseInput.classList.add('input-error');
+          setTimeout(() => pulseInput.classList.remove('input-error'), 500);
+        }
         return;
       }
     }
@@ -323,25 +380,28 @@ export default function HomePage() {
 
           <Card className="space-y-6">
             {qrCode && (
-              <div className="flex justify-center">
+              <div className="qr-print-container">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={qrCode} alt="QR Code" className="border-2 border-neon-green/30 rounded" />
+                <p className="qr-print-label print-only hidden">TimeSeal Vault - Scan to Access</p>
               </div>
             )}
 
             <div>
               <div className="flex gap-2 items-end">
-                <div className="flex-1">
+                <div className="flex-1 tooltip">
                   <Input
                     label="PUBLIC VAULT LINK"
                     value={result.publicUrl}
                     onChange={() => { }}
                     testId="public-url-input"
                   />
+                  <span className="tooltip-text">Share this link with anyone. Contains Key A in URL hash (never sent to server). Press Ctrl+K to copy.</span>
                 </div>
                 <Button
                   onClick={() => copyToClipboard(result.publicUrl, 'Link')}
                   className="bg-neon-green/20 mb-[2px]"
+                  title="Copy link (Ctrl+K)"
                 >
                   COPY
                 </Button>
@@ -353,17 +413,19 @@ export default function HomePage() {
             {result.pulseUrl && result.pulseToken && (
               <div>
                 <div className="flex gap-2 items-end">
-                  <div className="flex-1">
+                  <div className="flex-1 tooltip">
                     <Input
                       label="PULSE TOKEN (KEEP SECRET)"
                       value={result.pulseToken}
                       onChange={() => { }}
                       testId="pulse-token-input"
                     />
+                    <span className="tooltip-text">PRIVATE token for Dead Man's Switch. Visit pulse page every {pulseDays} days. Press Ctrl+Shift+K to copy.</span>
                   </div>
                   <Button
                     onClick={() => copyToClipboard(result.pulseToken!, 'Token')}
                     className="bg-neon-green/20 mb-[2px]"
+                    title="Copy token (Ctrl+Shift+K)"
                   >
                     COPY
                   </Button>
@@ -387,9 +449,10 @@ export default function HomePage() {
                     URL.revokeObjectURL(url);
                     toast.success('Receipt downloaded');
                   }}
-                  className="w-full bg-neon-green/10"
+                  className="w-full bg-neon-green/10 flex items-center justify-center gap-2"
                 >
-                  📄 DOWNLOAD CRYPTOGRAPHIC RECEIPT
+                  <Download className="w-4 h-4" />
+                  DOWNLOAD CRYPTOGRAPHIC RECEIPT
                 </Button>
                 <p className="text-xs text-neon-green/50 mt-2 text-center">
                   Proof of seal creation with HMAC signature
@@ -485,7 +548,10 @@ export default function HomePage() {
 
           <div>
             {/* Text Area */}
-            <label htmlFor="message-input" className="block text-sm mb-2 text-neon-green/80">MESSAGE OR FILE</label>
+            <label htmlFor="message-input" className="block text-sm mb-2 text-neon-green/80 tooltip">
+              MESSAGE OR FILE
+              <span className="tooltip-text">Enter text message or upload a file (max 750KB). Only one can be used at a time.</span>
+            </label>
             <textarea
               id="message-input"
               value={message}
@@ -504,16 +570,23 @@ export default function HomePage() {
               <input {...getInputProps()} />
               {file ? (
                 <div className="flex items-center justify-between">
-                  <span className="text-neon-green font-mono">📎 {file.name}</span>
+                  <div className="flex flex-col items-start gap-1">
+                    <div className="flex items-center gap-2">
+                      <Paperclip className="w-4 h-4 text-neon-green" />
+                      <span className="text-neon-green font-mono">{file.name}</span>
+                    </div>
+                    <span className="text-xs text-neon-green/50 font-mono ml-6">{formatFileSize(file.size)}</span>
+                  </div>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setFile(null);
                       toast.info('File removed');
                     }}
-                    className="text-red-500 hover:text-red-400 font-bold px-2"
+                    className="text-red-500 hover:text-red-400 transition-colors p-2"
+                    title="Remove file"
                   >
-                    REMOVE
+                    <Trash2 className="w-5 h-5" />
                   </button>
                 </div>
               ) : (
@@ -522,8 +595,13 @@ export default function HomePage() {
                     <p className="text-neon-green animate-pulse">DROP FILES HERE...</p>
                   ) : (
                     <>
+                      <FileText className="w-8 h-8 text-neon-green/50 mx-auto mb-2" />
                       <p className="text-neon-green/70">DRAG & DROP FILE HERE</p>
                       <p className="text-xs text-neon-green/40">OR CLICK TO SELECT</p>
+                      <div className="flex items-center justify-center gap-1 mt-2">
+                        <AlertTriangle className="w-3 h-3 text-neon-green/30" />
+                        <p className="text-xs text-neon-green/30">Max size: 750KB</p>
+                      </div>
                     </>
                   )}
                 </div>
@@ -562,7 +640,10 @@ export default function HomePage() {
                   exit={{ opacity: 0, height: 0 }}
                   className="relative z-50"
                 >
-                  <div className="block text-sm mb-2 text-neon-green/80 font-bold">UNLOCK DATE & TIME</div>
+                  <div className="block text-sm mb-2 text-neon-green/80 font-bold tooltip">
+                    UNLOCK DATE & TIME
+                    <span className="tooltip-text">Select when the seal will automatically unlock. Must be at least 1 minute in the future.</span>
+                  </div>
                   <input
                     type="datetime-local"
                     value={unlockDate}
@@ -578,7 +659,10 @@ export default function HomePage() {
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
                 >
-                  <label htmlFor="pulse-days" className="block text-sm mb-2 text-neon-green/80">PULSE INTERVAL (DAYS)</label>
+                  <label htmlFor="pulse-days" className="block text-sm mb-2 text-neon-green/80 tooltip">
+                    PULSE INTERVAL (DAYS)
+                    <span className="tooltip-text">How often you must "pulse" to keep the seal locked. If you miss a pulse, the seal unlocks automatically.</span>
+                  </label>
                   <div className="flex gap-4 items-center">
                     <input
                       id="pulse-days"

@@ -9,6 +9,7 @@ import { formatTimeShort, fetchJSON } from '@/lib/clientUtils';
 import { TIME_CONSTANTS } from '@/lib/constants';
 import DecryptedText from '@/app/components/DecryptedText';
 import { BackgroundBeams } from '@/app/components/ui/background-beams';
+import { Heart, Flame, CheckCircle, AlertTriangle } from 'lucide-react';
 
 export default function PulsePage() {
   return <PulsePageClient />;
@@ -112,7 +113,7 @@ function PulsePageClient() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <div className="text-6xl mb-4 animate-pulse">💓</div>
+            <Heart className="w-16 h-16 text-neon-green mx-auto mb-4 animate-pulse" />
             <h1 className="text-2xl sm:text-3xl font-bold glow-text mb-2 px-2">
               <DecryptedText text="DEAD MAN'S SWITCH" animateOn="view" className="text-neon-green" />
             </h1>
@@ -146,20 +147,31 @@ function PulsePageClient() {
       <div className="min-h-screen flex items-center justify-center p-4 relative w-full overflow-x-hidden pb-32">
         <BackgroundBeams className="absolute top-0 left-0 w-full h-full z-0" />
         <div className="max-w-md w-full relative z-10 text-center">
-          <div className="text-6xl mb-4">🔥</div>
-          <h1 className="text-2xl sm:text-3xl font-bold glow-text mb-4 text-red-500 px-2">BURN SEAL?</h1>
+          <Flame className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h1 className="text-2xl sm:text-3xl font-bold glow-text mb-4 text-red-500 px-2">CONFIRM BURN</h1>
 
-          <Card className="mb-8 border-red-500/30">
-            <p className="text-red-400/90 mb-4">
-              This will <span className="font-bold underline">permanently destroy</span> the seal.
-              The encrypted content will be unrecoverable.
-            </p>
-            <p className="text-red-500 font-bold uppercase text-sm">This action cannot be undone.</p>
+          <Card className="mb-8 border-red-500/30 bg-red-950/10">
+            <div className="flex items-start gap-3 mb-4">
+              <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div className="text-left">
+                <p className="font-bold text-red-500 mb-2">WARNING: IRREVERSIBLE ACTION</p>
+                <p className="text-red-400/90 mb-4">
+                  This will <span className="font-bold underline">permanently destroy</span> the seal and all encrypted content.
+                </p>
+              </div>
+            </div>
+            <ul className="text-left text-red-400/80 text-sm space-y-2 mb-4">
+              <li>• Encrypted data will be deleted from the database</li>
+              <li>• The vault link will become invalid</li>
+              <li>• Content cannot be recovered by anyone</li>
+            </ul>
+            <p className="text-red-500 font-bold uppercase text-sm border-t border-red-500/30 pt-4">This action cannot be undone.</p>
           </Card>
 
           <div className="space-y-4">
-            <Button onClick={handleBurn} disabled={isBurning} variant="danger" className="w-full shadow-[0_0_20px_rgba(255,0,0,0.3)]">
-              {isBurning ? 'BURNING...' : '🔥 YES, BURN IT'}
+            <Button onClick={handleBurn} disabled={isBurning} variant="danger" className="w-full shadow-[0_0_20px_rgba(255,0,0,0.3)] flex items-center justify-center gap-2">
+              <Flame className="w-4 h-4" />
+              {isBurning ? 'BURNING...' : 'YES, BURN IT PERMANENTLY'}
             </Button>
             <Button onClick={() => setShowBurnConfirm(false)} className="w-full border-neon-green/30 hover:bg-neon-green/10">
               CANCEL
@@ -179,9 +191,8 @@ function PulsePageClient() {
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="text-6xl mb-4"
           >
-            ✅
+            <CheckCircle className="w-16 h-16 text-neon-green mx-auto mb-4" />
           </motion.div>
           <h1 className="text-2xl sm:text-3xl font-bold glow-text mb-4 px-2">
             <DecryptedText text="PULSE CONFIRMED" animateOn="view" className="text-neon-green" />
@@ -200,7 +211,7 @@ function PulsePageClient() {
     <div className="min-h-screen flex items-center justify-center p-4 relative w-full overflow-hidden">
       <BackgroundBeams className="absolute top-0 left-0 w-full h-full z-0" />
       <div className="max-w-md w-full relative z-10 text-center">
-        <div className={`text-6xl mb-4 ${isUrgent ? 'animate-pulse' : ''}`}>💓</div>
+        <Heart className={`w-16 h-16 mx-auto mb-4 ${isUrgent ? 'text-red-500 animate-pulse' : 'text-neon-green'}`} />
         <h1 className="text-2xl sm:text-3xl font-bold glow-text mb-6 px-2">
           <DecryptedText text="DEAD MAN'S SWITCH" animateOn="view" className="text-neon-green" />
         </h1>
@@ -212,7 +223,10 @@ function PulsePageClient() {
               {formatTimeShort(timeRemaining)}
             </div>
             {isUrgent && (
-              <p className="text-red-500 text-sm font-bold animate-pulse">⚠️ URGENT: PULSE REQUIRED</p>
+              <div className="flex items-center justify-center gap-2 text-red-500 text-sm font-bold animate-pulse">
+                <AlertTriangle className="w-4 h-4" />
+                <p>URGENT: PULSE REQUIRED</p>
+              </div>
             )}
           </Card>
         )}
@@ -224,17 +238,19 @@ function PulsePageClient() {
         <Button
           onClick={handlePulse}
           disabled={isPulsing}
-          className="w-full text-xl py-6 mb-4 shadow-[0_0_20px_rgba(0,255,65,0.3)] hover:shadow-[0_0_40px_rgba(0,255,65,0.5)]"
+          className="w-full text-xl py-6 mb-4 shadow-[0_0_20px_rgba(0,255,65,0.3)] hover:shadow-[0_0_40px_rgba(0,255,65,0.5)] flex items-center justify-center gap-2"
         >
-          {isPulsing ? 'PULSING...' : '💓 SEND PULSE'}
+          <Heart className="w-5 h-5" />
+          {isPulsing ? 'PULSING...' : 'SEND PULSE'}
         </Button>
 
         <Button
           onClick={() => setShowBurnConfirm(true)}
           variant="danger"
-          className="w-full text-sm opacity-80 hover:opacity-100"
+          className="w-full text-sm opacity-80 hover:opacity-100 flex items-center justify-center gap-2"
         >
-          🔥 BURN SEAL (PERMANENT)
+          <Flame className="w-4 h-4" />
+          BURN SEAL (PERMANENT)
         </Button>
 
         {error && <ErrorMessage message={error} />}

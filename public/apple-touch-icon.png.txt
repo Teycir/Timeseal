@@ -1,0 +1,2 @@
+# This is a placeholder. In production, generate a 180x180 PNG from favicon.svg
+# Use: convert favicon.svg -resize 180x180 apple-touch-icon.png

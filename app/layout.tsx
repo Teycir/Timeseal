@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     default: 'TimeSeal - Cryptographic Time-Locked Vault & Dead Man\'s Switch',
     template: '%s | TimeSeal'
   },
-  description: 'Secure time-locked encryption vault with dead man\'s switch. Encrypt messages and files that unlock automatically at a future date or after inactivity. Built on Cloudflare edge with AES-GCM encryption.',
+  description: 'Create cryptographically enforced time-locked vaults and dead man\'s switches. Encrypt messages that unlock automatically at a future date or after inactivity. Zero-trust, edge-native AES-GCM encryption on Cloudflare Workers.',
   keywords: [
     'time-locked encryption',
     'dead man\'s switch',
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: 'https://timeseal.dev',
     title: 'TimeSeal - Cryptographic Time-Locked Vault & Dead Man\'s Switch',
-    description: 'Secure time-locked encryption vault. Encrypt messages that unlock automatically at a future date or after inactivity. Zero-trust, edge-native encryption.',
+    description: 'Create cryptographically enforced time-locked vaults. Encrypt messages that unlock automatically at a future date or after inactivity. Zero-trust, edge-native encryption with split-key architecture.',
     siteName: 'TimeSeal',
     images: [{
       url: '/og-image.png',
@@ -69,15 +69,23 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'TimeSeal - Cryptographic Time-Locked Vault',
-    description: 'Secure time-locked encryption vault with dead man\'s switch. Zero-trust, edge-native encryption.',
+    description: 'Create cryptographically enforced time-locked vaults with dead man\'s switch. Zero-trust, edge-native AES-GCM encryption.',
     images: ['/og-image.png'],
   },
   alternates: {
     canonical: 'https://timeseal.dev',
   },
   icons: {
-    icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔒</text></svg>',
-    apple: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔒</text></svg>'
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: '32x32' }
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }
+    ],
+    other: [
+      { rel: 'mask-icon', url: '/favicon.svg', color: '#00ff41' }
+    ]
   },
   manifest: '/manifest.json',
 }

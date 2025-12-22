@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Lock } from 'lucide-react';
 
 export function IdleBlur() {
     const [isIdle, setIsIdle] = useState(false);
@@ -59,9 +60,9 @@ export function IdleBlur() {
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ delay: 0.2 }}
-                            className="text-neon-green/50 text-6xl"
+                            className="flex justify-center"
                         >
-                            🔒
+                            <Lock className="w-16 h-16 text-neon-green/50" />
                         </motion.div>
                         <motion.p
                             initial={{ opacity: 0 }}

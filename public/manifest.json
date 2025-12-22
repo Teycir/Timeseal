@@ -1,21 +1,25 @@
 {
   "name": "TimeSeal - Cryptographic Time-Locked Vault",
   "short_name": "TimeSeal",
-  "description": "Secure time-locked encryption vault with dead man's switch",
+  "description": "Create cryptographically enforced time-locked vaults and dead man's switches. Zero-trust, edge-native encryption.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",
   "theme_color": "#00ff41",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔒</text></svg>",
-      "sizes": "192x192",
-      "type": "image/svg+xml"
-    },
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["security", "utilities", "productivity"],
+  "screenshots": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔒</text></svg>",
-      "sizes": "512x512",
-      "type": "image/svg+xml"
+      "src": "/explainerimage.png",
+      "sizes": "1200x630",
+      "type": "image/png"
     }
   ]
 }

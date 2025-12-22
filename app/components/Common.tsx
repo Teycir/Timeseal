@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { Hourglass } from 'lucide-react';
 
 export function ErrorMessage({ message }: { message: string }) {
   return (
@@ -18,7 +19,7 @@ export function LoadingSpinner({ text = 'Loading...' }: { text?: string }) {
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
-        <div className="animate-spin text-4xl mb-4">⏳</div>
+        <Hourglass className="w-12 h-12 text-neon-green mx-auto mb-4 animate-spin" />
         <p className="text-neon-green/70">{text}</p>
       </div>
     </div>
@@ -44,13 +45,13 @@ export function PageHeader({
   title, 
   subtitle 
 }: { 
-  icon: string; 
+  icon: React.ReactNode; 
   title: string; 
   subtitle?: string;
 }) {
   return (
     <div className="text-center mb-8">
-      <div className="text-6xl mb-4">{icon}</div>
+      <div className="flex justify-center mb-4">{icon}</div>
       <h1 className="text-3xl font-bold glow-text mb-4">{title}</h1>
       {subtitle && <p className="text-neon-green/70">{subtitle}</p>}
     </div>
