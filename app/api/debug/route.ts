@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 
 export async function GET() {

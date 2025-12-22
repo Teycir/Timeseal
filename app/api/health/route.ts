@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { jsonResponse } from '@/lib/apiHandler';
 import { r2CircuitBreaker } from '@/lib/circuitBreaker';
