@@ -207,19 +207,19 @@ function VaultPageClient({ id }: { id: string }) {
             repeat: Infinity,
             repeatType: "reverse"
           }}
-          className="text-8xl mb-8 filter drop-shadow-[0_0_15px_rgba(0,255,65,0.3)]"
+          className="text-6xl mb-6 filter drop-shadow-[0_0_15px_rgba(0,255,65,0.3)]"
         >
           🔒
         </motion.div>
 
-        <h1 className="text-5xl font-bold glow-text mb-4">
+        <h1 className="text-4xl font-bold glow-text mb-3">
           <DecryptedText text="VAULT SEALED" animateOn="view" className="text-neon-green" />
         </h1>
-        <p className="text-neon-green/70 mb-8">
+        <p className="text-neon-green/70 mb-6">
           This message is cryptographically locked until:
         </p>
 
-        <Card className="p-8 mb-8 border-neon-green/40 shadow-[0_0_30px_rgba(0,255,65,0.1)]">
+        <Card className="p-6 mb-6 border-neon-green/40 shadow-[0_0_30px_rgba(0,255,65,0.1)]">
           <div className="text-xl font-bold mb-4 text-neon-green/80 uppercase tracking-widest border-b border-neon-green/20 pb-2">
             Protocol Unlock Time
           </div>
@@ -243,7 +243,7 @@ function VaultPageClient({ id }: { id: string }) {
           )}
         </Card>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           <p className="text-xs text-neon-green/40 max-w-xs mx-auto leading-relaxed">
             <span className="block mb-1">SECURITY LEVEL: MAXIMUM</span>
             This vault uses split-key encryption and WORM storage.
