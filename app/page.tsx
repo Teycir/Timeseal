@@ -80,6 +80,7 @@ export default function HomePage() {
     publicUrl: string;
     pulseUrl?: string;
     pulseToken?: string;
+    receipt?: any;
   } | null>(null);
 
   // Use a ref for file input fallback (kept even if dropzone exists for accessibility/fallback)
@@ -262,7 +263,7 @@ export default function HomePage() {
         body: formData,
       });
 
-      const data = await response.json() as { success: boolean; publicUrl: string; pulseToken?: string; error?: string };
+      const data = await response.json() as { success: boolean; publicUrl: string; pulseToken?: string; receipt?: any; error?: string };
 
       if (data.success) {
         const origin = globalThis.window ? globalThis.window.location.origin : '';
@@ -273,6 +274,7 @@ export default function HomePage() {
           publicUrl,
           pulseUrl: data.pulseToken ? `${origin}/pulse` : undefined,
           pulseToken: data.pulseToken,
+          receipt: data.receipt,
         });
         toast.dismiss(loadingToast);
         toast.success('Seal created successfully!');
@@ -352,6 +354,29 @@ export default function HomePage() {
                 </div>
                 <p className="text-xs text-neon-green/50 mt-1">
                   Visit {result.pulseUrl} and enter this token every {pulseDays} days.
+                </p>
+              </div>
+            )}
+
+            {result.receipt && (
+              <div className="border-t border-neon-green/20 pt-4">
+                <Button
+                  onClick={() => {
+                    const blob = new Blob([JSON.stringify(result.receipt, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `timeseal-receipt-${result.receipt.sealId}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    toast.success('Receipt downloaded');
+                  }}
+                  className="w-full bg-neon-green/10"
+                >
+                  📄 DOWNLOAD CRYPTOGRAPHIC RECEIPT
+                </Button>
+                <p className="text-xs text-neon-green/50 mt-2 text-center">
+                  Proof of seal creation with HMAC signature
                 </p>
               </div>
             )}
