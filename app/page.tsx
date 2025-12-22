@@ -158,9 +158,69 @@ export default function HomePage() {
   };
 
   const handleCreateSeal = async () => {
-    if ((!message.trim() && !file) || !turnstileToken) {
-      toast.error('Please complete the security check and valid input');
+    // Validate Turnstile
+    if (!turnstileToken) {
+      toast.error('Please complete the security check');
       return;
+    }
+
+    // Validate content
+    if (!message.trim() && !file) {
+      toast.error('Please enter a message or upload a file');
+      return;
+    }
+
+    // Validate message length
+    if (message.trim() && message.length > 1000000) {
+      toast.error('Message too large (max 1MB)');
+      return;
+    }
+
+    // Validate file size
+    if (file && file.size > 25 * 1024 * 1024) {
+      toast.error('File too large (max 25MB)');
+      return;
+    }
+
+    // Validate date for timed release
+    if (sealType === 'timed') {
+      if (!unlockDate) {
+        toast.error('Please select an unlock date and time');
+        return;
+      }
+
+      const selectedTime = new Date(unlockDate).getTime();
+      const now = Date.now();
+      const minTime = now + 60000;
+      const maxTime = now + (20 * 365 * 24 * 60 * 60 * 1000);
+
+      if (Number.isNaN(selectedTime)) {
+        toast.error('Invalid date format');
+        return;
+      }
+
+      if (selectedTime <= now) {
+        toast.error('Unlock time cannot be in the past or now');
+        return;
+      }
+
+      if (selectedTime < minTime) {
+        toast.error('Unlock time must be at least 1 minute in the future');
+        return;
+      }
+
+      if (selectedTime > maxTime) {
+        toast.error('Unlock time cannot be more than 20 years in the future');
+        return;
+      }
+    }
+
+    // Validate pulse interval for dead man's switch
+    if (sealType === 'deadman') {
+      if (pulseDays < 1 || pulseDays > 90) {
+        toast.error('Pulse interval must be between 1 and 90 days');
+        return;
+      }
     }
 
     setIsCreating(true);
@@ -176,30 +236,10 @@ export default function HomePage() {
       let pulseDuration: number | undefined;
 
       if (sealType === 'timed') {
-        if (!unlockDate) {
-          toast.dismiss(loadingToast);
-          toast.error('Please select a valid future date');
-          return;
-        }
         unlockTime = new Date(unlockDate).getTime();
-
-        const minTime = Date.now() + 60000; // 1 minute from now
-        if (Number.isNaN(unlockTime) || unlockTime <= minTime) {
-          toast.dismiss(loadingToast);
-          toast.error('Unlock time must be at least 1 minute in the future');
-          return;
-        }
       } else {
         // Dead man's switch
         pulseDuration = pulseDays * 24 * 60 * 60 * 1000;
-
-        // Validate pulse interval
-        if (pulseDays < 1 || pulseDays > 90) {
-          toast.dismiss(loadingToast);
-          toast.error('Pulse interval must be between 1 and 90 days');
-          return;
-        }
-
         unlockTime = Date.now() + pulseDuration;
         pulseToken = crypto.randomUUID();
       }
