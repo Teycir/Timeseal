@@ -2,7 +2,7 @@
 
 ![License](https://img.shields.io/badge/license-BSL-neon_green?style=for-the-badge)
 ![Encryption](https://img.shields.io/badge/Encryption-AES--GCM-neon_green?style=for-the-badge)
-![Storage](https://img.shields.io/badge/Storage-R2_Object_Lock-neon_green?style=for-the-badge)
+![Storage](https://img.shields.io/badge/Storage-D1_Database-neon_green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Operational-neon_green?style=for-the-badge)
 
 # ⏳ TIME-SEAL
@@ -35,9 +35,9 @@
   <h3>Zero-Trust • Edge-Native • Unbreakable</h3>
 </div>
 
-### 🔒 Layer 1: The Vault (R2 Object Lock)
-> **Immutable Storage**
-Files are stored in Cloudflare R2 with **WORM Compliance** (Write Once, Read Many). This prevents deletion—even by the admin—until the unlock time expires.
+### 🔒 Layer 1: The Vault (D1 Database Storage)
+> **Encrypted Storage**
+Files are stored encrypted in Cloudflare D1 database. The encrypted blobs are stored alongside metadata, with cryptographic enforcement preventing early access.
 
 ### 🤝 Layer 2: The Handshake (Split-Key Crypto)
 > **Trust-Minimized**
@@ -60,15 +60,13 @@ sequenceDiagram
     participant Browser
     participant API
     participant D1_DB
-    participant R2_Storage
 
     Note over User, Browser: Phase A: Sealing
     User->>Browser: Enters Secret + Time
     Browser->>Browser: Generate Key A + Key B
     Browser->>Browser: Encrypt Secret (Key A + Key B)
     Browser->>API: Send EncryptedBlob + Key B + Time
-    API->>R2_Storage: Upload Blob (Object Lock)
-    API->>D1_DB: Store Key B + Time
+    API->>D1_DB: Store Blob + Key B + Time
     API-->>Browser: Return Seal ID
     Browser-->>User: Show Link (#KeyA)
 
@@ -157,7 +155,7 @@ sequenceDiagram
 *   **Frontend:** `Next.js 14` (App Router)
 *   **Runtime:** `Cloudflare Workers`
 *   **Database:** `Cloudflare D1` (SQLite)
-*   **Storage:** `Cloudflare R2` (Object Lock)
+*   **Storage:** `Cloudflare D1` (Encrypted Blobs)
 *   **Crypto:** `Web Crypto API` (Native AES-GCM)
 *   **Styling:** `Tailwind CSS` (Cipher-punk Theme)
 

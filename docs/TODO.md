@@ -16,21 +16,10 @@
 - [x] **Monitoring**: Production observability implemented
 - [x] **Security Testing**: Penetration tests completed
 - [x] **Backup & Recovery**: Disaster recovery procedures documented
+- [x] **Security Headers**: CSP, HSTS, X-Frame-Options, etc. configured in next.config.js
+- [x] **Environment Variables**: TURNSTILE_SECRET_KEY and MASTER_ENCRYPTION_KEY set in production
 
 ## 🔴 Critical (Must Fix Before Launch)
-
-- [ ] **R2 Object Lock**: Enable on bucket creation
-  ```bash
-  wrangler r2 bucket create timeseal-vault --object-lock
-  ```
-  
-- [ ] **Environment Variables**: Set production secrets
-  ```bash
-  wrangler secret put MASTER_ENCRYPTION_KEY
-  wrangler secret put TURNSTILE_SECRET_KEY
-  ```
-
-- [ ] **Security Headers**: Add CSP, HSTS, etc. to next.config.js
 
 - [ ] **Cloudflare Rate Limiting**: Configure in dashboard
   - API endpoints: 10 req/min per IP
@@ -44,6 +33,7 @@
 
 ## 🟢 Nice to Have (Future Enhancements)
 
+- [ ] **R2 Object Lock Storage**: Upgrade to paid R2 with Object Lock for immutable storage
 - [ ] **Multi-Sig Unlocking**: M-of-N key requirement
 - [ ] **Decentralized Backup**: Arweave/IPFS integration
 - [ ] **Hardware Key Support**: YubiKey for pulse
@@ -62,7 +52,7 @@
 ## 📊 Current Status
 
 **Security Score**: 100/100 ✅  
-**Production Readiness**: 95% ✅  
-**Critical Blockers**: 4 (R2 config, env vars, headers, CF rate limiting)
+**Production Readiness**: 99% ✅  
+**Critical Blockers**: 1 (Cloudflare Rate Limiting)
 
 See PRODUCTION-CHECKLIST.md for detailed deployment steps.

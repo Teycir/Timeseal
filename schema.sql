@@ -1,4 +1,4 @@
--- TimeSeal Database Schema (without hmac)
+-- TimeSeal Database Schema
 CREATE TABLE IF NOT EXISTS seals (
   id TEXT PRIMARY KEY,
   unlock_time INTEGER NOT NULL,
@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS seals (
   last_pulse INTEGER,
   key_b TEXT NOT NULL,
   iv TEXT NOT NULL,
+  encrypted_blob TEXT,
   pulse_token TEXT,
   created_at INTEGER NOT NULL
 );
