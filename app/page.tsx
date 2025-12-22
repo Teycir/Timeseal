@@ -14,7 +14,7 @@ const Turnstile = dynamic(() => import('@marsidev/react-turnstile').then(mod => 
 import { Card } from './components/Card';
 import { Button } from './components/Button';
 import { Input } from './components/Input';
-import { ShareButtons } from './components/ShareButtons';
+
 import DecryptedText from './components/DecryptedText';
 import { TextScramble } from './components/TextScramble';
 import { BackgroundBeams } from './components/ui/background-beams';
@@ -288,12 +288,8 @@ export default function HomePage() {
                   COPY
                 </Button>
               </div>
-              <p className="text-xs text-neon-green/50 mt-1">
-                Share this link. It contains Key A in the URL hash.
-              </p>
-              <div className="mt-3">
-                <ShareButtons url={result.publicUrl} text="🔒 I created a time-locked vault with TimeSeal!" />
-              </div>
+
+
             </div>
 
             {result.pulseUrl && result.pulseToken && (
@@ -342,9 +338,9 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative w-full overflow-x-hidden pb-12">
+    <div className="min-h-screen flex flex-col items-center py-12 p-4 relative w-full overflow-x-hidden">
       <BackgroundBeams className="absolute top-0 left-0 w-full h-full z-0" />
-      <div className="max-w-2xl w-full space-y-4 relative z-10">
+      <div className="max-w-2xl w-full space-y-4 relative z-10 my-auto">
 
         <div className="text-center">
           <motion.h1
