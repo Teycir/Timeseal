@@ -91,6 +91,93 @@ export default function SecurityPage() {
 
         <Card className="p-4 sm:p-6 md:p-8 space-y-6">
           <h2 className="text-xl sm:text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
+            <ShieldCheck className="w-6 h-6" /> Security Features (v0.6.2)
+          </h2>
+          <div className="space-y-4 text-neon-green/60 text-sm">
+            <div>
+              <p className="text-neon-green font-bold mb-2 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Replay Attack Prevention</p>
+              <p>Nonce-first validation prevents concurrent token reuse. Database-backed nonce storage ensures replay detection across all worker instances.</p>
+            </div>
+            <div>
+              <p className="text-neon-green font-bold mb-2 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Atomic Database Updates</p>
+              <p>All-or-nothing pulse updates prevent inconsistent state. Single SQL operation ensures both timestamp and unlock time update together.</p>
+            </div>
+            <div>
+              <p className="text-neon-green font-bold mb-2 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Strict Token Validation</p>
+              <p>Format validation rejects malformed pulse tokens before processing. Seal ID, timestamp, nonce, and signature all validated with regex.</p>
+            </div>
+            <div>
+              <p className="text-neon-green font-bold mb-2 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Safe Deletion Order</p>
+              <p>Database-first deletion prevents data loss. If blob deletion fails, seal record is already gone (acceptable orphan).</p>
+            </div>
+            <div>
+              <p className="text-neon-green font-bold mb-2 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Collision-Resistant Fingerprinting</p>
+              <p>SHA-256 hashed fingerprints for rate limiting. Combines IP + User-Agent + Accept-Language without truncation.</p>
+            </div>
+            <div>
+              <p className="text-neon-green font-bold mb-2 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Memory Leak Protection</p>
+              <p>Automatic cleanup of concurrent request tracker at 10K entries. Zero-count entries removed first.</p>
+            </div>
+            <div>
+              <p className="text-neon-green font-bold mb-2 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Accurate Access Metrics</p>
+              <p>Only counts successful unlocks, not locked checks. Provides accurate usage analytics.</p>
+            </div>
+            <div>
+              <p className="text-neon-green font-bold mb-2 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> File Size Enforcement</p>
+              <p>750KB limit enforced at all layers: UI validation, API validation, and database storage.</p>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-4 sm:p-6 md:p-8 space-y-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
+            <ShieldCheck className="w-6 h-6" /> Defense Layers
+          </h2>
+          <div className="space-y-4 text-neon-green/60 text-sm">
+            <div className="border-l-2 border-neon-green/30 pl-4">
+              <p className="text-neon-green font-bold mb-2">Layer 1: Cryptographic Defenses</p>
+              <ul className="list-disc list-inside ml-4 space-y-1 text-xs">
+                <li>AES-GCM-256 encryption (client + server)</li>
+                <li>Split-key architecture (Key A never leaves browser)</li>
+                <li>HMAC-signed pulse tokens with nonce replay protection</li>
+                <li>Master key encryption for Key B storage</li>
+                <li>SHA-256 blob hashing for integrity verification</li>
+              </ul>
+            </div>
+            <div className="border-l-2 border-neon-green/30 pl-4">
+              <p className="text-neon-green font-bold mb-2">Layer 2: Time-Lock Enforcement</p>
+              <ul className="list-disc list-inside ml-4 space-y-1 text-xs">
+                <li>Server-side time validation (client clock irrelevant)</li>
+                <li>Cloudflare NTP-synchronized timestamps</li>
+                <li>Atomic database operations prevent race conditions</li>
+                <li>Random jitter (0-100ms) prevents timing attacks</li>
+              </ul>
+            </div>
+            <div className="border-l-2 border-neon-green/30 pl-4">
+              <p className="text-neon-green font-bold mb-2">Layer 3: Access Control</p>
+              <ul className="list-disc list-inside ml-4 space-y-1 text-xs">
+                <li>Rate limiting with SHA-256 fingerprinting</li>
+                <li>Database-backed nonce storage (replay detection)</li>
+                <li>Cloudflare Turnstile bot protection</li>
+                <li>Concurrent request limiting (5 per IP)</li>
+                <li>Strict input validation and sanitization</li>
+              </ul>
+            </div>
+            <div className="border-l-2 border-neon-green/30 pl-4">
+              <p className="text-neon-green font-bold mb-2">Layer 4: Operational Security</p>
+              <ul className="list-disc list-inside ml-4 space-y-1 text-xs">
+                <li>Immutable audit logging (all access tracked)</li>
+                <li>Transaction rollback on failures</li>
+                <li>Circuit breakers with retry logic</li>
+                <li>Error sanitization (no internal state leakage)</li>
+                <li>Warrant canary for transparency</li>
+              </ul>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-4 sm:p-6 md:p-8 space-y-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
             <ShieldCheck className="w-6 h-6" /> Security Guarantees
           </h2>
           <div className="space-y-4 text-neon-green/60 text-sm">

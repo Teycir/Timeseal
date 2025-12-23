@@ -7,6 +7,8 @@ export interface DatabaseProvider {
   getSealByPulseToken(token: string): Promise<SealRecord | null>;
   updatePulse(id: string, timestamp: number): Promise<void>;
   updateUnlockTime(id: string, unlockTime: number): Promise<void>;
+  updatePulseAndUnlockTime(id: string, lastPulse: number, unlockTime: number): Promise<void>;
+  incrementAccessCount(id: string): Promise<void>;
   deleteSeal(id: string): Promise<void>;
   getExpiredDMS(): Promise<SealRecord[]>;
   checkRateLimit(key: string, limit: number, window: number): Promise<{ allowed: boolean; remaining: number }>;
@@ -77,13 +79,18 @@ export class SealDatabase implements DatabaseProvider {
   }
 
   async getSeal(id: string): Promise<SealRecord | null> {
-    // Use RETURNING clause for atomic update (SQLite 3.35+)
     const result = await this.db.prepare(
-      'UPDATE seals SET access_count = access_count + 1 WHERE id = ? RETURNING *'
+      'SELECT * FROM seals WHERE id = ?'
     ).bind(id).first();
 
     if (!result) return null;
     return this.mapResultToSealRecord(result);
+  }
+
+  async incrementAccessCount(id: string): Promise<void> {
+    await this.db.prepare(
+      'UPDATE seals SET access_count = access_count + 1 WHERE id = ?'
+    ).bind(id).run();
   }
 
   async updatePulse(id: string, timestamp: number): Promise<void> {
@@ -103,6 +110,16 @@ export class SealDatabase implements DatabaseProvider {
 
     if (!result.success) {
       throw new Error('Failed to update unlock time');
+    }
+  }
+
+  async updatePulseAndUnlockTime(id: string, lastPulse: number, unlockTime: number): Promise<void> {
+    const result = await this.db.prepare(
+      'UPDATE seals SET last_pulse = ?, unlock_time = ? WHERE id = ?'
+    ).bind(lastPulse, unlockTime, id).run();
+
+    if (!result.success) {
+      throw new Error('Failed to update pulse and unlock time');
     }
   }
 
@@ -214,13 +231,15 @@ export class MockDatabase implements DatabaseProvider {
   }
 
   async getSeal(id: string): Promise<SealRecord | null> {
+    return this.store.getSeals().get(id) || null;
+  }
+
+  async incrementAccessCount(id: string): Promise<void> {
     const seal = this.store.getSeals().get(id);
     if (seal) {
-      // Increment access count to match production behavior
       seal.accessCount = (seal.accessCount || 0) + 1;
       this.store.getSeals().set(id, seal);
     }
-    return seal || null;
   }
 
   async updatePulse(id: string, timestamp: number): Promise<void> {
@@ -237,6 +256,16 @@ export class MockDatabase implements DatabaseProvider {
     if (!seal) {
       throw new Error(`Failed to update unlock time for seal ${id}`);
     }
+    seal.unlockTime = unlockTime;
+    this.store.getSeals().set(id, seal);
+  }
+
+  async updatePulseAndUnlockTime(id: string, lastPulse: number, unlockTime: number): Promise<void> {
+    const seal = this.store.getSeals().get(id);
+    if (!seal) {
+      throw new Error(`Failed to update pulse and unlock time for seal ${id}`);
+    }
+    seal.lastPulse = lastPulse;
     seal.unlockTime = unlockTime;
     this.store.getSeals().set(id, seal);
   }

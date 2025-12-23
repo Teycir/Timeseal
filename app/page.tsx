@@ -144,13 +144,13 @@ export default function HomePage() {
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles?.length > 0) {
       const selectedFile = acceptedFiles[0];
-      const maxSize = 5 * 1024 * 1024; // 5MB
+      const maxSize = 750 * 1024; // 750KB
       if (selectedFile.size > maxSize) {
-        toast.error(`File too large: ${formatFileSize(selectedFile.size)} (max 5MB)`);
+        toast.error(`File too large: ${formatFileSize(selectedFile.size)} (max 750KB)`);
         return;
       }
       if (selectedFile.size > maxSize * 0.9) {
-        toast.warning(`File size: ${formatFileSize(selectedFile.size)} (approaching 5MB limit)`);
+        toast.warning(`File size: ${formatFileSize(selectedFile.size)} (approaching 750KB limit)`);
       }
       setFile(selectedFile);
       setMessage(''); // Clear message when file is selected
@@ -161,7 +161,7 @@ export default function HomePage() {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     multiple: false,
-    maxSize: 5 * 1024 * 1024, // 5MB hard limit
+    maxSize: 750 * 1024, // 750KB hard limit
   });
 
   // Confetti effect
@@ -262,9 +262,9 @@ export default function HomePage() {
       return;
     }
 
-    // Validate message length (D1 limit: 5MB)
-    if (message.trim() && message.length > 5000000) {
-      toast.error('Message too large (max 5MB)');
+    // Validate message length (D1 limit: 750KB)
+    if (message.trim() && message.length > 750000) {
+      toast.error('Message too large (max 750KB)');
       const textarea = document.getElementById('message-input');
       if (textarea) {
         textarea.classList.add('input-error');
@@ -273,9 +273,9 @@ export default function HomePage() {
       return;
     }
 
-    // Validate file size (D1 limit: 5MB)
-    if (file && file.size > 5 * 1024 * 1024) {
-      toast.error('File too large (max 5MB)');
+    // Validate file size (D1 limit: 750KB)
+    if (file && file.size > 750 * 1024) {
+      toast.error('File too large (max 750KB)');
       return;
     }
 
@@ -345,8 +345,8 @@ export default function HomePage() {
       // Validate combined size if both message and file
       if (message.trim() && file) {
         const combinedSize = message.length + file.size;
-        if (combinedSize > 5 * 1024 * 1024) {
-          toast.error(`Combined size too large: ${formatFileSize(combinedSize)} (max 5MB)`);
+        if (combinedSize > 750 * 1024) {
+          toast.error(`Combined size too large: ${formatFileSize(combinedSize)} (max 750KB)`);
           toast.dismiss(loadingToast);
           setIsCreating(false);
           return;
@@ -677,7 +677,7 @@ export default function HomePage() {
                   {/* Text Area */}
                   <label htmlFor="message-input" className="block text-sm mb-2 text-neon-green/80 tooltip">
                     MESSAGE OR FILE
-                    <span className="tooltip-text">Enter text message or upload a file (max 5MB). File takes priority if both provided.</span>
+                    <span className="tooltip-text">Enter text message or upload a file (max 750KB). File takes priority if both provided.</span>
                   </label>
                   <textarea
                     id="message-input"
@@ -726,7 +726,7 @@ export default function HomePage() {
                             <p className="text-xs text-neon-green/40">OR CLICK TO SELECT</p>
                             <div className="flex items-center justify-center gap-1 mt-2">
                               <AlertTriangle className="w-3 h-3 text-neon-green/30" />
-                              <p className="text-xs text-neon-green/30">Max size: 5MB</p>
+                              <p className="text-xs text-neon-green/30">Max size: 750KB</p>
                             </div>
                           </>
                         )}

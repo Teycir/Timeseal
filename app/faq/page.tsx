@@ -24,7 +24,24 @@ export default function FAQPage() {
         <Card className="p-4 sm:p-6 md:p-8 space-y-6">
           <div>
             <h3 className="text-base sm:text-lg font-bold text-neon-green mb-2">What is the maximum file size?</h3>
-            <p className="text-neon-green/60 text-sm">750 KB per seal (D1 database limit with base64 encoding).</p>
+            <p className="text-neon-green/60 text-sm">750KB per seal (D1 database limit with base64 encoding overhead).</p>
+          </div>
+
+          <div>
+            <h3 className="text-base sm:text-lg font-bold text-neon-green mb-2">How does Time-Seal prevent early access?</h3>
+            <p className="text-neon-green/60 text-sm mb-2">Split-key architecture: Your browser generates Key A (stays in URL hash) and Key B (sent to server). Both keys required for decryption. Server refuses to release Key B until unlock time.</p>
+            <p className="text-neon-green/60 text-sm">Server-side time validation using Cloudflare NTP-synchronized timestamps. Your local clock is irrelevant.</p>
+          </div>
+
+          <div>
+            <h3 className="text-base sm:text-lg font-bold text-neon-green mb-2">How do I create a seal?</h3>
+            <p className="text-neon-green/60 text-sm mb-2"><strong className="text-neon-green">Timed Release:</strong> Enter message/file, select "Timed Release", choose unlock date (up to 30 days), complete security check, save vault link.</p>
+            <p className="text-neon-green/60 text-sm"><strong className="text-neon-green">Dead Man&apos;s Switch:</strong> Same as above but select "Dead Man&apos;s Switch", set pulse interval, save both vault link (public) and pulse link (private).</p>
+          </div>
+
+          <div>
+            <h3 className="text-base sm:text-lg font-bold text-neon-green mb-2">How does Dead Man&apos;s Switch work?</h3>
+            <p className="text-neon-green/60 text-sm">Set pulse interval (e.g., 7 days). Visit private pulse link before interval expires to reset timer. If you miss a pulse, seal auto-unlocks for recipient. Use pulse link to "burn" seal permanently.</p>
           </div>
 
           <div>

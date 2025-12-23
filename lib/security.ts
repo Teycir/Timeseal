@@ -42,8 +42,14 @@ export function validateOrigin(request: Request): boolean {
 
 class ConcurrentRequestTracker {
   private requests = new Map<string, number>();
+  private readonly MAX_ENTRIES = 10000;
   
   track(ip: string): boolean {
+    // Prevent memory leak
+    if (this.requests.size > this.MAX_ENTRIES) {
+      this.cleanup();
+    }
+    
     const current = this.requests.get(ip) || 0;
     if (current >= 5) return false;
     this.requests.set(ip, current + 1);
@@ -52,7 +58,24 @@ class ConcurrentRequestTracker {
   
   release(ip: string): void {
     const current = this.requests.get(ip) || 0;
-    this.requests.set(ip, Math.max(0, current - 1));
+    if (current <= 1) {
+      this.requests.delete(ip); // Remove instead of keeping 0
+    } else {
+      this.requests.set(ip, current - 1);
+    }
+  }
+  
+  private cleanup(): void {
+    // Remove zero-count entries
+    for (const [ip, count] of this.requests.entries()) {
+      if (count === 0) {
+        this.requests.delete(ip);
+      }
+    }
+    // Emergency clear if still too large
+    if (this.requests.size > this.MAX_ENTRIES) {
+      this.requests.clear();
+    }
   }
 }
 
@@ -120,11 +143,15 @@ export async function validatePulseToken(token: string, sealId: string, secret: 
   return await crypto.subtle.verify('HMAC', key, sigBytes, encoder.encode(data));
 }
 
-export function getRequestFingerprint(request: Request): string {
+export async function getRequestFingerprint(request: Request): Promise<string> {
   const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
   const ua = request.headers.get('user-agent') || '';
   const lang = request.headers.get('accept-language') || '';
-  return `${ip}:${ua.slice(0, 50)}:${lang.slice(0, 20)}`;
+  
+  const data = `${ip}:${ua}:${lang}`;
+  const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(data));
+  const hashArray = Array.from(new Uint8Array(hash));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 32);
 }
 
 export function sanitizeError(error: unknown): string {

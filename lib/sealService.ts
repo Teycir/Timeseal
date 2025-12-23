@@ -171,6 +171,9 @@ export class SealService {
       };
     }
 
+    // Only increment access count on unlock
+    await this.db.incrementAccessCount(sealId);
+
     // Only decrypt if unlocked
     const decryptedKeyB = await decryptKeyBWithFallback(seal.keyB, sealId, [this.masterKey]);
     metrics.incrementSealUnlocked();
@@ -209,18 +212,30 @@ export class SealService {
       throw new Error(ErrorCode.INVALID_INPUT);
     }
 
-    const [sealId, timestamp, nonce] = parts;
+    const [sealId, timestamp, nonce, signature] = parts;
 
-    // Validate token FIRST to prevent nonce exhaustion attacks
-    const isValid = await validatePulseToken(pulseToken, sealId, this.masterKey);
-    if (!isValid) {
-      throw new Error(ErrorCode.INVALID_INPUT);
+    // Validate format strictly
+    if (!/^[a-f0-9]{32}$/.test(sealId)) {
+      throw new Error('Invalid seal ID format');
+    }
+    const ts = parseInt(timestamp);
+    if (isNaN(ts) || ts < 0 || ts.toString() !== timestamp) {
+      throw new Error('Invalid timestamp format');
+    }
+    if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(nonce)) {
+      throw new Error('Invalid nonce format');
     }
 
-    // Then check nonce
+    // Check nonce FIRST (atomic, prevents race condition)
     const nonceValid = await checkAndStoreNonce(nonce, this.db);
     if (!nonceValid) {
       throw new Error('Replay attack detected');
+    }
+
+    // Then validate token signature
+    const isValid = await validatePulseToken(pulseToken, sealId, this.masterKey);
+    if (!isValid) {
+      throw new Error(ErrorCode.INVALID_INPUT);
     }
 
     const seal = await this.db.getSeal(sealId);
@@ -240,8 +255,13 @@ export class SealService {
     const newUnlockTime = now + intervalToUse;
     const newPulseToken = await generatePulseToken(sealId, this.masterKey);
 
-    await this.db.updatePulse(seal.id, now);
-    await this.db.updateUnlockTime(seal.id, newUnlockTime);
+    // Atomic update (both or neither)
+    try {
+      await this.db.updatePulseAndUnlockTime(seal.id, now, newUnlockTime);
+    } catch (error) {
+      logger.error('pulse_update_failed', error as Error, { sealId: seal.id });
+      throw new Error('Failed to update pulse');
+    }
 
     metrics.incrementPulseReceived();
     this.auditLogger?.log({
@@ -280,19 +300,19 @@ export class SealService {
       throw new Error(ErrorCode.SEAL_NOT_FOUND);
     }
 
-    // Delete blob first, then database (reverse order for safety)
-    try {
-      await this.storage.deleteBlob(sealId);
-    } catch (storageError) {
-      logger.error('blob_delete_failed', storageError as Error, { sealId });
-      // Continue to delete database record even if blob deletion fails
-    }
-
+    // Delete DB first (reversible), then blob (idempotent)
     try {
       await this.db.deleteSeal(sealId);
     } catch (dbError) {
       logger.error('db_delete_failed', dbError as Error, { sealId });
-      throw dbError; // Throw DB error as it's more critical
+      throw dbError; // Critical - don't proceed
+    }
+
+    try {
+      await this.storage.deleteBlob(sealId);
+    } catch (storageError) {
+      // Non-critical - blob orphaned but seal is gone
+      logger.error('blob_delete_failed', storageError as Error, { sealId });
     }
 
     this.auditLogger?.log({

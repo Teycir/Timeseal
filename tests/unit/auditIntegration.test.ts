@@ -46,7 +46,6 @@ describe('Audit Logging Integration', () => {
       encryptedBlob: new ArrayBuffer(100),
       keyB: 'testkey',
       iv: 'testiv',
-      hmac: 'testhmac',
       unlockTime: Date.now() + 120000, // 2 minutes
     }, '127.0.0.1');
 
@@ -64,7 +63,6 @@ describe('Audit Logging Integration', () => {
       encryptedBlob: new ArrayBuffer(100),
       keyB: 'testkey',
       iv: 'testiv',
-      hmac: 'testhmac',
       unlockTime: Date.now() + 120000, // 2 minutes
     }, '127.0.0.1');
 
@@ -83,7 +81,6 @@ describe('Audit Logging Integration', () => {
       encryptedBlob: new ArrayBuffer(100),
       keyB: 'testkey',
       iv: 'testiv',
-      hmac: 'testhmac',
       unlockTime: Date.now() + 61000,
     }, '127.0.0.1');
 
@@ -108,7 +105,6 @@ describe('Audit Logging Integration', () => {
       encryptedBlob: new ArrayBuffer(100),
       keyB: 'testkey',
       iv: 'testiv',
-      hmac: 'testhmac',
       unlockTime: Date.now() + 120000, // 2 minutes
       isDMS: true,
       pulseInterval: 3600 * 1000,
@@ -131,7 +127,6 @@ describe('Audit Logging Integration', () => {
       encryptedBlob: new ArrayBuffer(100),
       keyB: 'testkey',
       iv: 'testiv',
-      hmac: 'testhmac',
       unlockTime: Date.now() + 120000, // 2 minutes
     }, '127.0.0.1');
 

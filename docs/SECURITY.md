@@ -198,7 +198,135 @@ Expected response time: 48 hours
 - [ ] Geographic restrictions (optional)
 - [ ] Honeypot seals for enumeration detection (optional)
 
+## Attack Defenses
+
+### 🛡️ Defense-in-Depth Architecture
+
+Time-Seal implements multiple overlapping security layers:
+
+#### Layer 1: Cryptographic Defenses
+- **AES-GCM-256 encryption** - Industry-standard authenticated encryption
+- **Split-key architecture** - Key A (client) + Key B (server) both required
+- **HMAC-signed pulse tokens** - Prevents token forgery
+- **Nonce replay protection** - Database-backed, atomic validation
+- **Master key encryption** - Key B encrypted before storage
+- **SHA-256 blob hashing** - Content integrity verification
+
+#### Layer 2: Time-Lock Enforcement
+- **Server-side time validation** - Client clock manipulation impossible
+- **Cloudflare NTP-synchronized timestamps** - Trusted time source
+- **Atomic database operations** - Prevents race conditions
+- **Random jitter (0-100ms)** - Prevents timing attacks
+- **Time check before decryption** - No early access possible
+
+#### Layer 3: Access Control
+- **SHA-256 fingerprinting** - Collision-resistant rate limiting (IP + UA + Lang)
+- **Database-backed nonces** - Replay detection across all workers
+- **Cloudflare Turnstile** - Bot protection without CAPTCHA friction
+- **Concurrent request limiting** - 5 simultaneous requests per IP
+- **Strict input validation** - Format checks reject malformed data
+- **Request sanitization** - XSS and injection prevention
+
+#### Layer 4: Operational Security
+- **Immutable audit logging** - All access tracked permanently
+- **Transaction rollback** - Database consistency on failures
+- **Circuit breakers** - Automatic retry with exponential backoff
+- **Error sanitization** - No internal state leakage
+- **Warrant canary** - Legal coercion transparency
+- **Memory leak protection** - Automatic cleanup mechanisms
+
+### 🔒 Specific Attack Mitigations
+
+#### Replay Attacks
+**Attack:** Reuse captured pulse token to extend seal indefinitely
+**Defense:**
+- Nonce checked FIRST (atomic database operation)
+- Nonce stored in D1 database (persists across workers)
+- Token signature validated SECOND (HMAC-SHA256)
+- Concurrent requests blocked by atomic nonce check
+
+#### Race Conditions
+**Attack:** Send 100 concurrent pulse requests with same token
+**Defense:**
+- Database nonce check is atomic (first request wins)
+- Pulse updates combined into single SQL operation
+- Transaction rollback on any failure
+- No partial state possible
+
+#### Rate Limit Bypass
+**Attack:** Rotate IPs or change user-agent to bypass limits
+**Defense:**
+- Fingerprints hashed with SHA-256 (full data, no truncation)
+- Combines IP + User-Agent + Accept-Language
+- Stored in D1 database (persists across workers)
+- Collision-resistant (2^256 keyspace)
+
+#### Timing Attacks
+**Attack:** Measure response times to detect unlock time
+**Defense:**
+- Random jitter (0-100ms) added to all responses
+- Time check happens before any operations
+- Constant-time comparisons for sensitive data
+
+#### Data Loss
+**Attack:** Blob deleted but database deletion fails
+**Defense:**
+- Database deleted FIRST (reversible)
+- Blob deleted SECOND (idempotent)
+- Errors logged but don't block deletion
+- Orphaned blobs acceptable (seal is gone)
+
+#### Token Injection
+**Attack:** Send malformed pulse tokens to crash server
+**Defense:**
+- Strict regex validation for all token parts
+- Seal ID: 32 hex characters
+- Timestamp: positive integer
+- Nonce: UUID format
+- Signature: base64
+- Rejected before processing
+
+#### Memory Exhaustion
+**Attack:** Create millions of concurrent requests
+**Defense:**
+- Concurrent tracker limited to 10K entries
+- Automatic cleanup when limit reached
+- Zero-count entries removed first
+- Emergency clear if still oversized
+
+#### Access Count Inflation
+**Attack:** Repeatedly check locked seal to inflate metrics
+**Defense:**
+- Access count only increments on successful unlock
+- Locked checks don't increment counter
+- Accurate usage analytics
+
+### 🔐 Cryptographic Guarantees
+
+**What is mathematically impossible:**
+- Decrypt without Key A (never sent to server)
+- Decrypt without Key B (encrypted with master key)
+- Forge pulse token signature (HMAC-SHA256)
+- Modify unlock time (stored in database)
+- Replay pulse token (nonce validation)
+- Brute-force AES-GCM-256 (2^256 keyspace)
+
+**What requires infrastructure compromise:**
+- Manipulate server time (Cloudflare NTP)
+- Access master encryption key (environment secret)
+- Modify database directly (Cloudflare D1 access)
+
 ## Recent Security Enhancements
+
+**v0.6.2 (2025-12-23):**
+- **CRITICAL FIX: Replay attack prevention** - Nonce checked atomically before token validation
+- **CRITICAL FIX: Atomic pulse updates** - Single database operation prevents partial state
+- **CRITICAL FIX: Safe deletion order** - Database deleted first, then blob
+- Strict pulse token format validation (seal ID, timestamp, nonce, signature)
+- SHA-256 fingerprint hashing (prevents rate limit collisions)
+- Memory leak protection (concurrent tracker auto-cleanup)
+- Access count accuracy (only increments on unlock)
+- File size alignment (750KB enforced at all layers)
 
 **v0.6.0 (2025-01-15):**
 - Memory protection for Key A (XOR obfuscation)

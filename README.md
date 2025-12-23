@@ -183,7 +183,269 @@ sequenceDiagram
 
 ---
 
+## ❓ FAQ: How It Works
+
+### How does Time-Seal prevent early access?
+
+**Split-Key Architecture:**
+1. Your browser generates two random keys: Key A and Key B
+2. Both keys are needed to decrypt your content
+3. Key A stays in your browser (in the URL hash)
+4. Key B is sent to the server (encrypted with master key)
+5. Server refuses to release Key B until unlock time
+6. Without both keys, decryption is mathematically impossible
+
+**Server-Side Time Enforcement:**
+- All time checks happen on Cloudflare's servers (not your computer)
+- Your local clock is completely irrelevant
+- Cloudflare uses NTP-synchronized time across global network
+- No way to manipulate server time without infrastructure access
+
+### How do I create a seal?
+
+**Timed Release:**
+1. Visit [timeseal.dev](https://timeseal.dev)
+2. Enter your message or upload a file (max 750KB)
+3. Select "Timed Release" mode
+4. Choose unlock date and time (up to 30 days)
+5. Complete security check (Cloudflare Turnstile)
+6. Click "Create Time-Seal"
+7. Save the vault link (contains Key A in URL hash)
+8. Share link with recipient
+
+**Dead Man's Switch:**
+1. Follow steps 1-3 above
+2. Select "Dead Man's Switch" mode
+3. Set pulse interval (how often you check in)
+4. Complete security check
+5. Click "Create Time-Seal"
+6. Save TWO links:
+   - **Public vault link** (share with recipient)
+   - **Private pulse link** (keep secret, use to check in)
+7. Visit pulse link before interval expires to keep seal locked
+
+### How do I unlock a seal?
+
+1. Open the vault link (contains Key A in URL hash)
+2. If locked: See countdown timer
+3. If unlocked: Content automatically decrypts in your browser
+4. Download or copy the decrypted content
+
+**Note:** Decryption happens entirely in your browser. The server never sees your decrypted content.
+
+### How does Dead Man's Switch work?
+
+**Setup:**
+- You set a pulse interval (e.g., 7 days)
+- Seal unlocks if you don't check in within that time
+- You get a private pulse link to reset the timer
+
+**Checking In:**
+1. Visit your private pulse link (from any device)
+2. Click "Pulse" button
+3. Timer resets for another interval
+4. Repeat before each interval expires
+
+**If You Miss a Pulse:**
+- Seal automatically unlocks at the deadline
+- Recipient can access content with vault link
+- Cannot be reversed once unlocked
+
+**Burning a Seal:**
+- Use pulse link to permanently delete seal
+- Content destroyed immediately
+- Cannot be recovered
+
+### What happens if I lose the vault link?
+
+**Lost forever.** Key A is in the URL hash. Without it:
+- Server cannot decrypt (doesn't have Key A)
+- You cannot decrypt (don't have the link)
+- No recovery mechanism exists (by design)
+
+**Best practices:**
+- Save vault links in password manager
+- Email to yourself (encrypted email recommended)
+- Print QR code for physical backup
+- Never share vault links over unencrypted channels
+
+### Can I delete a seal after creating it?
+
+**Timed Release:** ❌ No. Cannot be deleted once created.
+
+**Dead Man's Switch:** ✅ Yes. Use pulse link to "burn" the seal:
+1. Visit your private pulse link
+2. Click "Burn Seal" button
+3. Confirm deletion
+4. Content permanently destroyed
+
+### How secure is the URL hash?
+
+**Very secure by design:**
+- URL hash (#KeyA) is never sent to server
+- Only visible in your browser
+- HTTPS protects it in transit
+- Treat vault links like passwords
+
+**Risks to be aware of:**
+- Visible in browser history
+- Visible in bookmarks
+- May appear in referrer logs if you click links from vault page
+- Browser extensions can access it
+
+**Mitigation:**
+- Use incognito/private browsing for sensitive seals
+- Clear browser history after use
+- Check for browser extensions (we warn you)
+- Never paste vault links in public forums
+
+### What are the file size limits?
+
+**Maximum file size: 750KB**
+
+This limit is enforced at three layers:
+1. **UI validation** - Prevents upload before encryption
+2. **API validation** - Rejects oversized requests
+3. **Database storage** - Cloudflare D1 column limit
+
+**Why 750KB?**
+- Base64 encoding adds ~33% overhead
+- D1 TEXT column limit is 1MB
+- 750KB binary = ~1MB base64 (safe margin)
+
+**For larger files:**
+- Split into multiple seals
+- Use compression before upload
+- Consider self-hosting with R2 storage
+
+### How long do seals last?
+
+**Maximum seal duration: 30 days**
+- Unlock time cannot be more than 30 days in future
+- Seals auto-delete 30 days after unlock
+- Total maximum lifetime: 60 days (30 + 30)
+
+**Why the limit?**
+- Database resource protection
+- Compliance with data retention policies
+- Prevents indefinite storage costs
+
+### Can someone guess my seal ID?
+
+**Extremely unlikely:**
+- Seal IDs are 32 hex characters (16 bytes)
+- Cryptographically random (not sequential)
+- 2^128 possible combinations
+- Would take billions of years to guess
+
+**Even if they guess it:**
+- They can see the countdown timer
+- They cannot decrypt without Key A (in your vault link)
+- Content remains encrypted
+
+### What if Cloudflare goes down?
+
+**Your seal is safe:**
+- Encrypted data stored in D1 database
+- Countdown pauses during outage
+- Resumes when service restored
+- No data loss
+
+**What you cannot do during outage:**
+- Create new seals
+- Check seal status
+- Unlock seals (even if time has passed)
+- Pulse Dead Man's Switch
+
+### How do I verify a seal receipt?
+
+Receipts contain HMAC-SHA256 signatures:
+
+1. Download receipt JSON after creating seal
+2. Use `/api/verify-receipt` endpoint:
+```bash
+curl -X POST https://timeseal.dev/api/verify-receipt \
+  -H "Content-Type: application/json" \
+  -d @receipt.json
+```
+3. Response confirms seal authenticity
+
+**Receipt contains:**
+- Seal ID
+- Blob hash (SHA-256)
+- Unlock time
+- Creation timestamp
+- HMAC signature
+
+### Can I use Time-Seal for commercial purposes?
+
+**License: Business Source License (BSL)**
+- ✅ Free for non-commercial use
+- ❌ Commercial use requires license
+- ✅ Source code available for inspection
+- ✅ Converts to Apache 2.0 after 4 years
+
+Contact for commercial licensing: license@timeseal.dev
+
+### How do I self-host Time-Seal?
+
+See [SELF-HOSTING.md](docs/SELF-HOSTING.md) for complete guide.
+
+**Requirements:**
+- Cloudflare account (free tier works)
+- Cloudflare Workers
+- Cloudflare D1 database
+- Node.js 18+
+
+**Benefits:**
+- Full control over infrastructure
+- No trust in third-party service
+- Custom retention policies
+- Private deployment
+
+---
+
 ## 🛡️ Security: Attack Scenarios
+
+### 🔒 Security Features (v0.6.2)
+
+**✅ Replay Attack Prevention** - Nonce-first validation prevents concurrent token reuse  
+**✅ Atomic Database Updates** - All-or-nothing pulse updates prevent inconsistent state  
+**✅ Strict Token Validation** - Format validation rejects malformed pulse tokens  
+**✅ Safe Deletion Order** - Database-first deletion prevents data loss  
+**✅ Collision-Resistant Fingerprinting** - SHA-256 hashed fingerprints for rate limiting  
+**✅ Memory Leak Protection** - Automatic cleanup of concurrent request tracker  
+**✅ Accurate Access Metrics** - Only counts successful unlocks, not locked checks  
+**✅ File Size Enforcement** - 750KB limit enforced at all layers (UI, validation, storage)  
+
+### 🛡️ Defense Layers
+
+**Layer 1: Cryptographic Defenses**
+- AES-GCM-256 encryption (client + server)
+- Split-key architecture (Key A never leaves browser)
+- HMAC-signed pulse tokens with nonce replay protection
+- Master key encryption for Key B storage
+- SHA-256 blob hashing for integrity verification
+
+**Layer 2: Time-Lock Enforcement**
+- Server-side time validation (client clock irrelevant)
+- Cloudflare NTP-synchronized timestamps
+- Atomic database operations prevent race conditions
+- Random jitter (0-100ms) prevents timing attacks
+
+**Layer 3: Access Control**
+- Rate limiting with SHA-256 fingerprinting (IP + UA + Lang)
+- Database-backed nonce storage (replay detection)
+- Cloudflare Turnstile bot protection
+- Concurrent request limiting (5 per IP)
+- Strict input validation and sanitization
+
+**Layer 4: Operational Security**
+- Immutable audit logging (all access tracked)
+- Transaction rollback on failures
+- Circuit breakers with retry logic
+- Error sanitization (no internal state leakage)
+- Warrant canary for transparency
 
 ### 🔒 Hardening Features (v0.6.0)
 
@@ -242,7 +504,7 @@ See [HARDENING.md](docs/HARDENING.md) for full details.
 - Key B (server releases only after unlock time)
 
 ### "Can I bypass rate limits by rotating IPs or using VPNs?"
-**⚠️ HARDER.** Rate limiting uses browser fingerprinting (IP + User-Agent + Language), making simple IP rotation ineffective. You'd need to change your entire browser signature.
+**⚠️ HARDER.** Rate limiting uses SHA-256 hashed browser fingerprinting (IP + User-Agent + Language), making simple IP rotation ineffective. You'd need to change your entire browser signature. Fingerprints are collision-resistant and stored in D1 database.
 
 ### "Can I use timing attacks to detect the exact unlock time?"
 **❌ NO.** Server responses include random jitter (0-100ms delay) to prevent timing-based information leakage.
@@ -254,7 +516,11 @@ See [HARDENING.md](docs/HARDENING.md) for full details.
 **✅ BY DESIGN.** Authentication adds attack vectors (credential theft, phishing, password breaches, session hijacking). TimeSeal uses cryptography-only security: possession of the vault link (Key A) is the authentication. No passwords to steal, no accounts to hack.
 
 ### "Can I replay old API requests to trick the server?"
-**❌ NO.** Pulse tokens include nonces stored in D1 database. Replay attacks are detected across all worker instances and rejected.
+**❌ NO.** Pulse tokens include cryptographic nonces stored in D1 database with strict format validation:
+- Nonce checked FIRST (atomic operation prevents race conditions)
+- Token signature validated SECOND (HMAC-SHA256)
+- Replay attacks detected across all worker instances and rejected
+- Malformed tokens rejected before processing
 
 ### "What if Cloudflare goes down?"
 **⏸️ PAUSED.** Your seal remains locked in the database. When Cloudflare comes back online, the countdown resumes.
@@ -352,7 +618,17 @@ See [LICENSE](LICENSE) for full terms.
 
 ## 🔮 Roadmap
 
-**Recently Implemented (v0.6.1):**
+**Recently Implemented (v0.6.2):**
+- ✅ Replay Attack Prevention - Nonce-first validation eliminates race conditions
+- ✅ Atomic Pulse Updates - Single database operation prevents partial state
+- ✅ Strict Token Validation - Format checks reject malformed pulse tokens
+- ✅ Safe Deletion Order - Database-first prevents data loss
+- ✅ Fingerprint Hashing - SHA-256 prevents rate limit collisions
+- ✅ Memory Leak Fix - Concurrent tracker cleanup mechanism
+- ✅ Access Count Accuracy - Only counts successful unlocks
+- ✅ File Size Alignment - 750KB enforced at all layers
+
+**Recently Implemented (v0.6.1):****
 - ✅ Dead Man's Switch Pulse Fix - Resolved 500 error on repeated pulses
 - ✅ Pulse Token URL Encoding - Fixed 404 errors with special characters
 - ✅ Security Hardening - Removed public pulse URL exposure

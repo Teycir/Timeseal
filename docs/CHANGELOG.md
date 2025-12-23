@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.2] - 2025-12-23
+
+### Fixed
+- CRITICAL: Race condition in pulse token validation (nonce now checked first)
+- CRITICAL: Non-atomic pulse updates (combined into single database operation)
+- CRITICAL: Data loss risk in seal deletion (database deleted before blob)
+- File size limit mismatch (aligned to 750KB across all layers)
+- Access count inflation (only increments on successful unlock)
+- Rate limit fingerprint collisions (now using SHA-256 hash)
+- Memory leak in concurrent request tracker (added cleanup mechanism)
+- Malformed pulse token crashes (strict format validation added)
+
+### Security
+- Nonce validation now atomic and checked before token signature
+- Pulse updates are all-or-nothing (prevents inconsistent database state)
+- Deletion order reversed (database first, then blob)
+- Token format strictly validated (seal ID, timestamp, nonce, signature)
+- Fingerprints hashed with SHA-256 (prevents truncation collisions)
+- Concurrent tracker auto-cleanup at 10K entries (prevents memory exhaustion)
+
+### Changed
+- File upload limit reduced from 5MB to 750KB (D1 column limit)
+- Access count now only increments on unlock (not on locked checks)
+- Database interface extended with atomic update methods
+- Rate limit fingerprinting now async (due to SHA-256 hashing)
+
+### Added
+- `updatePulseAndUnlockTime()` method for atomic pulse updates
+- `incrementAccessCount()` method for separate access tracking
+- Strict regex validation for pulse token components
+- Memory leak protection in concurrent request tracker
+- SHA-256 fingerprint hashing for collision resistance
+
+### Documentation
+- Added SECURITY-REVIEW.md with comprehensive issue analysis
+- Added SECURITY-FIXES.md with implementation details
+- Added SECURITY-SUMMARY.md with executive summary
+- Updated README with v0.6.2 security features and defense layers
+
 ## [0.6.1] - 2025-01-16
 
 ### Fixed

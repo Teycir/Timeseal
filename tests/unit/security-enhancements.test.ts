@@ -1,7 +1,7 @@
 // Security Enhancements Test Suite
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { encryptKeyB, decryptKeyB } from '@/lib/keyEncryption';
-import { R2Storage, MockStorage } from '@/lib/storage';
+import { MockStorage } from '@/lib/storage';
 import { validateFileSize } from '@/lib/validation';
 import { verifyIntegrity, detectTampering } from '@/lib/clientIntegrity';
 
