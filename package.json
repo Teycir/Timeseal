@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "preview": "npx @opennextjs/cloudflare build && npx @opennextjs/cloudflare preview",
-    "deploy": "npx @opennextjs/cloudflare build && npx @opennextjs/cloudflare deploy",
+    "deploy": "./scripts/deploy.sh",
+    "deploy:unsafe": "npx @opennextjs/cloudflare build && npx @opennextjs/cloudflare deploy",
     "typecheck": "tsc --noEmit",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "test": "jest --coverage --maxWorkers=50%",
@@ -18,7 +19,8 @@
     "test:e2e": "playwright test -c tests/config/playwright.config.ts",
     "test:e2e:ui": "playwright test -c tests/config/playwright.config.ts --ui",
     "test:e2e:full": "playwright test -c tests/config/playwright-e2e.config.ts",
-    "test:all": "npm run test && npm run test:e2e:full"
+    "test:all": "npm run test && npm run test:e2e:full",
+    "prepare": "[ -d .git ] && git config core.hooksPath .husky || true"
   },
   "dependencies": {
     "@cloudflare/workers-types": "^4.20231218.0",

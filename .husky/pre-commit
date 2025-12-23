@@ -1,0 +1,23 @@
+#!/bin/bash
+
+echo "🔍 Running pre-commit checks..."
+
+# Lint staged files
+npm run lint --quiet || {
+  echo "❌ Lint failed. Fix errors before committing."
+  exit 1
+}
+
+# Type check
+npx tsc --noEmit || {
+  echo "❌ Type check failed. Fix errors before committing."
+  exit 1
+}
+
+# Build check (quick)
+npm run build > /dev/null 2>&1 || {
+  echo "❌ Build failed. Fix errors before committing."
+  exit 1
+}
+
+echo "✅ Pre-commit checks passed"

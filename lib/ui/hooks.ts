@@ -34,7 +34,13 @@ export function useTextScramble(
 
   useEffect(() => {
     if (config.animateOn === 'view' && !hasAnimatedRef.current) {
-      scramble();
+      const timer = setTimeout(() => {
+        scramble();
+      }, 100);
+      return () => {
+        clearTimeout(timer);
+        scramblerRef.current?.stop();
+      };
     }
     return () => scramblerRef.current?.stop();
   }, [config.animateOn, scramble]);
