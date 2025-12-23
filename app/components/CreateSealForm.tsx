@@ -27,11 +27,11 @@ interface Template {
 }
 
 const TEMPLATES: Template[] = [
-  { name: 'Crypto Inheritance', icon: <Bitcoin className="w-6 h-6 text-neon-green drop-shadow-[0_0_5px_rgba(0,255,65,0.5)]" />, type: 'deadman', placeholder: 'Seed phrase: ...\nWallet addresses: ...', pulseDays: 30 },
-  { name: 'Whistleblower', icon: <ShieldAlert className="w-6 h-6 text-neon-green drop-shadow-[0_0_5px_rgba(0,255,65,0.5)]" />, type: 'deadman', placeholder: 'Evidence of...', pulseDays: 7 },
-  { name: 'Product Launch', icon: <Rocket className="w-6 h-6 text-neon-green drop-shadow-[0_0_5px_rgba(0,255,65,0.5)]" />, type: 'timed', placeholder: 'Product details, access codes...' },
-  { name: 'Birthday Gift', icon: <Gift className="w-6 h-6 text-neon-green drop-shadow-[0_0_5px_rgba(0,255,65,0.5)]" />, type: 'timed', placeholder: 'Happy Birthday! Here\'s your surprise...' },
-  { name: 'Legal Hold', icon: <Scale className="w-6 h-6 text-neon-green drop-shadow-[0_0_5px_rgba(0,255,65,0.5)]" />, type: 'timed', placeholder: 'Contract terms...' },
+  { name: 'Crypto Inheritance', icon: <Bitcoin className="w-6 h-6 text-neon-green drop-shadow-[0_0_5px_rgba(0,255,65,0.5)]" />, type: 'deadman', placeholder: 'Seed phrase: ...\nWallet addresses: ...\nExchange accounts: ...', pulseDays: 30 },
+  { name: 'Whistleblower', icon: <ShieldAlert className="w-6 h-6 text-neon-green drop-shadow-[0_0_5px_rgba(0,255,65,0.5)]" />, type: 'deadman', placeholder: 'Evidence of wrongdoing...\nDocumentation...\nWitness contacts...', pulseDays: 7 },
+  { name: 'Product Launch', icon: <Rocket className="w-6 h-6 text-neon-green drop-shadow-[0_0_5px_rgba(0,255,65,0.5)]" />, type: 'timed', placeholder: 'Product details...\nAccess codes...\nLaunch instructions...' },
+  { name: 'Birthday Gift', icon: <Gift className="w-6 h-6 text-neon-green drop-shadow-[0_0_5px_rgba(0,255,65,0.5)]" />, type: 'timed', placeholder: 'Happy Birthday! 🎉\n\nHere\'s your surprise...' },
+  { name: 'Legal Hold', icon: <Scale className="w-6 h-6 text-neon-green drop-shadow-[0_0_5px_rgba(0,255,65,0.5)]" />, type: 'timed', placeholder: 'Contract terms...\nSettlement details...\nLegal documents...' },
 ];
 
 const containerVariants = {
@@ -95,7 +95,14 @@ export function CreateSealForm({ onSuccess, onProgressChange }: CreateSealFormPr
       setPulseValue(template.pulseDays);
       setPulseUnit('days');
     }
-    toast.info(`Applied template: ${template.name}`);
+    
+    // Auto-set unlock date for timed releases (24 hours from now)
+    if (template.type === 'timed') {
+      const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      setUnlockDate(tomorrow.toISOString().slice(0, 16));
+    }
+    
+    toast.success(`Template applied: ${template.name}`);
   };
 
   const handleCreateSeal = async () => {

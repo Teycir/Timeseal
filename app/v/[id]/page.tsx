@@ -101,6 +101,34 @@ function VaultPageClient({ id }: { id: string }) {
       try {
         const content = new TextDecoder('utf-8', { fatal: true }).decode(decrypted);
         setDecryptedContent(content);
+        
+        // Trigger confetti on successful unlock
+        if (typeof window !== 'undefined') {
+          const confetti = (await import('canvas-confetti')).default;
+          const duration = 2000;
+          const end = Date.now() + duration;
+          
+          (function frame() {
+            confetti({
+              particleCount: 3,
+              angle: 60,
+              spread: 55,
+              origin: { x: 0, y: 0.6 },
+              colors: ['#00ff41', '#ffffff', '#00ff41']
+            });
+            confetti({
+              particleCount: 3,
+              angle: 120,
+              spread: 55,
+              origin: { x: 1, y: 0.6 },
+              colors: ['#00ff41', '#ffffff', '#00ff41']
+            });
+            
+            if (Date.now() < end) {
+              requestAnimationFrame(frame);
+            }
+          })();
+        }
       } catch (decodeErr) {
         console.error('[VAULT] UTF-8 decode failed:', decodeErr);
         ErrorLogger.log(decodeErr, { component: 'Vault', action: 'utf8_decode', sealId: id });
@@ -251,38 +279,87 @@ function VaultPageClient({ id }: { id: string }) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 relative w-full overflow-x-hidden pb-32">
         <BackgroundBeams className="absolute top-0 left-0 w-full h-full z-0" />
+        
+        {/* Lock Shatter Animation */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ scale: 1, opacity: 1 }}
+          animate={{ 
+            scale: [1, 1.2, 0],
+            opacity: [1, 1, 0],
+            rotate: [0, 0, 45]
+          }}
+          transition={{ duration: 0.5, times: [0, 0.3, 1] }}
+          className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none"
+        >
+          <Lock className="w-32 h-32 text-neon-green" />
+        </motion.div>
+        
+        {/* Flash Effect */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 1, 0] }}
+          transition={{ duration: 0.2, delay: 0.5 }}
+          className="absolute inset-0 bg-neon-green z-10 pointer-events-none"
+        />
+        
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, filter: 'blur(20px)' }}
+          animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+          transition={{ duration: 0.8, delay: 0.7 }}
           className="max-w-2xl w-full relative z-10"
         >
           <div className="text-center mb-8">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold glow-text mb-4 px-2">
+            <motion.h1 
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.9 }}
+              className="text-3xl sm:text-4xl md:text-5xl font-bold glow-text mb-4 px-2"
+            >
               <DecryptedText text="VAULT UNLOCKED" animateOn="view" className="text-neon-green" />
-            </h1>
-            <p className="text-neon-green/70 text-sm sm:text-base px-4">The seal has been broken. Here is your message:</p>
+            </motion.h1>
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.1 }}
+              className="text-neon-green/70 text-sm sm:text-base px-4"
+            >
+              The seal has been broken. Here is your message:
+            </motion.p>
           </div>
 
-          <Card className="p-4 sm:p-6 md:p-8 mb-8 relative group">
-            <div className="absolute top-0 right-0 p-2 opacity-50 group-hover:opacity-100 transition-opacity">
-              <span className="text-xs font-mono text-neon-green border border-neon-green/30 px-2 py-1 rounded">DECRYPTED</span>
-            </div>
-            <div
-              className="whitespace-pre-wrap text-sm leading-relaxed break-words font-mono text-neon-green/90 select-text cursor-text"
-              style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
-            >
-              {decryptedContent}
-            </div>
-          </Card>
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 1.3 }}
+          >
+            <Card className="p-4 sm:p-6 md:p-8 mb-8 relative group">
+              <div className="absolute top-0 right-0 p-2 opacity-50 group-hover:opacity-100 transition-opacity">
+                <span className="text-xs font-mono text-neon-green border border-neon-green/30 px-2 py-1 rounded">DECRYPTED</span>
+              </div>
+              <div
+                className="whitespace-pre-wrap text-sm leading-relaxed break-words font-mono text-neon-green/90 select-text cursor-text"
+                style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
+              >
+                {decryptedContent}
+              </div>
+            </Card>
+          </motion.div>
 
-          <div className="flex flex-col sm:flex-row gap-4 mb-8">
-            <button
+          <motion.div 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 1.5 }}
+            className="flex flex-col sm:flex-row gap-4 mb-8"
+          >
+            <motion.button
               onClick={downloadContent}
               className="cyber-button flex items-center justify-center gap-2 flex-1"
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ duration: 2, repeat: Infinity, delay: 2 }}
             >
               <Download className="w-4 h-4" />
               DOWNLOAD CONTENT
-            </button>
+            </motion.button>
             <button
               onClick={copyVaultLink}
               className="cyber-button flex items-center justify-center gap-2 flex-1 bg-neon-green/10"
@@ -290,13 +367,18 @@ function VaultPageClient({ id }: { id: string }) {
               <Copy className="w-4 h-4" />
               COPY LINK
             </button>
-          </div>
+          </motion.div>
 
-          <div className="text-center">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.7 }}
+            className="text-center"
+          >
             <a href="/" className="cyber-button text-sm sm:text-base md:text-lg px-4 sm:px-6 md:px-8 py-3 sm:py-4">
               CREATE YOUR OWN TIME-SEAL
             </a>
-          </div>
+          </motion.div>
         </motion.div>
       </div>
     );
@@ -306,6 +388,16 @@ function VaultPageClient({ id }: { id: string }) {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative w-full overflow-x-hidden pb-20">
       <BackgroundBeams className="absolute top-0 left-0 w-full h-full z-0" />
+      
+      <motion.a
+        href="/dashboard"
+        className="fixed top-4 left-4 z-50 px-4 py-2 bg-dark-bg/80 backdrop-blur-sm border-2 border-neon-green/30 rounded-xl hover:border-neon-green transition-all"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <span className="text-xs text-neon-green/70 font-mono">MY SEALS</span>
+      </motion.a>
+      
       <div className="max-w-md w-full text-center relative z-10">
         <motion.div
           animate={{

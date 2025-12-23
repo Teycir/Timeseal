@@ -71,6 +71,25 @@ export default function HomePage() {
   const handleSuccess = (data: { publicUrl: string; pulseUrl?: string; pulseToken?: string; receipt?: any; keyA: string }) => {
     setResult(data);
     triggerConfetti();
+    
+    // Save to local storage
+    try {
+      const stored = localStorage.getItem('timeseal_links');
+      const seals = stored ? JSON.parse(stored) : [];
+      const sealId = data.publicUrl.split('/v/')[1]?.split('#')[0];
+      seals.push({
+        id: sealId,
+        publicUrl: data.publicUrl,
+        pulseUrl: data.pulseUrl,
+        pulseToken: data.pulseToken,
+        type: data.pulseToken ? 'deadman' : 'timed',
+        unlockTime: Date.now() + 3600000, // Will be updated from receipt if available
+        createdAt: Date.now()
+      });
+      localStorage.setItem('timeseal_links', JSON.stringify(seals));
+    } catch (err) {
+      console.error('Failed to save seal to dashboard:', err);
+    }
   };
 
   const handleReset = () => {
@@ -101,6 +120,15 @@ export default function HomePage() {
         <svg className="w-5 h-5 text-neon-green animate-subtle-shimmer" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
           <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
         </svg>
+      </motion.a>
+
+      <motion.a
+        href="/dashboard"
+        className="fixed top-4 left-4 z-50 flex items-center gap-2 px-4 py-2 bg-dark-bg/80 backdrop-blur-sm border-2 border-neon-green/30 rounded-xl hover:border-neon-green transition-all group"
+        whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(0, 255, 65, 0.3)' }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <span className="text-xs text-neon-green/70 font-mono group-hover:text-neon-green transition-colors">MY SEALS</span>
       </motion.a>
 
       <div className="max-w-2xl w-full relative z-10 my-auto">
