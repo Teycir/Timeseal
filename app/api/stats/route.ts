@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAPIRoute } from '@/lib/routeHelper';
 import { AnalyticsService } from '@/lib/analytics';
 
-export const runtime = 'edge';
 
 export async function GET(request: NextRequest) {
   return createAPIRoute(async ({ container }) => {

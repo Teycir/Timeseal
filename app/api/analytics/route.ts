@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAPIRoute } from '@/lib/routeHelper';
 import { AnalyticsService } from '@/lib/analytics';
 
-export const runtime = 'edge';
 
 const VALID_EVENT_TYPES = ['page_view', 'seal_created', 'seal_unlocked', 'pulse_received'];
 

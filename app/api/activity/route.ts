@@ -2,7 +2,6 @@ import { NextRequest } from 'next/server';
 import { createAPIRoute } from '@/lib/routeHelper';
 import { jsonResponse } from '@/lib/apiHandler';
 
-export const runtime = 'edge';
 
 export async function GET(request: NextRequest) {
   return createAPIRoute(async ({ container }) => {
