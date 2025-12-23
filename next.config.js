@@ -8,7 +8,7 @@ const nextConfig = {
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
   },
   generateBuildId: async () => {
-    return `build-${Date.now()}`;
+    return `v${Date.now()}-${Math.random().toString(36).substring(7)}`;
   },
 
   async headers() {

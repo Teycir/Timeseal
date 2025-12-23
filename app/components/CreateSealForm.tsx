@@ -457,9 +457,9 @@ export function CreateSealForm({
                   backgroundColor: "rgba(0, 255, 65, 0.1)",
                 }}
                 whileTap={{ scale: 0.95 }}
-                className="cyber-border p-3 transition-colors text-center h-full flex flex-col items-center justify-center"
-                title={t.tooltip}
+                className="cyber-border p-3 transition-colors text-center h-full flex flex-col items-center justify-center tooltip"
               >
+                <span className="tooltip-text">{t.tooltip}</span>
                 <motion.div
                   className="mb-1"
                   whileHover={{
@@ -518,7 +518,6 @@ export function CreateSealForm({
                     toast.info("File removed");
                   }}
                   className="text-red-500 hover:text-red-400 transition-colors p-2"
-                  title="Remove file"
                 >
                   <Trash2 className="w-5 h-5" />
                 </button>
