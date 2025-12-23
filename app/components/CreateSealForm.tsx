@@ -591,21 +591,6 @@ export function CreateSealForm({
             </label>
             </div>
 
-            <div className="flex items-center gap-2 p-3 bg-neon-green/5 border border-neon-green/20 rounded-lg">
-            <Input
-              type="url"
-              value={webhookUrl}
-              onChange={setWebhookUrl}
-              placeholder="https://hooks.zapier.com/... (optional)"
-            />
-            <div className="text-xs text-neon-green/60 tooltip">
-              🔔 Webhook
-              <span className="tooltip-text">
-                Get notified when seal unlocks. Supports Discord, Slack, Zapier, IFTTT, or custom HTTPS endpoints.
-              </span>
-            </div>
-            </div>
-
             <div className="flex space-x-4 bg-dark-bg/30 p-1 rounded-xl border border-neon-green/10">
             <button
               onClick={() => setSealType("timed")}
@@ -623,7 +608,7 @@ export function CreateSealForm({
               <span className="tooltip-text">
                 Auto-unlock if you don&apos;t check in periodically
               </span>
-              <span className="tooltip-text">DEAD MAN&apos;S SWITCH</span>
+              DEAD MAN&apos;S SWITCH
             </button>
             </div>
 

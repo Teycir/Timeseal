@@ -114,7 +114,7 @@ export default function HomePage() {
         href="https://github.com/teycir/timeseal#readme"
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-2 bg-dark-bg/80 backdrop-blur-sm border-2 border-neon-green/30 rounded-xl hover:border-neon-green transition-all group"
+        className="fixed top-4 left-4 z-50 flex items-center gap-2 px-4 py-2 bg-dark-bg/80 backdrop-blur-sm border-2 border-neon-green/30 rounded-xl hover:border-neon-green transition-all group"
         whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(0, 255, 65, 0.3)' }}
         whileTap={{ scale: 0.95 }}
         aria-label="View TimeSeal source code on GitHub"
@@ -125,15 +125,37 @@ export default function HomePage() {
         </svg>
       </motion.a>
 
-      <motion.a
-        href="/dashboard"
-        className="fixed top-4 left-4 z-50 flex items-center gap-2 px-4 py-2 bg-dark-bg/80 backdrop-blur-sm border-2 border-neon-green/30 rounded-xl hover:border-neon-green transition-all group"
-        whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(0, 255, 65, 0.3)' }}
-        whileTap={{ scale: 0.95 }}
-        aria-label="View your saved TimeSeal vaults"
-      >
-        <span className="text-xs text-neon-green/70 font-mono group-hover:text-neon-green transition-colors">MY SEALS</span>
-      </motion.a>
+      <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
+        <motion.a
+          href="/dashboard"
+          className="flex items-center gap-2 px-4 py-2 bg-dark-bg/80 backdrop-blur-sm border-2 border-neon-green/30 rounded-xl hover:border-neon-green transition-all group"
+          whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(0, 255, 65, 0.3)' }}
+          whileTap={{ scale: 0.95 }}
+          aria-label="View your saved TimeSeal vaults"
+        >
+          <span className="text-xs text-neon-green/70 font-mono group-hover:text-neon-green transition-colors">MY SEALS</span>
+        </motion.a>
+
+        <motion.a
+          href="/generate-seed"
+          className="flex items-center gap-2 px-4 py-2 bg-dark-bg/80 backdrop-blur-sm border-2 border-neon-green/30 rounded-xl hover:border-neon-green transition-all group"
+          whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(0, 255, 65, 0.3)' }}
+          whileTap={{ scale: 0.95 }}
+          aria-label="Generate BIP39 seed phrase"
+        >
+          <span className="text-xs text-neon-green/70 font-mono group-hover:text-neon-green transition-colors">GENERATE SEED PHRASE</span>
+        </motion.a>
+
+        <motion.a
+          href="/webhook"
+          className="flex items-center gap-2 px-4 py-2 bg-dark-bg/80 backdrop-blur-sm border-2 border-neon-green/30 rounded-xl hover:border-neon-green transition-all group"
+          whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(0, 255, 65, 0.3)' }}
+          whileTap={{ scale: 0.95 }}
+          aria-label="Configure webhook notifications"
+        >
+          <span className="text-xs text-neon-green/70 font-mono group-hover:text-neon-green transition-colors">WEBHOOK</span>
+        </motion.a>
+      </div>
 
       <section className="max-w-2xl w-full relative z-10 my-auto" aria-label="Create time-locked vault">
         <AnimatePresence mode="wait">

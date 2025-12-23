@@ -24,6 +24,7 @@ interface SealSuccessProps {
   keyA: string;
   seedPhrase?: string;
   sealId: string;
+  webhookUrl?: string;
   onReset: () => void;
 }
 
@@ -34,6 +35,7 @@ export function SealSuccess({
   receipt,
   seedPhrase,
   sealId,
+  webhookUrl,
   onReset,
 }: SealSuccessProps) {
   const [qrCode, setQrCode] = useState<string>("");
@@ -257,6 +259,26 @@ export function SealSuccess({
             <p className="text-xs text-neon-green/50 mt-1">
               Visit this link to reset the countdown. Works from any
               device/location.
+            </p>
+          </div>
+        )}
+
+        {webhookUrl && (
+          <div className="mt-4">
+            <div className="flex gap-2 items-end">
+              <div className="flex-1 tooltip">
+                <Input
+                  label="WEBHOOK URL"
+                  value={webhookUrl}
+                  onChange={() => {}}
+                />
+                <span className="tooltip-text">
+                  You&apos;ll receive a notification at this URL when the seal unlocks.
+                </span>
+              </div>
+            </div>
+            <p className="text-xs text-neon-green/50 mt-1">
+              🔔 Notification will be sent when seal unlocks
             </p>
           </div>
         )}
