@@ -19,19 +19,24 @@ export default function HowItWorksPage() {
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold glow-text mb-4 px-2">
             <DecryptedText text="HOW IT WORKS" animateOn="view" className="text-neon-green" speed={75} maxIterations={20} />
           </h1>
-          <p className="text-neon-green/70 text-sm sm:text-base px-4">Zero-Trust • Edge-Native • Unbreakable</p>
+          <p className="text-neon-green/70 text-sm sm:text-base px-4">Zero-Trust • Edge-Native</p>
         </motion.div>
 
         <Card className="p-4 sm:p-6 md:p-8 space-y-6">
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
-              <Lock className="w-6 h-6" /> Layer 1: The Vault (D1 Database Storage)
+              <Lock className="w-6 h-6" /> Layer 1: The Vault (Encrypted D1 Database Storage)
             </h2>
-            <p className="text-neon-green/80 mb-2 text-sm sm:text-base">Encrypted Storage</p>
-            <p className="text-neon-green/60 text-sm leading-relaxed">
-              Files are stored encrypted in Cloudflare D1 database. The encrypted blobs are stored alongside metadata,
-              with cryptographic enforcement preventing early access.
+            <p className="text-neon-green/80 mb-2 text-sm sm:text-base">Triple-Layer Encryption</p>
+            <p className="text-neon-green/60 text-sm leading-relaxed mb-3">
+              All seals are encrypted in the database with multiple security layers:
             </p>
+            <ul className="text-neon-green/60 text-sm space-y-2 list-disc list-inside">
+              <li><strong className="text-neon-green">Client-Side Encryption:</strong> AES-GCM-256 in your browser before sending</li>
+              <li><strong className="text-neon-green">Split-Key Architecture:</strong> Key A (client) + Key B (server)</li>
+              <li><strong className="text-neon-green">Server-Side Key Encryption:</strong> Key B encrypted with MASTER_ENCRYPTION_KEY</li>
+              <li><strong className="text-neon-green">Database Storage:</strong> Only encrypted blobs stored, never plaintext</li>
+            </ul>
           </div>
 
           <div>
@@ -100,8 +105,9 @@ export default function HowItWorksPage() {
           <ul className="text-neon-green/60 text-sm space-y-2">
             <li><strong className="text-neon-green">Algorithm:</strong> AES-GCM (256-bit)</li>
             <li><strong className="text-neon-green">Key Generation:</strong> Web Crypto API (CSPRNG)</li>
-            <li><strong className="text-neon-green">Storage:</strong> Cloudflare D1 (Encrypted Blobs)</li>
-            <li><strong className="text-neon-green">Database:</strong> Cloudflare D1 (SQLite)</li>
+            <li><strong className="text-neon-green">Key Derivation:</strong> HKDF for additional security</li>
+            <li><strong className="text-neon-green">Storage:</strong> Cloudflare D1 (Encrypted Blobs + Encrypted Keys)</li>
+            <li><strong className="text-neon-green">Master Key:</strong> Environment secret (never in database)</li>
             <li><strong className="text-neon-green">Audit Trail:</strong> Immutable access logs</li>
           </ul>
         </Card>

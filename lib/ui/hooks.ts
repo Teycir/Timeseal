@@ -9,22 +9,31 @@ export function useTextScramble(
   const [displayText, setDisplayText] = useState(text);
   const [isScrambling, setIsScrambling] = useState(false);
   const scramblerRef = useRef<TextScrambler | null>(null);
+  const hasAnimatedRef = useRef(false);
 
   const scramble = useCallback(() => {
     if (!scramblerRef.current) {
-      scramblerRef.current = new TextScrambler(config);
+      scramblerRef.current = new TextScrambler({
+        speed: config.speed,
+        maxIterations: config.maxIterations,
+        characters: config.characters,
+        useOriginalCharsOnly: config.useOriginalCharsOnly,
+      });
     }
 
     setIsScrambling(true);
     scramblerRef.current.scramble(
       text,
       setDisplayText,
-      () => setIsScrambling(false)
+      () => {
+        setIsScrambling(false);
+        hasAnimatedRef.current = true;
+      }
     );
-  }, [text, config]);
+  }, [text, config.speed, config.maxIterations, config.characters, config.useOriginalCharsOnly]);
 
   useEffect(() => {
-    if (config.animateOn === 'view') {
+    if (config.animateOn === 'view' && !hasAnimatedRef.current) {
       scramble();
     }
     return () => scramblerRef.current?.stop();

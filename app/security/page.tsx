@@ -75,8 +75,8 @@ export default function SecurityPage() {
           </h2>
           <div className="space-y-4 text-neon-green/60 text-sm">
             <div>
-              <p className="text-neon-green font-bold mb-2">Cloudflare D1 Encrypted Database Storage</p>
-              <p>All seals are stored encrypted in Cloudflare&apos;s edge database with triple-layer encryption: client-side AES-GCM-256, server-side key encryption, and database encryption at rest. NO plaintext content is ever stored.</p>
+              <p className="text-neon-green font-bold mb-2">Cloudflare D1 Database Storage</p>
+              <p>All seals stored encrypted in Cloudflare D1 (SQLite at the edge) with triple-layer encryption. Encrypted blobs stored as base64 TEXT. Maximum 750KB per seal due to D1 column limits.</p>
             </div>
             <div>
               <p className="text-neon-green font-bold mb-2">Edge Runtime</p>

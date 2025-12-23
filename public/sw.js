@@ -1,5 +1,5 @@
-const CACHE_NAME = 'timeseal-v4';
-const OFFLINE_CACHE = 'timeseal-offline-v1';
+const CACHE_NAME = 'timeseal-v5';
+const OFFLINE_CACHE = 'timeseal-offline-v2';
 
 const OFFLINE_URLS = [
   '/',
@@ -37,19 +37,36 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   
-  // Cache-first for dashboard (offline support)
-  if (url.pathname === '/dashboard') {
+  // Skip non-GET requests
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
+  // Network-first for HTML pages (always fresh)
+  if (event.request.headers.get('accept')?.includes('text/html')) {
     event.respondWith(
-      caches.match(event.request)
-        .then((response) => response || fetch(event.request))
+      fetch(event.request)
         .catch(() => caches.match(event.request))
     );
     return;
   }
 
-  // Network-first for everything else
+  // Cache-first for static assets (JS, CSS, images)
   event.respondWith(
-    fetch(event.request)
-      .catch(() => caches.match(event.request))
+    caches.match(event.request)
+      .then((response) => {
+        if (response) {
+          return response;
+        }
+        return fetch(event.request).then((response) => {
+          if (response.ok) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone);
+            });
+          }
+          return response;
+        });
+      })
   );
 });

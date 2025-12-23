@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { BackgroundBeams } from '../components/ui/background-beams';
 import { FloatingIcons } from '../components/FloatingIcons';
 import { Card } from '../components/Card';
+import DecryptedText from '../components/DecryptedText';
 import { generateSeedPhrase } from '@/lib/seedPhrase';
 
 export default function GenerateSeedPage() {
@@ -83,7 +84,16 @@ export default function GenerateSeedPage() {
 
       <div className="max-w-4xl w-full relative z-10">
         <div className="text-center mb-8">
-          <h1 className="text-4xl sm:text-5xl font-bold glow-text mb-4">GENERATE SEED PHRASE</h1>
+          <h1 className="text-4xl sm:text-5xl font-bold glow-text pulse-glow mb-4">
+            <DecryptedText
+              text="GENERATE SEED PHRASE"
+              animateOn="view"
+              speed={75}
+              maxIterations={20}
+              className="text-neon-green"
+              encryptedClassName="text-neon-green/30"
+            />
+          </h1>
           <p className="text-neon-green/70 text-sm">Generate a BIP39 seed phrase for Key A recovery</p>
         </div>
 

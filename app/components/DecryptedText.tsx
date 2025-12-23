@@ -32,13 +32,12 @@ export default function DecryptedText({
     animateOn = 'hover',
 }: DecryptedTextProps) {
     const [isHovering, setIsHovering] = useState(false);
-    const [hasAnimated, setHasAnimated] = useState(false);
     const { displayText, scramble } = useTextScramble(text, {
         speed,
         maxIterations,
         useOriginalCharsOnly,
         characters,
-        animateOn: hasAnimated ? undefined : animateOn,
+        animateOn,
     });
 
     const handleMouseEnter = () => {
@@ -53,13 +52,6 @@ export default function DecryptedText({
             setIsHovering(false);
         }
     };
-
-    // Mark as animated after first render
-    useState(() => {
-        if (animateOn === 'view' && !hasAnimated) {
-            setTimeout(() => setHasAnimated(true), (maxIterations + 1) * speed);
-        }
-    });
 
     return (
         <motion.span

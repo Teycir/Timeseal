@@ -123,7 +123,6 @@ export function CreateSealForm({
   const [pulseUnit, setPulseUnit] = useState<"minutes" | "days">("days");
   const [isCreating, setIsCreating] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-  const [useSeedPhrase, setUseSeedPhrase] = useState(false);
   const [webhookUrl, setWebhookUrl] = useState("");
 
   const formatFileSize = (bytes: number) => {
@@ -275,7 +274,6 @@ export function CreateSealForm({
 
       onProgressChange(40);
       const encrypted = await encryptData(file || message, { 
-        useSeedPhrase,
         webhookUrl: webhookUrl.trim() || undefined,
       });
       onProgressChange(60);
@@ -569,26 +567,6 @@ export function CreateSealForm({
                 unlocks if you don&apos;t check in
               </span>
             </div>
-            </div>
-
-            <div className="flex items-center gap-2 p-3 bg-yellow-950/20 border border-yellow-400/30 rounded-lg">
-            <input
-              type="checkbox"
-              id="seed-phrase-toggle"
-              checked={useSeedPhrase}
-              onChange={(e) => setUseSeedPhrase(e.target.checked)}
-              className="w-4 h-4 accent-yellow-400"
-            />
-            <label
-              htmlFor="seed-phrase-toggle"
-              className="text-sm text-yellow-400 cursor-pointer tooltip"
-            >
-              🔑 Generate recovery seed phrase
-              <span className="tooltip-text">
-                Creates a 12-word BIP39 seed phrase to recover your vault link
-                if lost. Write it down securely!
-              </span>
-            </label>
             </div>
 
             <div className="flex space-x-4 bg-dark-bg/30 p-1 rounded-xl border border-neon-green/10">
