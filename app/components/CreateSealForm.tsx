@@ -124,6 +124,7 @@ export function CreateSealForm({
   const [isCreating, setIsCreating] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [useSeedPhrase, setUseSeedPhrase] = useState(false);
+  const [webhookUrl, setWebhookUrl] = useState("");
 
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
@@ -273,7 +274,10 @@ export function CreateSealForm({
       }
 
       onProgressChange(40);
-      const encrypted = await encryptData(file || message, { useSeedPhrase });
+      const encrypted = await encryptData(file || message, { 
+        useSeedPhrase,
+        webhookUrl: webhookUrl.trim() || undefined,
+      });
       onProgressChange(60);
 
       let unlockTime: number;
@@ -299,6 +303,8 @@ export function CreateSealForm({
         formData.append("cf-turnstile-response", turnstileToken);
       if (pulseDuration)
         formData.append("pulseInterval", pulseDuration.toString());
+      if (encrypted.encryptedWebhook)
+        formData.append("encryptedWebhook", encrypted.encryptedWebhook);
 
       onProgressChange(80);
       const response = await fetch("/api/create-seal", {
@@ -424,7 +430,7 @@ export function CreateSealForm({
         <p className="text-xs text-neon-green/30 max-w-md mx-auto">
           Encrypt messages that unlock at a future date or after inactivity
         </p>
-        <p className="text-xs text-yellow-500/50 max-w-md mx-auto mt-2">
+        <p className="text-xs text-yellow-500/50 max-w-md mx-auto mt-2" role="note">
           ⚠️ Seals auto-delete 30 days after unlock
         </p>
         <SealCounter />
@@ -432,14 +438,14 @@ export function CreateSealForm({
       </motion.div>
 
       <Card className="space-y-6">
-        <div>
+        <section aria-labelledby="templates-heading">
           <div className="flex items-center justify-between mb-2">
-            <div className="text-sm text-neon-green/80 font-bold tooltip">
+            <h2 id="templates-heading" className="text-sm text-neon-green/80 font-bold tooltip">
               QUICK START TEMPLATES
               <span className="tooltip-text">
                 Click a template to auto-fill the form with a common use case
               </span>
-            </div>
+            </h2>
           </div>
           <motion.div
             variants={containerVariants}
@@ -477,21 +483,19 @@ export function CreateSealForm({
               </motion.button>
             ))}
           </motion.div>
-        </div>
+        </section>
 
-        <div>
-          <label
-            htmlFor="message-input"
-            className="block text-sm mb-2 text-neon-green/80 tooltip"
-          >
+        <section aria-labelledby="message-heading">
+          <h2 id="message-heading" className="block text-sm mb-2 text-neon-green/80 tooltip">
             MESSAGE OR FILE
             <span className="tooltip-text">
               Enter text message or upload a file (max 750KB). File takes
               priority if both provided.
             </span>
-          </label>
+          </h2>
           <textarea
             id="message-input"
+            aria-labelledby="message-heading"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Enter your secret message..."
@@ -552,9 +556,11 @@ export function CreateSealForm({
               </div>
             )}
           </div>
-        </div>
+        </section>
 
-        <div className="space-y-4">
+        <section aria-labelledby="seal-type-heading">
+          <h2 id="seal-type-heading" className="sr-only">Seal Configuration</h2>
+          <div className="space-y-4">
           <div className="flex items-center justify-between mb-1">
             <div className="text-xs text-neon-green/60 tooltip">
               Choose seal type
@@ -583,6 +589,22 @@ export function CreateSealForm({
                 if lost. Write it down securely!
               </span>
             </label>
+          </div>
+
+          <div className="flex items-center gap-2 p-3 bg-neon-green/5 border border-neon-green/20 rounded-lg">
+            <Input
+              type="url"
+              value={webhookUrl}
+              onChange={(e) => setWebhookUrl(e.target.value)}
+              placeholder="https://hooks.zapier.com/... (optional)"
+              className="flex-1 text-sm"
+            />
+            <div className="text-xs text-neon-green/60 tooltip">
+              🔔 Webhook
+              <span className="tooltip-text">
+                Get notified when seal unlocks. Supports Discord, Slack, Zapier, IFTTT, or custom HTTPS endpoints.
+              </span>
+            </div>
           </div>
 
           <div className="flex space-x-4 bg-dark-bg/30 p-1 rounded-xl border border-neon-green/10">
@@ -698,9 +720,11 @@ export function CreateSealForm({
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
+        </section>
 
-        <div className="flex justify-center pt-6">
+        <section aria-labelledby="submit-heading">
+          <h2 id="submit-heading" className="sr-only">Create Seal</h2>
+          <div className="flex justify-center pt-6">
           <div className="tooltip">
             <span className="tooltip-text">
               {isCreating
@@ -726,7 +750,7 @@ export function CreateSealForm({
               {isCreating ? "ENCRYPTING & SEALING..." : "CREATE TIME-SEAL"}
             </Button>
           </div>
-        </div>
+        </section>
       </Card>
 
       <div className="flex justify-center mt-6">

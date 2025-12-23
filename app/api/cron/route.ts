@@ -5,7 +5,7 @@ export async function GET(request: NextRequest) {
   // Verify cron secret
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
-  
+
   if (!cronSecret || cronSecret === '' || cronSecret === 'change-me') {
     return jsonResponse({ error: "CRON_SECRET not configured" }, { status: 500 });
   }
@@ -25,9 +25,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Get seals to delete (with blobs)
+    // Delete if:
+    // 1. Unlocked and older than retention period (default 30 days) AND custom expiration is not set
+    // 2. Custom expiration date has passed
     const sealsToDelete = await env.DB.prepare(
-      'SELECT id FROM seals WHERE unlock_time < ?'
-    ).bind(cutoffTime).all();
+      `SELECT id FROM seals 
+       WHERE (expires_at IS NULL AND unlock_time < ?)
+       OR (expires_at IS NOT NULL AND expires_at < ?)`
+    ).bind(cutoffTime, now).all();
 
     let blobsDeleted = 0;
     // Delete blobs first
@@ -44,8 +49,10 @@ export async function GET(request: NextRequest) {
 
     // Then delete seal records
     const sealsResult = await env.DB.prepare(
-      'DELETE FROM seals WHERE unlock_time < ?'
-    ).bind(cutoffTime).run();
+      `DELETE FROM seals 
+       WHERE (expires_at IS NULL AND unlock_time < ?)
+       OR (expires_at IS NOT NULL AND expires_at < ?)`
+    ).bind(cutoffTime, now).run();
 
     // Clean up expired rate limits
     const rateLimitsResult = await env.DB.prepare(

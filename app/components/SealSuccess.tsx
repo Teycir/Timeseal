@@ -191,7 +191,7 @@ export function SealSuccess({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={qrCode}
-              alt="QR Code"
+              alt="QR code for TimeSeal vault link - scan to access encrypted time-locked message"
               className="border-2 border-neon-green/30 rounded"
             />
             <p className="qr-print-label print-only hidden">

@@ -24,21 +24,40 @@ export const metadata: Metadata = {
   },
   description: 'Create cryptographically enforced time-locked vaults and dead man\'s switches. Encrypt messages that unlock automatically at a future date or after inactivity. Zero-trust, edge-native AES-GCM encryption on Cloudflare Workers.',
   keywords: [
+    // Primary keywords
     'time-locked encryption',
     'dead man\'s switch',
     'cryptographic vault',
-    'secure message encryption',
-    'timed release encryption',
-    'future message',
+    'time capsule encryption',
+    'future message encryption',
+    
+    // Use case keywords
     'crypto inheritance',
+    'seed phrase protection',
     'whistleblower protection',
+    'estate planning encryption',
+    'self-destructing message',
+    'ephemeral encryption',
+    
+    // Technical keywords
     'AES-GCM encryption',
-    'Cloudflare Workers',
-    'zero-trust encryption',
     'split-key cryptography',
-    'D1 database',
-    'encrypted blob storage',
-    'time capsule encryption'
+    'zero-trust encryption',
+    'edge encryption',
+    'Cloudflare Workers encryption',
+    
+    // Competitor alternatives
+    'privnote alternative',
+    'onetimesecret alternative',
+    'snappass alternative',
+    'password pusher alternative',
+    
+    // Long-tail keywords
+    'send encrypted message future date',
+    'automatic message unlock',
+    'timed release encryption',
+    'delayed message delivery',
+    'posthumous message delivery',
   ],
   authors: [{ name: 'TimeSeal' }],
   creator: 'TimeSeal',

@@ -5,6 +5,10 @@ Allow: /
 # Disallow private/sensitive routes
 Disallow: /api/
 Disallow: /pulse/
+Disallow: /v/*
+
+# Crawl-delay for rate limiting
+Crawl-delay: 1
 
 # Sitemap
 Sitemap: https://timeseal.dev/sitemap.xml

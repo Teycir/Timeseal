@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
       const pulseInterval = formData.get("pulseInterval")
         ? parseInt(formData.get("pulseInterval") as string, 10)
         : undefined;
+      const encryptedWebhook = formData.get("encryptedWebhook") as string | null;
       // Ephemeral seal options
       const isEphemeral = formData.get("isEphemeral") === "true";
       const maxViewsStr = formData.get("maxViews") as string | null;
@@ -75,6 +76,7 @@ export async function POST(request: NextRequest) {
           unlockTime,
           isDMS,
           pulseInterval,
+          encryptedWebhook: encryptedWebhook || undefined,
           isEphemeral,
           maxViews,
         },

@@ -2,6 +2,7 @@
 import { SecureMemory } from "./memoryProtection";
 import { arrayBufferToBase64, base64ToArrayBuffer } from "./cryptoUtils";
 import { generateSeedPhrase } from "./seedPhrase";
+import { encryptWebhook } from "./reusable/webhook";
 
 export interface EncryptionResult {
   encryptedBlob: ArrayBuffer;
@@ -9,6 +10,7 @@ export interface EncryptionResult {
   keyB: string;
   iv: string;
   seedPhrase?: string;
+  encryptedWebhook?: string;
 }
 
 export interface DecryptionKeys {
@@ -91,7 +93,7 @@ async function deriveMasterKey(
 // Encrypt data with split-key system (with memory protection and optional seed phrase)
 export async function encryptData(
   data: string | File,
-  options?: { useSeedPhrase?: boolean },
+  options?: { useSeedPhrase?: boolean; webhookUrl?: string },
 ): Promise<EncryptionResult> {
   const memory = new SecureMemory();
 
@@ -159,6 +161,12 @@ export async function encryptData(
 
     const ivBase64 = arrayBufferToBase64(iv.buffer);
 
+    // Encrypt webhook URL with keyB if provided
+    let encryptedWebhook: string | undefined;
+    if (options?.webhookUrl) {
+      encryptedWebhook = await encryptWebhook(options.webhookUrl, keyB);
+    }
+
     // Retrieve keys only when needed for return
     return {
       encryptedBlob,
@@ -166,6 +174,7 @@ export async function encryptData(
       keyB: memory.retrieve(keyBProtected),
       iv: ivBase64,
       seedPhrase,
+      encryptedWebhook,
     };
   } finally {
     memory.destroy();

@@ -388,11 +388,12 @@ This limit is enforced at three layers:
    - Effectively infinite duration while you're alive
    ```
 
-2. **Chain multiple seals**
+2. **Chain multiple seals (Progressive Disclosure)**
    - Seal 1: Unlocks in 30 days, contains link to Seal 2
    - Seal 2: Unlocks in 30 days, contains link to Seal 3
    - Total: 60+ days with manual chaining
-   - **Use case**: Multi-stage reveals
+   - **Use case**: Multi-stage reveals, evidence drip, educational content
+   - See [How to create chained seals](#how-do-i-create-chained-seals-progressive-disclosure) below
 
 3. **Self-host with custom limits**
    - Deploy your own instance
@@ -484,6 +485,75 @@ See [SELF-HOSTING.md](docs/SELF-HOSTING.md) for complete guide.
 - No trust in third-party service
 - Custom retention policies
 - Private deployment
+
+### How do I create chained seals (Progressive Disclosure)?
+
+**Manual chaining** lets you create multi-stage reveals without a dedicated feature. Each seal unlocks to reveal the next seal's link.
+
+**Use cases:**
+- 📰 Journalist: Release evidence in stages
+- 🎓 Educator: Drip course content over time
+- 🎁 Marketer: Build suspense with staged product reveals
+- 🔍 Scavenger Hunt: Each clue unlocks the next
+
+**Step-by-step:**
+
+1. **Create seals in reverse order** (last stage first):
+   ```
+   Stage 3 (Final): Create seal with final content
+   → Get vault link: https://timeseal.dev/vault/xyz789#keyC
+   
+   Stage 2 (Middle): Create seal with:
+   - Content: "Stage 2 complete. Next: https://timeseal.dev/vault/xyz789#keyC"
+   - Unlock time: 7 days from now
+   → Get vault link: https://timeseal.dev/vault/abc456#keyB
+   
+   Stage 1 (First): Create seal with:
+   - Content: "Stage 1 complete. Next: https://timeseal.dev/vault/abc456#keyB"
+   - Unlock time: Today (immediate)
+   → Get vault link: https://timeseal.dev/vault/def123#keyA
+   ```
+
+2. **Share only the first vault link** with recipients:
+   ```
+   https://timeseal.dev/vault/def123#keyA
+   ```
+
+3. **Recipients experience the chain**:
+   - Open Stage 1 link → Unlocks immediately → Shows Stage 2 link
+   - Open Stage 2 link → Locked for 7 days → Countdown timer
+   - After 7 days → Stage 2 unlocks → Shows Stage 3 link
+   - Open Stage 3 link → Unlocks at scheduled time → Final content
+
+**Pro tips:**
+
+- **Embed links in content**: Hide next stage links in images, documents, or encrypted messages
+- **Use QR codes**: Generate QR codes for next stage links (great for physical scavenger hunts)
+- **Combine with DMS**: Make later stages Dead Man's Switch seals for conditional unlocking
+- **Track with receipts**: Save receipts for all stages to verify chain integrity
+
+**Example: Whistleblower evidence release**
+```
+Stage 1 (Immediate): "I have evidence of corruption. More in 48 hours."
+Stage 2 (2 days): "Here are the documents: [link to files]. Final analysis in 7 days."
+Stage 3 (7 days): "Full investigation report with sources and timeline."
+```
+
+**Example: Educational course**
+```
+Stage 1 (Week 1): "Lesson 1: Introduction to Cryptography [content]"
+Stage 2 (Week 2): "Lesson 2: Symmetric Encryption [content]"
+Stage 3 (Week 3): "Lesson 3: Public Key Cryptography [content]"
+Stage 4 (Week 4): "Final Exam [link]"
+```
+
+**Limitations:**
+- Manual process (no automated chaining UI)
+- Must create seals in reverse order
+- Each stage needs separate vault link
+- Maximum 30 days per seal (use DMS for longer chains)
+
+**Future feature:** If there's demand, we may add native progressive disclosure mode. Vote on [GitHub Issues](https://github.com/teycir/timeseal/issues) if you'd use this feature.
 
 ---
 

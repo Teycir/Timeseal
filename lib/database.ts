@@ -31,6 +31,7 @@ export interface SealRecord {
   unlockMessage?: string;
   expiresAt?: number;
   accessCount?: number;
+  encryptedWebhook?: string;
   // Ephemeral seal fields
   isEphemeral?: boolean;
   maxViews?: number | null;
@@ -66,6 +67,7 @@ export class SealDatabase implements DatabaseProvider {
       unlockMessage: result.unlock_message ? String(result.unlock_message) : undefined,
       expiresAt: result.expires_at ? Number(result.expires_at) : undefined,
       accessCount: result.access_count ? Number(result.access_count) : 0,
+      encryptedWebhook: result.encrypted_webhook ? String(result.encrypted_webhook) : undefined,
       // Ephemeral fields
       isEphemeral: result.is_ephemeral === 1,
       maxViews: result.max_views !== null ? Number(result.max_views) : null,
@@ -77,8 +79,8 @@ export class SealDatabase implements DatabaseProvider {
 
   async createSeal(data: SealRecord): Promise<void> {
     const result = await this.db.prepare(
-      `INSERT INTO seals (id, unlock_time, is_dms, pulse_interval, last_pulse, key_b, iv, pulse_token, created_at, blob_hash, unlock_message, expires_at, access_count, is_ephemeral, max_views, view_count)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO seals (id, unlock_time, is_dms, pulse_interval, last_pulse, key_b, iv, pulse_token, created_at, blob_hash, unlock_message, expires_at, access_count, encrypted_webhook, is_ephemeral, max_views, view_count)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
       data.id,
       data.unlockTime,
@@ -93,6 +95,7 @@ export class SealDatabase implements DatabaseProvider {
       data.unlockMessage || null,
       data.expiresAt || null,
       data.accessCount || 0,
+      data.encryptedWebhook || null,
       data.isEphemeral ? 1 : 0,
       data.maxViews !== undefined ? data.maxViews : null,
       data.viewCount || 0
