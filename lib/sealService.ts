@@ -8,6 +8,7 @@ import { metrics } from './metrics';
 import { ErrorCode } from './errors';
 import { storageCircuitBreaker, withRetry } from './circuitBreaker';
 import { generatePulseToken, validatePulseToken, checkAndStoreNonce } from './security';
+import { sealEvents } from './patterns/observer';
 
 export interface CreateSealRequest {
   encryptedBlob: ArrayBuffer;
@@ -136,6 +137,9 @@ export class SealService {
     metrics.incrementSealCreated();
     logger.info('seal_created', { sealId, isDMS: request.isDMS });
 
+    // Emit event for observers
+    sealEvents.emit('seal:created', { sealId, isDMS: request.isDMS || false, ip });
+
     return { sealId, iv: request.iv, pulseToken, receipt };
   }
 
@@ -186,6 +190,9 @@ export class SealService {
       ip,
       metadata: { unlockTime: seal.unlockTime },
     });
+
+    // Emit event for observers
+    sealEvents.emit('seal:unlocked', { sealId, ip });
 
     return {
       id: sealId,
@@ -273,6 +280,9 @@ export class SealService {
     });
     logger.info('pulse_received', { sealId: seal.id, newUnlockTime });
 
+    // Emit event for observers
+    sealEvents.emit('pulse:received', { sealId: seal.id, ip });
+
     return { newUnlockTime, newPulseToken };
   }
 
@@ -323,6 +333,9 @@ export class SealService {
       metadata: { burned: true },
     });
     logger.info('seal_burned', { sealId });
+
+    // Emit event for observers
+    sealEvents.emit('seal:deleted', { sealId });
   }
 
   private generateSealId(): string {

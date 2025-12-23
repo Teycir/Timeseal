@@ -124,3 +124,6 @@ export {
 
 // Re-export commonly used utilities
 export { cn } from './utils';
+
+// Design Patterns
+export * from './patterns';

@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.1] - 2025-12-23
+
+### Added
+- **Observer Pattern** - Event-driven architecture for seal lifecycle
+  - `lib/patterns/observer.ts` - Type-safe event emitter
+  - `lib/eventListeners.ts` - Centralized event handling
+  - Integrated into `sealService.ts` for all seal operations
+  - Events: seal:created, seal:unlocked, seal:deleted, pulse:received
+
+### Changed
+- `sealService.ts` now emits events for all seal operations
+- Metrics and logging decoupled via event system
+
+### Removed
+- Builder pattern (not needed - seal creation already simple)
+- Decorator pattern (middleware already handles this)
+- Unused pattern examples and documentation
+
+### Benefits
+- Decoupled logging/metrics from business logic
+- Easy to add new listeners without modifying core code
+- Type-safe event system
+- Zero dead code - only what's actually used
+
+### Testing
+- ✅ All 135 tests pass (no regressions)
+- ✅ Observer pattern fully integrated
+- ✅ No unused code in codebase
+
 ## [0.8.0] - 2025-12-23
 
 ### Added

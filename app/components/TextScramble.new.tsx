@@ -9,13 +9,12 @@ interface TextScrambleProps {
     duration?: number;
 }
 
-export function TextScramble({ children, className = '', duration = 1.5 }: TextScrambleProps) {
-    const ref = useRef(null);
-    const isInView = useInView(ref, { once: true, margin: "-100px" });
-    const displayText = isInView ? useRevealAnimation(children, duration) : '';
+// Inner component that runs the animation
+function TextScrambleContent({ text, duration }: { text: string; duration: number }) {
+    const displayText = useRevealAnimation(text, duration);
 
     return (
-        <span ref={ref} className={className}>
+        <>
             {displayText.split('').map((char, i) => (
                 <motion.span
                     key={i}
@@ -26,6 +25,21 @@ export function TextScramble({ children, className = '', duration = 1.5 }: TextS
                     {char}
                 </motion.span>
             ))}
+        </>
+    );
+}
+
+export function TextScramble({ children, className = '', duration = 1.5 }: TextScrambleProps) {
+    const ref = useRef(null);
+    const isInView = useInView(ref, { once: true, margin: "-100px" });
+
+    return (
+        <span ref={ref} className={className}>
+            {isInView ? (
+                <TextScrambleContent text={children} duration={duration} />
+            ) : (
+                <span className="opacity-0">{children}</span>
+            )}
         </span>
     );
 }
