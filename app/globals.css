@@ -4,6 +4,19 @@
 @tailwind utilities;
 /* stylelint-enable at-rule-no-unknown */
 
+/* Screen Reader Only - for accessibility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
 :root {
   --neon-green: #00ff41;
   --dark-bg: #0a0a0a;
