@@ -14,17 +14,17 @@ export async function POST(request: NextRequest) {
       const { generateVaultQR } = await import('@/lib/qrcode');
 
       if (!vaultLink || typeof vaultLink !== 'string') {
-        return jsonResponse({ error: 'Invalid vault link' }, 400);
+        return jsonResponse({ error: 'Invalid vault link' }, { status: 400 });
       }
 
       // Validate URL format
       if (!vaultLink.startsWith('http://') && !vaultLink.startsWith('https://')) {
-        return jsonResponse({ error: 'Vault link must be HTTP(S) URL' }, 400);
+        return jsonResponse({ error: 'Vault link must be HTTP(S) URL' }, { status: 400 });
       }
 
       // Limit URL length to prevent huge QR codes
       if (vaultLink.length > 2048) {
-        return jsonResponse({ error: 'Vault link too long' }, 400);
+        return jsonResponse({ error: 'Vault link too long' }, { status: 400 });
       }
 
       const qrDataUrl = await generateVaultQR(vaultLink);

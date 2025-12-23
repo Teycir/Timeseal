@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
   const contentLength = parseInt(request.headers.get("content-length") || "0", 10);
   const sizeValidation = validateRequestSize(contentLength);
   if (!sizeValidation.valid) {
-    return jsonResponse({ error: sizeValidation.error }, 413);
+    return jsonResponse({ error: sizeValidation.error }, { status: 413 });
   }
 
   return createAPIRoute(

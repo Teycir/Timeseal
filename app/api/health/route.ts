@@ -20,6 +20,6 @@ export async function GET() {
     return jsonResponse({
       status: 'error',
       error: String(error),
-    }, 500);
+    }, { status: 500 });
   }
 }

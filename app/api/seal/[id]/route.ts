@@ -17,7 +17,7 @@ export async function GET(
 
   return createAPIRoute(async ({ container, ip }) => {
     if (!concurrentTracker.track(ip)) {
-      return jsonResponse({ error: 'Too many concurrent requests' }, 429);
+      return jsonResponse({ error: 'Too many concurrent requests' }, { status: 429 });
     }
 
     try {
@@ -25,7 +25,7 @@ export async function GET(
 
       const sealIdValidation = validateSealId(sealId);
       if (!sealIdValidation.valid) {
-        return jsonResponse({ error: sealIdValidation.error }, 400);
+        return jsonResponse({ error: sealIdValidation.error }, { status: 400 });
       }
 
       if (detectSuspiciousPattern(ip, sealId)) {
@@ -78,7 +78,7 @@ export async function GET(
       } catch (error) {
         console.error('[SEAL-API] Error:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        return jsonResponse({ error: `Seal retrieval failed: ${errorMessage}` }, 500);
+        return jsonResponse({ error: `Seal retrieval failed: ${errorMessage}` }, { status: 500 });
       }
     } finally {
       concurrentTracker.release(ip);

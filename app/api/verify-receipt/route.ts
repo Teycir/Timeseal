@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     const { receipt } = body;
 
     if (!receipt?.sealId || !receipt?.blobHash || !receipt?.signature) {
-      return jsonResponse({ valid: false, error: 'Invalid receipt format' }, 400);
+      return jsonResponse({ valid: false, error: 'Invalid receipt format' }, { status: 400 });
     }
 
     const data = `${receipt.sealId}:${receipt.blobHash}:${receipt.unlockTime}:${receipt.createdAt}`;

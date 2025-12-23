@@ -7,11 +7,11 @@ export async function GET(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
   
   if (!cronSecret || cronSecret === '' || cronSecret === 'change-me') {
-    return jsonResponse({ error: "CRON_SECRET not configured" }, 500);
+    return jsonResponse({ error: "CRON_SECRET not configured" }, { status: 500 });
   }
 
   if (authHeader !== `Bearer ${cronSecret}`) {
-    return jsonResponse({ error: "Unauthorized" }, 401);
+    return jsonResponse({ error: "Unauthorized" }, { status: 401 });
   }
 
   const RETENTION_DAYS = 30; // Keep seals 30 days after unlock
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
   try {
     const env = (request as any).env;
     if (!env?.DB) {
-      return jsonResponse({ error: "Database not available" }, 500);
+      return jsonResponse({ error: "Database not available" }, { status: 500 });
     }
 
     // Get seals to delete (with blobs)
@@ -67,6 +67,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("[CRON] Cleanup error:", error);
-    return jsonResponse({ error: "Cleanup failed" }, 500);
+    return jsonResponse({ error: "Cleanup failed" }, { status: 500 });
   }
 }
