@@ -125,7 +125,127 @@ interface ProofOfLife {
 
 ---
 
-## 💡 Innovation 4: **Social Recovery**
+## 💡 Innovation 4: **Seed Phrase Recovery**
+
+### Problem
+Current: Lost vault link = lost forever  
+Need: Self-recovery without trusting third parties
+
+### Solution: BIP39 Seed Phrase for Key A
+
+```typescript
+// Example: "Generate 12-word seed phrase to rebuild vault link"
+interface SeedPhraseRecovery {
+  sealId: string;            // Public seal ID
+  seedPhrase: string[];      // 12 BIP39 words (user writes down)
+  derivationPath: string;    // "m/44'/0'/0'/0/0" (deterministic)
+}
+
+// Creation flow:
+// 1. User creates seal normally
+// 2. System generates 12-word BIP39 seed phrase
+// 3. Seed phrase deterministically derives Key A
+// 4. User writes down: Seal ID + 12 words
+// 5. Vault link generated as usual
+
+// Recovery flow:
+// 1. User lost vault link (Key A lost)
+// 2. User has: Seal ID + 12-word seed phrase
+// 3. Visit /recover page
+// 4. Enter Seal ID + seed phrase
+// 5. Key A reconstructed deterministically
+// 6. Vault link rebuilt: /vault/{sealId}#{keyA}
+
+// Use cases:
+// 1. Crypto holders (familiar with seed phrases)
+// 2. Estate planning (write in will)
+// 3. Long-term seals (30+ days)
+// 4. High-value secrets (backup critical)
+```
+
+**Implementation:**
+```typescript
+// lib/seedPhrase.ts
+import * as bip39 from 'bip39';
+import { HDKey } from '@scure/bip32';
+
+export async function generateSeedPhrase(): Promise<{
+  mnemonic: string;
+  keyA: string;
+}> {
+  const mnemonic = bip39.generateMnemonic(128); // 12 words
+  const seed = await bip39.mnemonicToSeed(mnemonic);
+  const hdkey = HDKey.fromMasterSeed(seed);
+  const derived = hdkey.derive("m/44'/0'/0'/0/0");
+  const keyA = Buffer.from(derived.privateKey!).toString('base64');
+  return { mnemonic, keyA };
+}
+
+export async function recoverKeyA(mnemonic: string): Promise<string> {
+  if (!bip39.validateMnemonic(mnemonic)) {
+    throw new Error('Invalid seed phrase');
+  }
+  const seed = await bip39.mnemonicToSeed(mnemonic);
+  const hdkey = HDKey.fromMasterSeed(seed);
+  const derived = hdkey.derive("m/44'/0'/0'/0/0");
+  return Buffer.from(derived.privateKey!).toString('base64');
+}
+```
+
+**Security properties:**
+- ✅ 128-bit entropy (same as AES-128)
+- ✅ Deterministic (same seed = same Key A)
+- ✅ Human-readable (12 common words)
+- ✅ Error detection (BIP39 checksum)
+- ✅ No server storage (client-side only)
+- ✅ Industry standard (crypto wallets)
+
+**UX flow:**
+```
+[Create Seal] → [Show Seed Phrase] → [User Writes Down]
+                      ↓
+              "🔑 Recovery Seed Phrase
+               Write these 12 words on paper:
+               
+               1. abandon  2. ability  3. able
+               4. about    5. above    6. absent
+               7. absorb   8. abstract 9. absurd
+               10. abuse   11. access  12. accident
+               
+               ⚠️ Anyone with these words can access your seal
+               ⚠️ Store securely (safe, password manager)
+               
+               Seal ID: a1b2c3d4...
+               
+               [✓ I've written it down] [Continue]"
+```
+
+**Recovery page:**
+```
+[/recover] → Enter Seal ID + 12 words → Rebuild vault link
+
+"🔓 Recover Lost Vault Link
+
+Seal ID: [___________]
+
+Seed Phrase (12 words):
+[word1] [word2] [word3] [word4]
+[word5] [word6] [word7] [word8]
+[word9] [word10] [word11] [word12]
+
+[Recover Vault Link]
+
+✅ Success! Your vault link:
+https://timeseal.dev/vault/a1b2c3d4...#keyA
+
+[Copy Link] [Open Vault]"
+```
+
+**Market fit:** Crypto, estate planning, long-term storage
+
+---
+
+## 💡 Innovation 5: **Social Recovery (Alternative)**
 
 ### Problem
 Current: Lost vault link = lost forever  
@@ -167,7 +287,7 @@ interface SocialRecovery {
 
 ---
 
-## 💡 Innovation 5: **Quantum-Resistant Mode**
+## 💡 Innovation 6: **Quantum-Resistant Mode**
 
 ### Problem
 Current: AES-256 vulnerable to future quantum computers  
@@ -204,7 +324,7 @@ interface QuantumResistantSeal {
 
 ---
 
-## 💡 Innovation 6: **Decentralized Witness Network**
+## 💡 Innovation 7: **Decentralized Witness Network**
 
 ### Problem
 Current: Trust Cloudflare's time enforcement  
@@ -248,7 +368,7 @@ interface BlockchainWitness {
 
 ---
 
-## 💡 Innovation 7: **Collaborative Seals**
+## 💡 Innovation 8: **Collaborative Seals**
 
 ### Problem
 Current: Single creator, single recipient  
@@ -292,7 +412,7 @@ interface CollaborativeSeal {
 
 ---
 
-## 💡 Innovation 8: **Ephemeral Seals**
+## 💡 Innovation 9: **Ephemeral Seals (IMPLEMENTED v0.9.0)**
 
 ### Problem
 Current: Seals persist 30 days after unlock  

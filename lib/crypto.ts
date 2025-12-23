@@ -1,12 +1,14 @@
 // Time-Seal Crypto Library - Split-Key AES-GCM Encryption
 import { SecureMemory } from './memoryProtection';
 import { arrayBufferToBase64, base64ToArrayBuffer } from './cryptoUtils';
+import { generateSeedPhrase } from './seedPhrase';
 
 export interface EncryptionResult {
   encryptedBlob: ArrayBuffer;
   keyA: string;
   keyB: string;
   iv: string;
+  seedPhrase?: string;
 }
 
 export interface DecryptionKeys {
@@ -82,12 +84,27 @@ async function deriveMasterKey(keyA: CryptoKey, keyB: CryptoKey): Promise<Crypto
   );
 }
 
-// Encrypt data with split-key system (with memory protection)
-export async function encryptData(data: string | File): Promise<EncryptionResult> {
+// Encrypt data with split-key system (with memory protection and optional seed phrase)
+export async function encryptData(data: string | File, options?: { useSeedPhrase?: boolean }): Promise<EncryptionResult> {
   const memory = new SecureMemory();
   
   try {
-    const { keyA, keyB } = await generateKeys();
+    let keyA: CryptoKey;
+    let keyB: CryptoKey;
+    let seedPhrase: string | undefined;
+
+    if (options?.useSeedPhrase) {
+      const seed = await generateSeedPhrase();
+      seedPhrase = seed.mnemonic;
+      const keyABuffer = base64ToArrayBuffer(seed.keyA);
+      keyA = await crypto.subtle.importKey('raw', keyABuffer, { name: 'AES-GCM' }, true, ['encrypt', 'decrypt']);
+      const keys = await generateKeys();
+      keyB = keys.keyB;
+    } else {
+      const keys = await generateKeys();
+      keyA = keys.keyA;
+      keyB = keys.keyB;
+    }
     const masterKey = await deriveMasterKey(keyA, keyB);
     
     // Convert input to ArrayBuffer
@@ -130,6 +147,7 @@ export async function encryptData(data: string | File): Promise<EncryptionResult
       keyA: memory.retrieve(keyAProtected),
       keyB: memory.retrieve(keyBProtected),
       iv: ivBase64,
+      seedPhrase,
     };
   } finally {
     memory.destroy();

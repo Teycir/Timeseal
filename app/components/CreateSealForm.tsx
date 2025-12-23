@@ -47,7 +47,7 @@ const itemVariants = {
 };
 
 interface CreateSealFormProps {
-  onSuccess: (result: { publicUrl: string; pulseUrl?: string; pulseToken?: string; receipt?: any; keyA: string }) => void;
+  onSuccess: (result: { publicUrl: string; pulseUrl?: string; pulseToken?: string; receipt?: any; keyA: string; seedPhrase?: string; sealId: string }) => void;
   onProgressChange: (progress: number) => void;
 }
 
@@ -60,6 +60,7 @@ export function CreateSealForm({ onSuccess, onProgressChange }: CreateSealFormPr
   const [pulseUnit, setPulseUnit] = useState<'minutes' | 'days'>('days');
   const [isCreating, setIsCreating] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [useSeedPhrase, setUseSeedPhrase] = useState(false);
 
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
@@ -196,7 +197,7 @@ export function CreateSealForm({ onSuccess, onProgressChange }: CreateSealFormPr
       }
 
       onProgressChange(40);
-      const encrypted = await encryptData(file || message);
+      const encrypted = await encryptData(file || message, { useSeedPhrase });
       onProgressChange(60);
 
       let unlockTime: number;
@@ -246,6 +247,8 @@ export function CreateSealForm({ onSuccess, onProgressChange }: CreateSealFormPr
           pulseToken: data.pulseToken,
           receipt: data.receipt,
           keyA: encrypted.keyA,
+          seedPhrase: encrypted.seedPhrase,
+          sealId: data.publicUrl.split('/').pop() || '',
         });
       } else {
         toast.dismiss(loadingToast);
@@ -392,6 +395,21 @@ export function CreateSealForm({ onSuccess, onProgressChange }: CreateSealFormPr
               <span className="tooltip-text">Timed Release: unlocks at specific date. Dead Man&apos;s Switch: unlocks if you don&apos;t check in</span>
             </div>
           </div>
+          
+          <div className="flex items-center gap-2 p-3 bg-yellow-950/20 border border-yellow-400/30 rounded-lg">
+            <input
+              type="checkbox"
+              id="seed-phrase-toggle"
+              checked={useSeedPhrase}
+              onChange={(e) => setUseSeedPhrase(e.target.checked)}
+              className="w-4 h-4 accent-yellow-400"
+            />
+            <label htmlFor="seed-phrase-toggle" className="text-sm text-yellow-400 cursor-pointer tooltip">
+              🔑 Generate recovery seed phrase
+              <span className="tooltip-text">Creates a 12-word BIP39 seed phrase to recover your vault link if lost. Write it down securely!</span>
+            </label>
+          </div>
+
           <div className="flex space-x-4 bg-dark-bg/30 p-1 rounded-xl border border-neon-green/10">
             <button
               onClick={() => setSealType('timed')}

@@ -14,11 +14,14 @@ interface SealSuccessProps {
   pulseToken?: string;
   receipt?: any;
   keyA: string;
+  seedPhrase?: string;
+  sealId: string;
   onReset: () => void;
 }
 
-export function SealSuccess({ publicUrl, pulseUrl, pulseToken, receipt, onReset }: SealSuccessProps) {
+export function SealSuccess({ publicUrl, pulseUrl, pulseToken, receipt, seedPhrase, sealId, onReset }: SealSuccessProps) {
   const [qrCode, setQrCode] = useState<string>('');
+  const [showSeedPhrase, setShowSeedPhrase] = useState(!!seedPhrase);
 
   useEffect(() => {
     const generateQR = async () => {
@@ -69,6 +72,55 @@ export function SealSuccess({ publicUrl, pulseUrl, pulseToken, receipt, onReset 
       </motion.div>
 
       <Card className="space-y-6">
+        {seedPhrase && showSeedPhrase && (
+          <div className="border border-yellow-400 bg-yellow-950/20 p-6 space-y-4">
+            <h3 className="text-xl font-mono text-yellow-400">🔑 Recovery Seed Phrase</h3>
+            
+            <p className="font-mono text-sm text-yellow-300">
+              Write these 12 words on paper. You'll need them to recover your vault link if lost.
+            </p>
+
+            <div className="bg-black p-4 border border-yellow-400">
+              <div className="grid grid-cols-3 gap-3">
+                {seedPhrase.split(' ').map((word, i) => (
+                  <div key={i} className="font-mono text-green-400">
+                    <span className="text-yellow-400">{i + 1}.</span> {word}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-black p-3 border border-yellow-400 font-mono text-xs text-yellow-300">
+              <p className="mb-1">Seal ID: {sealId}</p>
+            </div>
+
+            <div className="space-y-2 text-sm font-mono text-yellow-300">
+              <p>⚠️ Anyone with these words can access your seal</p>
+              <p>⚠️ Store securely (safe, password manager, paper backup)</p>
+              <p>⚠️ Never share or store digitally unencrypted</p>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                onClick={() => {
+                  copyToClipboard(`Seal ID: ${sealId}\n\nSeed Phrase:\n${seedPhrase}`, 'Seed Phrase');
+                }}
+                className="flex-1 bg-yellow-400/20"
+                variant="secondary"
+              >
+                Copy to Clipboard
+              </Button>
+              <Button
+                onClick={() => setShowSeedPhrase(false)}
+                className="flex-1 bg-green-400/20"
+                variant="secondary"
+              >
+                ✓ I've Written It Down
+              </Button>
+            </div>
+          </div>
+        )}
+
         {qrCode && (
           <div className="qr-print-container flex justify-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
