@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import { Hourglass } from 'lucide-react';
+import { motion } from "framer-motion";
+import { Hourglass } from "lucide-react";
 
 export function ErrorMessage({ message }: { message: string }) {
   return (
@@ -15,7 +15,7 @@ export function ErrorMessage({ message }: { message: string }) {
   );
 }
 
-export function LoadingSpinner({ text = 'Loading...' }: { text?: string }) {
+export function LoadingSpinner({ text = "Loading..." }: { text?: string }) {
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
@@ -26,27 +26,29 @@ export function LoadingSpinner({ text = 'Loading...' }: { text?: string }) {
   );
 }
 
-export function CountdownDisplay({ 
-  timeLeft, 
-  isUrgent = false 
-}: { 
-  timeLeft: string; 
+export function CountdownDisplay({
+  timeLeft,
+  isUrgent = false,
+}: {
+  timeLeft: string;
   isUrgent?: boolean;
 }) {
   return (
-    <div className={`text-4xl font-mono ${isUrgent ? 'text-red-500 pulse-glow' : 'pulse-glow'}`}>
+    <div
+      className={`text-4xl font-mono ${isUrgent ? "text-red-500 pulse-glow" : "pulse-glow"}`}
+    >
       {timeLeft}
     </div>
   );
 }
 
-export function PageHeader({ 
-  icon, 
-  title, 
-  subtitle 
-}: { 
-  icon: React.ReactNode; 
-  title: string; 
+export function PageHeader({
+  icon,
+  title,
+  subtitle,
+}: {
+  icon: React.ReactNode;
+  title: string;
   subtitle?: string;
 }) {
   return (
@@ -61,9 +63,7 @@ export function PageHeader({
 export function CenteredContainer({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
-        {children}
-      </div>
+      <div className="max-w-md w-full">{children}</div>
     </div>
   );
 }

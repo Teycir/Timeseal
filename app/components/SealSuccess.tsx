@@ -8,11 +8,19 @@ import { Button } from "./Button";
 import { Input } from "./Input";
 import { Download } from "lucide-react";
 
+interface Receipt {
+  sealId: string;
+  timestamp?: string;
+  signature?: string;
+  blobHash?: string;
+  unlockTime?: number;
+}
+
 interface SealSuccessProps {
   publicUrl: string;
   pulseUrl?: string;
   pulseToken?: string;
-  receipt?: any;
+  receipt?: Receipt;
   keyA: string;
   seedPhrase?: string;
   sealId: string;
@@ -34,12 +42,17 @@ export function SealSuccess({
 
   useEffect(() => {
     const generateQR = async () => {
-      const QRCodeModule = await import("qrcode");
-      const qr = await QRCodeModule.toDataURL(publicUrl, {
-        width: 256,
-        margin: 2,
-      });
-      setQrCode(qr);
+      try {
+        const QRCodeModule = await import("qrcode");
+        const qr = await QRCodeModule.toDataURL(publicUrl, {
+          width: 256,
+          margin: 2,
+        });
+        setQrCode(qr);
+      } catch (error) {
+        console.error("QR generation failed:", error);
+        toast.error("Failed to generate QR code");
+      }
     };
     generateQR();
   }, [publicUrl]);
@@ -111,8 +124,8 @@ export function SealSuccess({
             </div>
 
             <p className="font-mono text-sm text-yellow-300/80">
-              Write these 12 words on paper. You&apos;ll need them to recover your
-              vault link if lost.
+              Write these 12 words on paper. You&apos;ll need them to recover
+              your vault link if lost.
             </p>
 
             <div className="bg-dark-bg p-5 border-2 border-yellow-400/30 rounded-lg">
@@ -260,7 +273,7 @@ export function SealSuccess({
                 a.href = url;
                 a.download = `timeseal-receipt-${receipt.sealId}.json`;
                 a.click();
-                URL.revokeObjectURL(url);
+                setTimeout(() => URL.revokeObjectURL(url), 100);
                 toast.success("Receipt downloaded");
               }}
               className="w-full bg-neon-green/10 flex items-center justify-center gap-2"

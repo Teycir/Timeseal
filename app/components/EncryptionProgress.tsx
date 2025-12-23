@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import { Lock } from 'lucide-react';
+import { motion } from "framer-motion";
+import { Lock } from "lucide-react";
 
 interface EncryptionProgressProps {
   progress: number;
@@ -35,13 +35,13 @@ export function EncryptionProgress({ progress }: EncryptionProgressProps) {
                 <motion.div
                   key={i}
                   className="absolute inset-0 bg-neon-green/30"
-                  initial={{ x: '-100%' }}
-                  animate={{ x: '200%' }}
+                  initial={{ x: "-100%" }}
+                  animate={{ x: "200%" }}
                   transition={{
                     duration: 1,
                     repeat: Infinity,
                     delay: i * 0.3,
-                    ease: 'linear'
+                    ease: "linear",
                   }}
                 />
               ))}

@@ -1,17 +1,22 @@
-'use client';
+"use client";
 
-import { motion, useMotionValue, useSpring, HTMLMotionProps } from 'framer-motion';
-import { useRef } from 'react';
+import {
+  motion,
+  useMotionValue,
+  useSpring,
+  HTMLMotionProps,
+} from "framer-motion";
+import { useRef } from "react";
 
 interface ButtonProps extends HTMLMotionProps<"button"> {
   children: React.ReactNode;
-  variant?: 'primary' | 'secondary' | 'danger';
+  variant?: "primary" | "secondary" | "danger";
 }
 
 export function Button({
   children,
-  variant = 'primary',
-  className = '',
+  variant = "primary",
+  className = "",
   ...props
 }: ButtonProps) {
   const ref = useRef<HTMLButtonElement>(null);
@@ -56,9 +61,10 @@ export function Button({
   };
 
   const variantStyles = {
-    primary: '',
-    secondary: 'bg-transparent border-neon-green/30 hover:bg-neon-green/10',
-    danger: 'border-red-500 text-red-500 hover:bg-red-500/10 hover:text-red-500 hover:shadow-[0_0_20px_rgba(239,68,68,0.4)]',
+    primary: "",
+    secondary: "bg-transparent border-neon-green/30 hover:bg-neon-green/10",
+    danger:
+      "border-red-500 text-red-500 hover:bg-red-500/10 hover:text-red-500 hover:shadow-[0_0_20px_rgba(239,68,68,0.4)]",
   };
 
   return (
@@ -68,25 +74,35 @@ export function Button({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       style={{ x: springX, y: springY }}
-      whileHover={!props.disabled ? {
-        scale: 1.02,
-        boxShadow: '0 0 25px rgba(0, 255, 65, 0.5), 0 0 50px rgba(0, 255, 65, 0.2)',
-        textShadow: '0 0 10px rgba(0, 255, 65, 0.8)'
-      } : {}}
-      whileTap={!props.disabled ? {
-        scale: 0.98,
-        boxShadow: '0 0 30px rgba(0, 255, 65, 0.7), 0 0 60px rgba(0, 255, 65, 0.3)'
-      } : {}}
-      className={`cyber-button ${variantStyles[variant]} ${className} ${!props.disabled && variant === 'primary' ? 'relative overflow-hidden' : ''}`}
+      whileHover={
+        !props.disabled
+          ? {
+              scale: 1.02,
+              boxShadow:
+                "0 0 25px rgba(0, 255, 65, 0.5), 0 0 50px rgba(0, 255, 65, 0.2)",
+              textShadow: "0 0 10px rgba(0, 255, 65, 0.8)",
+            }
+          : {}
+      }
+      whileTap={
+        !props.disabled
+          ? {
+              scale: 0.98,
+              boxShadow:
+                "0 0 30px rgba(0, 255, 65, 0.7), 0 0 60px rgba(0, 255, 65, 0.3)",
+            }
+          : {}
+      }
+      className={`cyber-button ${variantStyles[variant]} ${className} ${!props.disabled && variant === "primary" ? "relative overflow-hidden" : ""}`}
       {...props}
     >
-      {!props.disabled && variant === 'primary' && (
+      {!props.disabled && variant === "primary" && (
         <motion.div
           className="absolute inset-0 bg-gradient-to-r from-transparent via-neon-green/20 to-transparent"
-          initial={{ x: '-100%' }}
+          initial={{ x: "-100%" }}
           whileHover={{
-            x: '100%',
-            transition: { duration: 0.6, ease: 'easeInOut' }
+            x: "100%",
+            transition: { duration: 0.6, ease: "easeInOut" },
           }}
         />
       )}

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Download, QrCode } from 'lucide-react';
+import { useState } from "react";
+import { Download, QrCode } from "lucide-react";
 
 interface QRCodeDisplayProps {
   vaultLink: string;
@@ -17,18 +17,18 @@ export function QRCodeDisplay({ vaultLink }: QRCodeDisplayProps) {
     setError(null);
 
     try {
-      const response = await fetch('/api/qr', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/qr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ vaultLink }),
       });
 
-      if (!response.ok) throw new Error('Failed to generate QR code');
+      if (!response.ok) throw new Error("Failed to generate QR code");
 
       const data = await response.json();
       setQrCode(data.qrCode);
     } catch (err) {
-      setError('Failed to generate QR code');
+      setError("Failed to generate QR code");
     } finally {
       setLoading(false);
     }
@@ -37,9 +37,9 @@ export function QRCodeDisplay({ vaultLink }: QRCodeDisplayProps) {
   const downloadQR = () => {
     if (!qrCode) return;
 
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = qrCode;
-    link.download = 'timeseal-vault-qr.png';
+    link.download = "timeseal-vault-qr.png";
     link.click();
   };
 
@@ -52,7 +52,7 @@ export function QRCodeDisplay({ vaultLink }: QRCodeDisplayProps) {
           className="flex items-center gap-2 px-4 py-2 bg-[#00FF00] text-black font-mono hover:bg-[#00DD00] disabled:opacity-50"
         >
           <QrCode size={20} />
-          {loading ? 'Generating...' : 'Generate QR Code'}
+          {loading ? "Generating..." : "Generate QR Code"}
         </button>
       ) : (
         <div className="space-y-4">
@@ -74,9 +74,7 @@ export function QRCodeDisplay({ vaultLink }: QRCodeDisplayProps) {
         </div>
       )}
 
-      {error && (
-        <p className="text-red-500 text-sm font-mono">{error}</p>
-      )}
+      {error && <p className="text-red-500 text-sm font-mono">{error}</p>}
     </div>
   );
 }

@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Lock, Unlock, Shield } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Lock, Unlock, Shield } from "lucide-react";
 
 interface Activity {
-  type: 'sealed' | 'unlocked' | 'dms';
+  type: "sealed" | "unlocked" | "dms";
   timestamp: number;
   location?: string;
 }
@@ -17,17 +17,17 @@ export function ActivityTicker() {
   useEffect(() => {
     const fetchActivities = async () => {
       try {
-        const res = await fetch('/api/activity');
+        const res = await fetch("/api/activity");
         const data = await res.json();
         if (data.activities?.length > 0) {
           // Validate activity types
-          const validActivities = data.activities.filter((a: Activity) => 
-            ['sealed', 'unlocked', 'dms'].includes(a.type)
+          const validActivities = data.activities.filter((a: Activity) =>
+            ["sealed", "unlocked", "dms"].includes(a.type),
           );
           setActivities(validActivities);
         }
       } catch (err) {
-        console.error('Failed to fetch activities:', err);
+        console.error("Failed to fetch activities:", err);
       }
     };
 
@@ -49,20 +49,20 @@ export function ActivityTicker() {
   const current = activities[currentIndex];
   const formatted = (() => {
     switch (current.type) {
-      case 'sealed':
+      case "sealed":
         return {
           icon: <Lock className="w-4 h-4" />,
-          text: `🔒 Anonymous sealed a message${current.location ? ` in ${current.location}` : ''}`,
+          text: `🔒 Anonymous sealed a message${current.location ? ` in ${current.location}` : ""}`,
         };
-      case 'unlocked':
+      case "unlocked":
         return {
           icon: <Unlock className="w-4 h-4" />,
           text: `⏰ Seal unlocked`,
         };
-      case 'dms':
+      case "dms":
         return {
           icon: <Shield className="w-4 h-4" />,
-          text: `💀 Dead man's switch activated${current.location ? ` in ${current.location}` : ''}`,
+          text: `💀 Dead man's switch activated${current.location ? ` in ${current.location}` : ""}`,
         };
     }
   })();

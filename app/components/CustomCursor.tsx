@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 
 export function CustomCursor() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -11,11 +11,11 @@ export function CustomCursor() {
     const updateMousePosition = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
       const target = e.target as HTMLElement;
-      setIsPointer(window.getComputedStyle(target).cursor === 'pointer');
+      setIsPointer(window.getComputedStyle(target).cursor === "pointer");
     };
 
-    window.addEventListener('mousemove', updateMousePosition);
-    return () => window.removeEventListener('mousemove', updateMousePosition);
+    window.addEventListener("mousemove", updateMousePosition);
+    return () => window.removeEventListener("mousemove", updateMousePosition);
   }, []);
 
   return (
@@ -27,7 +27,7 @@ export function CustomCursor() {
           y: mousePosition.y - 8,
           scale: isPointer ? 1.5 : 1,
         }}
-        transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+        transition={{ type: "spring", stiffness: 500, damping: 28 }}
       />
       <motion.div
         className="fixed w-1 h-1 bg-neon-green rounded-full pointer-events-none z-[9999]"
@@ -35,7 +35,7 @@ export function CustomCursor() {
           x: mousePosition.x - 2,
           y: mousePosition.y - 2,
         }}
-        transition={{ type: 'spring', stiffness: 1000, damping: 50 }}
+        transition={{ type: "spring", stiffness: 1000, damping: 50 }}
       />
     </>
   );
