@@ -7,6 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.1] - 2025-01-18
+
+### Added
+- **Encrypted Local Storage** - Browser-based encrypted vault for saving seals
+  - `lib/encryptedStorage.ts` - AES-GCM-256 encrypted localStorage (180 LOC)
+  - Unique encryption key per browser (stored in localStorage)
+  - Dashboard page for viewing saved seals
+  - Three-button interface: COPY | DOWNLOAD (MD) | SAVE (encrypted)
+  - Markdown download includes both vault and pulse links
+  - Privacy-first: No server storage, all data encrypted locally
+
+### Removed
+- **Seed Phrase System** - Simplified user experience
+  - Removed `/generate-seed` page and UI
+  - Removed `/recover` page and recovery flow
+  - Removed `lib/seedPhrase.ts` library
+  - Removed `lib/reusable/seedPhraseRecovery.ts` library
+  - Removed seed phrase from all crypto operations
+  - Removed "Generate Seed Phrase" navigation button
+
+### Changed
+- Seal creation now always uses random keys (no seed phrase option)
+- Dashboard now loads from encrypted localStorage (not server)
+- SealSuccess component shows three action buttons per link
+- Simplified crypto.ts interface (removed seedPhrase parameters)
+- Deploy script fixed with proper bash syntax (`[[]]` instead of `[]`)
+
+### Security
+- Local vault encrypted with AES-GCM-256
+- Unique encryption key per browser (never transmitted)
+- No server-side storage of user's seal links
+- Encrypted data stored in localStorage only
+- Manual save action (user controls what's stored)
+
+### User Experience
+- Simplified flow: Create → Copy/Download/Save
+- No complex seed phrase management
+- Instant access to saved seals in dashboard
+- Markdown files for offline backup
+- One-click copy to clipboard
+
+### Documentation
+- Updated README with encrypted storage feature
+- Removed seed phrase documentation
+- Added dashboard usage instructions
+
+### Breaking Changes
+- Seed phrase recovery no longer available
+- Old seed phrases cannot be used to recover seals
+- Users must save vault links manually (COPY/DOWNLOAD/SAVE buttons)
+
 ## [0.9.0] - 2025-01-17
 
 ### Added

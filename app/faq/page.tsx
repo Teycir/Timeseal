@@ -55,7 +55,7 @@ export default function FAQPage() {
               <li>Select &quot;Timed Release&quot; mode</li>
               <li>Choose unlock date/time (up to 30 days)</li>
               <li>Complete Cloudflare Turnstile security check</li>
-              <li>Save vault link (contains Key A in URL hash)</li>
+              <li>Choose how to save: COPY | DOWNLOAD (MD) | SAVE (encrypted vault)</li>
             </ul>
             <p className="text-neon-green/60 text-sm mb-2"><strong className="text-neon-green">Dead Man&apos;s Switch:</strong></p>
             <ul className="list-disc list-inside ml-4 space-y-1 text-xs text-neon-green/60">
@@ -65,6 +65,24 @@ export default function FAQPage() {
               <li>Save TWO links: vault link (public) and pulse link (private)</li>
               <li>Visit pulse link before interval expires to keep sealed</li>
             </ul>
+          </div>
+
+          <div>
+            <h3 className="text-base sm:text-lg font-bold text-neon-green mb-2">How do I save my seals for later?</h3>
+            <p className="text-neon-green/60 text-sm mb-2"><strong className="text-neon-green">Three options after creating a seal:</strong></p>
+            <ul className="list-disc list-inside ml-4 space-y-1 text-xs text-neon-green/60 mb-2">
+              <li><strong className="text-neon-green">COPY</strong> - Copy vault link to clipboard (paste into password manager)</li>
+              <li><strong className="text-neon-green">DOWNLOAD (MD)</strong> - Download markdown file with both vault and pulse links</li>
+              <li><strong className="text-neon-green">SAVE</strong> - Encrypt and save to browser vault (AES-GCM-256)</li>
+            </ul>
+            <p className="text-neon-green/60 text-sm mb-2"><strong className="text-neon-green">Encrypted Local Storage:</strong></p>
+            <ul className="list-disc list-inside ml-4 space-y-1 text-xs text-neon-green/60 mb-2">
+              <li>Seals encrypted with AES-GCM-256 in your browser</li>
+              <li>Unique encryption key per browser (stored locally)</li>
+              <li>No server-side storage of your vault links</li>
+              <li>Access saved seals at /dashboard</li>
+            </ul>
+            <p className="text-neon-green/60 text-sm"><strong className="text-neon-green">Best practices:</strong> Use all three methods for important seals. Store markdown files in encrypted cloud storage. Never share vault links over unencrypted channels.</p>
           </div>
 
           <div>

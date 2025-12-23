@@ -91,6 +91,22 @@ export default function SecurityPage() {
 
         <Card className="p-4 sm:p-6 md:p-8 space-y-6">
           <h2 className="text-xl sm:text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
+            <ShieldCheck className="w-6 h-6" /> Security Features (v0.9.1)
+          </h2>
+          <div className="space-y-4 text-neon-green/60 text-sm">
+            <div>
+              <p className="text-neon-green font-bold mb-2 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Encrypted Local Storage</p>
+              <p>Browser-based encrypted vault for saving seals. AES-GCM-256 encryption with unique key per browser. No server-side storage of user&apos;s vault links. Privacy-first design.</p>
+            </div>
+            <div>
+              <p className="text-neon-green font-bold mb-2 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Simplified Security Model</p>
+              <p>Removed seed phrase complexity. Always uses cryptographically random keys. No recovery mechanism (by design). Users control what&apos;s stored via COPY | DOWNLOAD | SAVE buttons.</p>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-4 sm:p-6 md:p-8 space-y-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
             <ShieldCheck className="w-6 h-6" /> Security Features (v0.6.2)
           </h2>
           <div className="space-y-4 text-neon-green/60 text-sm">

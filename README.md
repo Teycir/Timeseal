@@ -223,8 +223,11 @@ sequenceDiagram
 4. Choose unlock date and time (up to 30 days)
 5. Complete security check (Cloudflare Turnstile)
 6. Click "Create Time-Seal"
-7. Save the vault link (contains Key A in URL hash)
-8. Share link with recipient
+7. Choose how to save the vault link:
+   - **COPY** - Copy to clipboard
+   - **DOWNLOAD** - Save markdown file with links
+   - **SAVE** - Encrypt and store in browser vault
+8. Share vault link with recipient
 
 **Dead Man's Switch:**
 1. Follow steps 1-3 above
@@ -268,6 +271,50 @@ sequenceDiagram
 - Use pulse link to permanently delete seal
 - Content destroyed immediately
 - Cannot be recovered
+
+### How do I save my seals for later?
+
+**Three options after creating a seal:**
+
+1. **COPY** - Copy vault link to clipboard
+   - Paste into password manager
+   - Send via encrypted messaging
+   - Share with recipient
+
+2. **DOWNLOAD (MD)** - Download markdown file
+   - Contains both vault and pulse links
+   - Includes security notes and instructions
+   - Offline backup for your records
+   - Print or store in secure location
+
+3. **SAVE** - Encrypt and save to browser vault
+   - Stored encrypted in your browser (AES-GCM-256)
+   - Access anytime from dashboard
+   - Never transmitted to server
+   - Unique encryption key per browser
+
+**Encrypted Local Storage:**
+- Your seals are encrypted with AES-GCM-256
+- Encryption key stored in your browser only
+- No server-side storage of your vault links
+- Data persists in localStorage until you clear it
+- Access saved seals at [/dashboard](https://timeseal.dev/dashboard)
+
+**Best practices:**
+- Use all three methods for important seals
+- Store markdown files in encrypted cloud storage
+- Keep vault links in password manager
+- Never share vault links over unencrypted channels
+- Clear browser data will delete saved seals
+
+### How do I access my saved seals?
+
+1. Visit [/dashboard](https://timeseal.dev/dashboard)
+2. See all seals saved in your browser
+3. Click any seal to open vault page
+4. Delete seals you no longer need
+
+**Note:** Saved seals are encrypted and stored locally in your browser. They are NOT synced to the server or across devices.
 
 ### What happens if I lose the vault link?
 
@@ -606,6 +653,14 @@ Stage 4 (Week 4): "Final Exam [link]"
 - Error sanitization (no internal state leakage)
 - Warrant canary for transparency
 
+### 🔒 Hardening Features (v0.9.1)
+
+**✅ Encrypted Local Storage** - Browser-based encrypted vault for saving seals  
+**✅ Privacy-First Design** - No server storage of user's vault links  
+**✅ AES-GCM-256 Encryption** - Unique key per browser, stored locally  
+**✅ Manual Save Control** - User decides what to store  
+**✅ Simplified Security** - No seed phrase complexity, pure random keys  
+
 ### 🔒 Hardening Features (v0.6.0)
 
 **✅ Memory Protection** - Key A obfuscated in browser memory to prevent casual inspection  
@@ -779,7 +834,15 @@ See [LICENSE](LICENSE) for full terms.
 
 ## 🔮 Roadmap
 
-**Recently Implemented (v0.9.0):**
+**Recently Implemented (v0.9.1):**
+- ✅ Encrypted Local Storage - Browser-based encrypted vault for saving seals
+- ✅ Three-Button Interface - COPY | DOWNLOAD (MD) | SAVE (encrypted)
+- ✅ Privacy-First Storage - No server storage of user's vault links
+- ✅ Simplified Security - Removed seed phrase complexity
+- ✅ Dashboard Access - View and manage saved seals
+- ✅ Markdown Downloads - Offline backup with both vault and pulse links
+
+**Recently Implemented (v0.9.0):****
 - ✅ Ephemeral Seals - Self-destructing read-once messages
 - ✅ Atomic View Counting - Race-condition safe view tracking
 - ✅ Privacy-Preserving Fingerprints - SHA-256 hashed viewer tracking

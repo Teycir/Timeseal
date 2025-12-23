@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { addSeal } from "@/lib/encryptedStorage";
 import { Card } from "./Card";
 import { Button } from "./Button";
 import { Input } from "./Input";
@@ -21,8 +22,6 @@ interface SealSuccessProps {
   pulseUrl?: string;
   pulseToken?: string;
   receipt?: Receipt;
-  keyA: string;
-  seedPhrase?: string;
   sealId: string;
   onReset: () => void;
 }
@@ -32,13 +31,10 @@ export function SealSuccess({
   pulseUrl,
   pulseToken,
   receipt,
-  seedPhrase,
   sealId,
   onReset,
 }: SealSuccessProps) {
   const [qrCode, setQrCode] = useState<string>("");
-  const [showSeedPhrase, setShowSeedPhrase] = useState(!!seedPhrase);
-  const [seedConfirmed, setSeedConfirmed] = useState(false);
 
   useEffect(() => {
     const generateQR = async () => {
@@ -110,82 +106,6 @@ export function SealSuccess({
       </motion.div>
 
       <Card className="space-y-6">
-        {seedPhrase && showSeedPhrase && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="border-2 border-yellow-400/50 bg-yellow-950/10 p-6 space-y-4 rounded-xl"
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">🔑</span>
-              <h3 className="text-xl font-mono text-yellow-400 font-bold">
-                RECOVERY SEED PHRASE
-              </h3>
-            </div>
-
-            <p className="font-mono text-sm text-yellow-300/80">
-              Write these 12 words on paper. You&apos;ll need them to recover
-              your vault link if lost.
-            </p>
-
-            <div className="bg-dark-bg p-5 border-2 border-yellow-400/30 rounded-xl">
-              <div className="grid grid-cols-3 gap-4">
-                {seedPhrase
-                  .split(" ")
-                  .filter((w) => w)
-                  .map((word, i) => (
-                    <div
-                      key={i}
-                      className="font-mono text-neon-green flex items-center gap-2"
-                    >
-                      <span className="text-yellow-400/70 text-xs w-6">
-                        {i + 1}.
-                      </span>
-                      <span className="font-bold">{word}</span>
-                    </div>
-                  ))}
-              </div>
-            </div>
-
-            <div className="bg-dark-bg p-3 border-2 border-yellow-400/30 rounded-xl">
-              <p className="font-mono text-xs text-yellow-300/70">
-                Seal ID: <span className="text-neon-green">{sealId}</span>
-              </p>
-            </div>
-
-            <div className="space-y-2 text-sm font-mono text-yellow-300/70 bg-dark-bg/50 p-4 rounded-xl border border-yellow-400/20">
-              <p>⚠️ Anyone with these words can access your seal</p>
-              <p>⚠️ Store securely (safe, password manager, paper backup)</p>
-              <p>⚠️ Never share or store digitally unencrypted</p>
-            </div>
-
-            <div className="flex gap-3">
-              <Button
-                onClick={() => {
-                  copyToClipboard(
-                    `Seal ID: ${sealId}\n\nSeed Phrase:\n${seedPhrase}`,
-                    "Seed Phrase",
-                  );
-                }}
-                className="flex-1"
-                variant="secondary"
-              >
-                COPY TO CLIPBOARD
-              </Button>
-              <Button
-                onClick={() => {
-                  setShowSeedPhrase(false);
-                  setSeedConfirmed(true);
-                  toast.success("Seed phrase confirmed");
-                }}
-                className="flex-1"
-              >
-                ✓ I&apos;VE WRITTEN IT DOWN
-              </Button>
-            </div>
-          </motion.div>
-        )}
-
         {qrCode && (
           <div className="qr-print-container flex justify-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -222,6 +142,79 @@ export function SealSuccess({
             >
               COPY
             </Button>
+            <Button
+              onClick={() => {
+                const content = `# TimeSeal Vault
+
+**Seal ID:** ${sealId}
+
+**Type:** ${pulseToken ? 'Dead Man\'s Switch' : 'Timed Release'}
+
+**Created:** ${new Date().toLocaleString()}
+
+---
+
+## Vault Link (Public)
+
+${publicUrl}
+
+${pulseUrl && pulseToken ? `## Pulse Link (Keep Secret)
+
+${pulseUrl}/${encodeURIComponent(pulseToken)}
+
+⚠️ **WARNING:** Keep this link private. It allows you to reset the countdown or burn the seal.
+
+---
+
+` : ''}## Security Notes
+
+- Store this file securely (encrypted storage, password manager, or safe)
+- The vault link contains Key A in the URL hash (#)
+- Never share vault links over unencrypted channels
+- Anyone with the vault link can access the content after unlock time
+${pulseUrl && pulseToken ? '- Anyone with the pulse link can control the seal (reset timer or burn)' : ''}
+
+---
+
+*Generated by TimeSeal - Cryptographically Enforced Time-Locked Vaults*`;
+                const blob = new Blob([content], { type: "text/markdown" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `timeseal-${sealId}.md`;
+                a.click();
+                setTimeout(() => URL.revokeObjectURL(url), 100);
+                toast.success("Saved as markdown");
+              }}
+              className="bg-neon-green/20 mb-[2px]"
+              title="Download as markdown"
+              variant="secondary"
+            >
+              <Download className="w-4 h-4" />
+            </Button>
+            <Button
+              onClick={async () => {
+                try {
+                  await addSeal({
+                    id: sealId,
+                    publicUrl,
+                    pulseUrl,
+                    pulseToken,
+                    type: pulseToken ? 'deadman' : 'timed',
+                    unlockTime: receipt?.unlockTime || Date.now() + 3600000,
+                    createdAt: Date.now()
+                  });
+                  toast.success("Saved to My Seals");
+                } catch {
+                  toast.error("Failed to save");
+                }
+              }}
+              className="bg-neon-green/20 mb-[2px]"
+              title="Save to encrypted vault"
+              variant="secondary"
+            >
+              SAVE
+            </Button>
           </div>
         </div>
 
@@ -244,7 +237,7 @@ export function SealSuccess({
                 onClick={() =>
                   copyToClipboard(
                     `${pulseUrl}/${encodeURIComponent(pulseToken || "")}`,
-                    "Link",
+                    "Pulse Link",
                   )
                 }
                 className="bg-neon-green/20 mb-[2px]"

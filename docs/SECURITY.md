@@ -318,7 +318,19 @@ Time-Seal implements multiple overlapping security layers:
 
 ## Recent Security Enhancements
 
-**v0.6.2 (2025-12-23):**
+**v0.9.1 (2025-01-18):**
+- **Encrypted Local Storage** - Browser-based encrypted vault for saving seals
+  - AES-GCM-256 encryption with unique key per browser
+  - No server-side storage of user's vault links
+  - Privacy-first: All data encrypted locally in localStorage
+  - Manual save action (user controls what's stored)
+- **Simplified Security Model** - Removed seed phrase complexity
+  - Always uses cryptographically random keys
+  - No recovery mechanism (by design)
+  - Users responsible for saving vault links
+  - Three-button interface: COPY | DOWNLOAD | SAVE
+
+**v0.6.2 (2025-12-23):****
 - **CRITICAL FIX: Replay attack prevention** - Nonce checked atomically before token validation
 - **CRITICAL FIX: Atomic pulse updates** - Single database operation prevents partial state
 - **CRITICAL FIX: Safe deletion order** - Database deleted first, then blob

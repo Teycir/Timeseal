@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { ensureIntegrity } from '@/lib/clientIntegrity';
+import { addSeal } from '@/lib/encryptedStorage';
 import { BackgroundBeams } from './components/ui/background-beams';
 import { EncryptionProgress } from './components/EncryptionProgress';
 import { FloatingIcons } from './components/FloatingIcons';
@@ -23,7 +24,6 @@ export default function HomePage() {
     pulseToken?: string;
     receipt?: any;
     keyA: string;
-    seedPhrase?: string;
     sealId: string;
   } | null>(null);
 
@@ -70,28 +70,23 @@ export default function HomePage() {
     });
   }, []);
 
-  const handleSuccess = (data: { publicUrl: string; pulseUrl?: string; pulseToken?: string; receipt?: any; keyA: string; seedPhrase?: string; sealId: string }) => {
+  const handleSuccess = (data: { publicUrl: string; pulseUrl?: string; pulseToken?: string; receipt?: any; keyA: string; sealId: string }) => {
     setResult(data);
     triggerConfetti();
 
-    // Save to local storage
-    try {
-      const stored = localStorage.getItem('timeseal_links');
-      const seals = stored ? JSON.parse(stored) : [];
-      const sealId = data.publicUrl.split('/v/')[1]?.split('#')[0];
-      seals.push({
-        id: sealId,
-        publicUrl: data.publicUrl,
-        pulseUrl: data.pulseUrl,
-        pulseToken: data.pulseToken,
-        type: data.pulseToken ? 'deadman' : 'timed',
-        unlockTime: Date.now() + 3600000, // Will be updated from receipt if available
-        createdAt: Date.now()
-      });
-      localStorage.setItem('timeseal_links', JSON.stringify(seals));
-    } catch (err) {
-      console.error('Failed to save seal to dashboard:', err);
-    }
+    // Save to encrypted local storage
+    const sealId = data.publicUrl.split('/v/')[1]?.split('#')[0];
+    addSeal({
+      id: sealId || '',
+      publicUrl: data.publicUrl,
+      pulseUrl: data.pulseUrl,
+      pulseToken: data.pulseToken,
+      type: data.pulseToken ? 'deadman' : 'timed',
+      unlockTime: Date.now() + 3600000,
+      createdAt: Date.now()
+    }).catch(err => {
+      console.error('Failed to save seal to encrypted storage:', err);
+    });
   };
 
   const handleReset = () => {
@@ -135,16 +130,6 @@ export default function HomePage() {
         >
           <span className="text-xs text-neon-green/70 font-mono group-hover:text-neon-green transition-colors">MY SEALS</span>
         </motion.a>
-
-        <motion.a
-          href="/generate-seed"
-          className="flex items-center justify-center gap-2 px-4 py-2 bg-dark-bg/80 backdrop-blur-sm border-2 border-neon-green/30 rounded-xl hover:border-neon-green transition-all group"
-          whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(0, 255, 65, 0.3)' }}
-          whileTap={{ scale: 0.95 }}
-          aria-label="Generate BIP39 seed phrase"
-        >
-          <span className="text-xs text-neon-green/70 font-mono group-hover:text-neon-green transition-colors">GENERATE SEED PHRASE</span>
-        </motion.a>
       </div>
 
       <section className="max-w-2xl w-full relative z-10 my-auto" aria-label="Create time-locked vault">
@@ -155,8 +140,6 @@ export default function HomePage() {
               pulseUrl={result.pulseUrl}
               pulseToken={result.pulseToken}
               receipt={result.receipt}
-              keyA={result.keyA}
-              seedPhrase={result.seedPhrase}
               sealId={result.sealId}
               onReset={handleReset}
             />

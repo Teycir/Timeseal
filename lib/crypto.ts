@@ -1,14 +1,12 @@
 // Time-Seal Crypto Library - Split-Key AES-GCM Encryption
 import { SecureMemory } from "./memoryProtection";
 import { arrayBufferToBase64, base64ToArrayBuffer } from "./cryptoUtils";
-import { generateSeedPhrase } from "./seedPhrase";
 
 export interface EncryptionResult {
   encryptedBlob: ArrayBuffer;
   keyA: string;
   keyB: string;
   iv: string;
-  seedPhrase?: string;
 }
 
 export interface DecryptionKeys {
@@ -88,41 +86,17 @@ async function deriveMasterKey(
   );
 }
 
-// Encrypt data with split-key system (with memory protection and optional seed phrase)
+// Encrypt data with split-key system (with memory protection)
 export async function encryptData(
   data: string | File,
-  options?: { useSeedPhrase?: boolean },
 ): Promise<EncryptionResult> {
   const memory = new SecureMemory();
 
   try {
-    let keyA: CryptoKey;
-    let keyB: CryptoKey;
-    let seedPhrase: string | undefined;
-
-    if (options?.useSeedPhrase) {
-      const seed = await generateSeedPhrase();
-      seedPhrase = seed.mnemonic;
-      const seedProtected = memory.protect(seedPhrase);
-      const keyABuffer = base64ToArrayBuffer(seed.keyA);
-      keyA = await crypto.subtle.importKey(
-        "raw",
-        keyABuffer,
-        { name: "AES-GCM" },
-        true,
-        ["encrypt", "decrypt"],
-      );
-      keyB = (await crypto.subtle.generateKey(
-        { name: "AES-GCM", length: 256 },
-        true,
-        ["encrypt", "decrypt"],
-      )) as CryptoKey;
-      seedPhrase = memory.retrieve(seedProtected);
-    } else {
-      const keys = await generateKeys();
-      keyA = keys.keyA;
-      keyB = keys.keyB;
-    }
+    const keys = await generateKeys();
+    const keyA = keys.keyA;
+    const keyB = keys.keyB;
+    
     const masterKey = await deriveMasterKey(keyA, keyB);
 
     // Convert input to ArrayBuffer
@@ -165,7 +139,6 @@ export async function encryptData(
       keyA: memory.retrieve(keyAProtected),
       keyB: memory.retrieve(keyBProtected),
       iv: ivBase64,
-      seedPhrase,
     };
   } finally {
     memory.destroy();

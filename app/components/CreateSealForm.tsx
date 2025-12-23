@@ -111,7 +111,6 @@ interface CreateSealFormProps {
     pulseToken?: string;
     receipt?: any;
     keyA: string;
-    seedPhrase?: string;
     sealId: string;
   }) => void;
   onProgressChange: (progress: number) => void;
@@ -354,7 +353,6 @@ export function CreateSealForm({
           pulseToken: data.pulseToken,
           receipt: data.receipt,
           keyA: encrypted.keyA,
-          seedPhrase: encrypted.seedPhrase,
           sealId: data.publicUrl.split("/").pop() || "",
         });
       } else {
@@ -718,10 +716,7 @@ export function CreateSealForm({
             Complete this security check to prove you&apos;re human
           </span>
           <Turnstile
-            siteKey={
-              process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ||
-              "1x00000000000000000000AA"
-            }
+            siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
             onSuccess={setTurnstileToken}
             onError={() =>
               toast.error("Security verification failed. Please refresh.")

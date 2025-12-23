@@ -9,6 +9,7 @@ import { Copy, ExternalLink, Trash2, Clock, Shield, Download } from 'lucide-reac
 import { toast } from 'sonner';
 import Link from 'next/link';
 import DecryptedText from '../components/DecryptedText';
+import { loadSeals, removeSeal } from '@/lib/encryptedStorage';
 
 interface StoredSeal {
   id: string;
@@ -25,22 +26,17 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem('timeseal_links');
-    if (stored) {
-      try {
-        setSeals(JSON.parse(stored));
-      } catch {
-        toast.error('Failed to load saved seals');
-      }
-    }
-    setIsLoading(false);
+    loadSeals()
+      .then(setSeals)
+      .catch(() => toast.error('Failed to load saved seals'))
+      .finally(() => setIsLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const deleteSeal = (id: string) => {
+  const deleteSeal = async (id: string) => {
     if (confirm('Remove this seal from your dashboard?')) {
-      const updated = seals.filter(s => s.id !== id);
-      localStorage.setItem('timeseal_links', JSON.stringify(updated));
-      setSeals(updated);
+      await removeSeal(id);
+      setSeals(seals.filter(s => s.id !== id));
       toast.success('Seal removed');
     }
   };
@@ -140,15 +136,6 @@ ${seal.pulseUrl && seal.pulseToken ? '- Anyone with the pulse link can control t
           whileTap={{ scale: 0.95 }}
         >
           <span className="text-xs text-neon-green/70 font-mono group-hover:text-neon-green transition-colors">HOME</span>
-        </motion.a>
-
-        <motion.a
-          href="/generate-seed"
-          className="flex items-center justify-center gap-2 px-4 py-2 bg-dark-bg/80 backdrop-blur-sm border-2 border-neon-green/30 rounded-xl hover:border-neon-green transition-all group"
-          whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(0, 255, 65, 0.3)' }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <span className="text-xs text-neon-green/70 font-mono group-hover:text-neon-green transition-colors">GENERATE SEED PHRASE</span>
         </motion.a>
       </div>
       
@@ -273,7 +260,7 @@ ${seal.pulseUrl && seal.pulseToken ? '- Anyone with the pulse link can control t
 
         <div className="mt-8 text-center">
           <p className="text-xs text-neon-green/40">
-            💡 Stored locally in your browser. Print or save vault links to paper for offline backup.
+            🔒 Stored encrypted in your browser. Download backups for offline storage.
           </p>
         </div>
       </div>
