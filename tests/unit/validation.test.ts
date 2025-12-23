@@ -49,15 +49,15 @@ describe('Validation', () => {
     });
 
     it('should reject too short interval', () => {
-      const result = validatePulseInterval(1800 * 1000); // 30 minutes
+      const result = validatePulseInterval(60 * 1000); // 1 minute (too short)
       expect(result.valid).toBe(false);
-      expect(result.error).toContain('at least 1 hour');
+      expect(result.error).toContain('at least 5 minutes');
     });
 
     it('should reject too long interval', () => {
       const result = validatePulseInterval(100 * 24 * 3600 * 1000); // 100 days
       expect(result.valid).toBe(false);
-      expect(result.error).toContain('cannot exceed 90 days');
+      expect(result.error).toContain('cannot exceed 30 days');
     });
   });
 

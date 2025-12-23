@@ -3,11 +3,13 @@ import { SealDatabase } from "./database";
 import { SealService } from "./sealService";
 import { AuditLogger } from "./auditLogger";
 import { createStorage } from "./storage";
+import { logger, createChildLogger } from "./structuredLogger";
 import type { D1Database } from "@cloudflare/workers-types";
 
 interface CloudflareEnv {
   DB: D1Database; // Required, not optional
   MASTER_ENCRYPTION_KEY: string; // Required, not optional
+  METRICS_SECRET?: string; // Optional
 }
 
 export interface Container {
@@ -16,6 +18,9 @@ export interface Container {
   database: SealDatabase;
   db: D1Database; // Always D1Database
   auditLogger: AuditLogger;
+  logger: typeof logger;
+  createLogger: typeof createChildLogger;
+  masterKey: string;
 }
 
 export function createContainer(env: CloudflareEnv): Container {
@@ -43,5 +48,8 @@ export function createContainer(env: CloudflareEnv): Container {
     database,
     db: env.DB,
     auditLogger,
+    logger,
+    createLogger: createChildLogger,
+    masterKey: env.MASTER_ENCRYPTION_KEY,
   };
 }

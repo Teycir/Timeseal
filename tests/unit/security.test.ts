@@ -1,4 +1,4 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 import {
   constantTimeEqual,
   generatePulseToken,
@@ -7,6 +7,7 @@ import {
   validateCSRF,
   validateContentType,
   checkAndStoreNonce,
+  setSecurityEnv,
 } from '../../lib/security';
 
 describe('Security Utilities', () => {
@@ -61,19 +62,16 @@ describe('Security Utilities', () => {
 
   describe('sanitizeError', () => {
     it('should return generic message in production', () => {
-      const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'production';
+      setSecurityEnv({ NODE_ENV: 'production' });
       const result = sanitizeError(new Error('Internal details'));
       expect(result).toBe('An error occurred. Please try again.');
-      process.env.NODE_ENV = originalEnv;
+      setSecurityEnv({ NODE_ENV: 'development' }); // Reset
     });
 
     it('should return error message in development', () => {
-      const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'development';
+      setSecurityEnv({ NODE_ENV: 'development' });
       const result = sanitizeError(new Error('Debug info'));
       expect(result).toBe('Debug info');
-      process.env.NODE_ENV = originalEnv;
     });
   });
 

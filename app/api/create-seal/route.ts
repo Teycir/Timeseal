@@ -9,19 +9,14 @@ import {
   validateTimestamp,
 } from "@/lib/validation";
 import { ErrorCode, createErrorResponse } from "@/lib/errors";
-import { validateHTTPMethod, validateOrigin } from "@/lib/security";
+import { RATE_LIMIT_CREATE_SEAL } from "@/lib/constants";
+import { validateAPIRequest, validateFields, trackAnalytics } from "@/lib/apiHelpers";
 
 export async function POST(request: NextRequest) {
-  if (!validateHTTPMethod(request, ["POST"])) {
-    return jsonResponse({ error: "Method not allowed" }, 405);
-  }
+  const securityError = validateAPIRequest(request, ["POST"]);
+  if (securityError) return securityError;
 
-  if (!validateOrigin(request)) {
-    return jsonResponse({ error: "Invalid origin" }, 403);
-  }
-
-  const contentLength = parseInt(request.headers.get("content-length") || "0");
-
+  const contentLength = parseInt(request.headers.get("content-length") || "0", 10);
   const sizeValidation = validateRequestSize(contentLength);
   if (!sizeValidation.valid) {
     return jsonResponse({ error: sizeValidation.error }, 413);
@@ -33,10 +28,10 @@ export async function POST(request: NextRequest) {
       const encryptedBlob = formData.get("encryptedBlob") as File;
       const keyB = formData.get("keyB") as string;
       const iv = formData.get("iv") as string;
-      const unlockTime = parseInt(formData.get("unlockTime") as string);
+      const unlockTime = parseInt(formData.get("unlockTime") as string, 10);
       const isDMS = formData.get("isDMS") === "true";
       const pulseInterval = formData.get("pulseInterval")
-        ? parseInt(formData.get("pulseInterval") as string)
+        ? parseInt(formData.get("pulseInterval") as string, 10)
         : undefined;
 
       if (!encryptedBlob || !keyB || !iv || !unlockTime || isNaN(unlockTime)) {
@@ -46,37 +41,18 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const keyBValidation = validateKey(keyB, "Key B");
-      if (!keyBValidation.valid) {
-        return jsonResponse({ error: keyBValidation.error }, 400);
-      }
+      // Validate all fields at once
+      const validationError = validateFields([
+        { validation: validateKey(keyB, "Key B") },
+        { validation: validateKey(iv, "IV") },
+        { validation: validateTimestamp(unlockTime) },
+        { validation: validateFileSize(encryptedBlob.size) },
+        { validation: validateUnlockTime(unlockTime) },
+      ]);
+      if (validationError) return validationError;
 
-      const ivValidation = validateKey(iv, "IV");
-      if (!ivValidation.valid) {
-        return jsonResponse({ error: ivValidation.error }, 400);
-      }
-
-      const timestampValidation = validateTimestamp(unlockTime);
-      if (!timestampValidation.valid) {
-        return jsonResponse({ error: timestampValidation.error }, 400);
-      }
-
-      const fileSizeValidation = validateFileSize(encryptedBlob.size);
-      if (!fileSizeValidation.valid) {
-        return jsonResponse({ error: fileSizeValidation.error }, 400);
-      }
-
-      const timeValidation = validateUnlockTime(unlockTime);
-      if (!timeValidation.valid) {
-        return createErrorResponse(
-          ErrorCode.INVALID_UNLOCK_TIME,
-          timeValidation.error,
-        );
-      }
-
-      const sealService = container.sealService;
       const blobBuffer = await encryptedBlob.arrayBuffer();
-      const result = await sealService.createSeal(
+      const result = await container.sealService.createSeal(
         {
           encryptedBlob: blobBuffer,
           keyB,
@@ -88,12 +64,7 @@ export async function POST(request: NextRequest) {
         ip,
       );
 
-      // Track analytics
-      try {
-        const { AnalyticsService } = await import('@/lib/analytics');
-        const analytics = new AnalyticsService(container.db);
-        await analytics.trackEvent({ eventType: 'seal_created' });
-      } catch {}
+      await trackAnalytics(container.db, 'seal_created');
 
       return jsonResponse({
         success: true,
@@ -104,6 +75,6 @@ export async function POST(request: NextRequest) {
         receipt: result.receipt,
       });
     },
-    { rateLimit: { limit: 10, window: 60000 } },
+    { rateLimit: RATE_LIMIT_CREATE_SEAL },
   )(request);
 }

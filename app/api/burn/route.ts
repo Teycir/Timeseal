@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { jsonResponse } from '@/lib/apiHandler';
 import { createAPIRoute } from '@/lib/routeHelper';
 import { ErrorCode, createErrorResponse } from '@/lib/errors';
+import { RATE_LIMIT_BURN } from '@/lib/constants';
 
 export async function POST(request: NextRequest) {
   return createAPIRoute(async ({ container, request: ctx, ip }) => {
@@ -24,5 +25,5 @@ export async function POST(request: NextRequest) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       return createErrorResponse(ErrorCode.INTERNAL_ERROR, `Burn failed: ${errorMessage}`);
     }
-  }, { rateLimit: { limit: 10, window: 60000 } })(request);
+  }, { rateLimit: RATE_LIMIT_BURN })(request);
 }

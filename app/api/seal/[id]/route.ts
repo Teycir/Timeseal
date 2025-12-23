@@ -2,21 +2,18 @@ import { NextRequest } from 'next/server';
 import { jsonResponse } from '@/lib/apiHandler';
 import { createAPIRoute } from '@/lib/routeHelper';
 import { validateSealId } from '@/lib/validation';
-import { isHoneypot, validateHTTPMethod, validateOrigin, concurrentTracker, detectSuspiciousPattern } from '@/lib/security';
+import { isHoneypot, concurrentTracker, detectSuspiciousPattern } from '@/lib/security';
 import { logger } from '@/lib/logger';
+import { RATE_LIMIT_GET_SEAL } from '@/lib/constants';
+import { validateAPIRequest, encodeBase64Chunked, trackAnalytics } from '@/lib/apiHelpers';
 
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!validateHTTPMethod(request, ['GET'])) {
-    return jsonResponse({ error: 'Method not allowed' }, 405);
-  }
-
-  if (!validateOrigin(request)) {
-    return jsonResponse({ error: 'Invalid origin' }, 403);
-  }
+  const securityError = validateAPIRequest(request, ['GET']);
+  if (securityError) return securityError;
 
   return createAPIRoute(async ({ container, ip }) => {
     if (!concurrentTracker.track(ip)) {
@@ -65,15 +62,9 @@ export async function GET(
         }
 
         const blob = await sealService.getBlob(sealId);
-        const bytes = new Uint8Array(blob);
-        const blobBase64 = btoa(String.fromCharCode(...bytes));
+        const blobBase64 = encodeBase64Chunked(new Uint8Array(blob));
 
-        // Track analytics
-        try {
-          const { AnalyticsService } = await import('@/lib/analytics');
-          const analytics = new AnalyticsService(container.db);
-          await analytics.trackEvent({ eventType: 'seal_unlocked' });
-        } catch {}
+        await trackAnalytics(container.db, 'seal_unlocked');
 
         return jsonResponse({
           id: sealId,
@@ -92,5 +83,5 @@ export async function GET(
     } finally {
       concurrentTracker.release(ip);
     }
-  }, { rateLimit: { limit: 20, window: 60000 } })(request);
+  }, { rateLimit: RATE_LIMIT_GET_SEAL })(request);
 }

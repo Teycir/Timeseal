@@ -218,7 +218,7 @@ export class SealService {
     if (!/^[a-f0-9]{32}$/.test(sealId)) {
       throw new Error('Invalid seal ID format');
     }
-    const ts = parseInt(timestamp);
+    const ts = parseInt(timestamp, 10);
     if (isNaN(ts) || ts < 0 || ts.toString() !== timestamp) {
       throw new Error('Invalid timestamp format');
     }

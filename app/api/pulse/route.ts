@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server';
 import { jsonResponse } from '@/lib/apiHandler';
 import { createAPIRoute } from '@/lib/routeHelper';
 import { ErrorCode, createErrorResponse } from '@/lib/errors';
+import { RATE_LIMIT_PULSE } from '@/lib/constants';
+import { trackAnalytics } from '@/lib/apiHelpers';
 
 
 export async function POST(request: NextRequest) {
@@ -22,12 +24,7 @@ export async function POST(request: NextRequest) {
     const sealService = container.sealService;
     const result = await sealService.pulseSeal(pulseToken, ip, newInterval);
 
-    // Track analytics
-    try {
-      const { AnalyticsService } = await import('@/lib/analytics');
-      const analytics = new AnalyticsService(container.db);
-      await analytics.trackEvent({ eventType: 'pulse_received' });
-    } catch {}
+    await trackAnalytics(container.db, 'pulse_received');
 
     return jsonResponse({
       success: true,
@@ -35,5 +32,5 @@ export async function POST(request: NextRequest) {
       newPulseToken: result.newPulseToken,
       message: 'Pulse updated successfully',
     });
-  }, { rateLimit: { limit: 20, window: 60000 } })(request);
+  }, { rateLimit: RATE_LIMIT_PULSE })(request);
 }

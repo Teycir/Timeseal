@@ -1,6 +1,17 @@
 // Security Utilities
 import { logger } from './logger';
 
+interface SecurityEnv {
+  NEXT_PUBLIC_APP_URL?: string;
+  NODE_ENV?: string;
+}
+
+let cachedEnv: SecurityEnv = {};
+
+export function setSecurityEnv(env: SecurityEnv) {
+  cachedEnv = env;
+}
+
 export function constantTimeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   
@@ -18,7 +29,7 @@ export function validateIP(ip: string): boolean {
   return ipv4.test(ip) || ipv6.test(ip);
 }
 
-const HONEYPOT_IDS = ['00000000000000000000000000000000', 'ffffffffffffffffffffffffffffffff'];
+import { HONEYPOT_IDS, DEFAULT_ALLOWED_ORIGINS, MAX_CONCURRENT_REQUESTS, MAX_CONCURRENT_TRACKER_ENTRIES, NONCE_EXPIRY, PULSE_TOKEN_WINDOW } from './constants';
 
 export function isHoneypot(sealId: string): boolean {
   return HONEYPOT_IDS.includes(sealId);
@@ -32,10 +43,8 @@ export function validateOrigin(request: Request): boolean {
   const origin = request.headers.get('origin');
   if (!origin) return true;
   const allowedOrigins = [
-    process.env.NEXT_PUBLIC_APP_URL,
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'https://timeseal.teycir-932.workers.dev'
+    cachedEnv.NEXT_PUBLIC_APP_URL,
+    ...DEFAULT_ALLOWED_ORIGINS
   ].filter(Boolean);
   return allowedOrigins.some(allowed => origin.startsWith(allowed as string));
 }
@@ -125,8 +134,8 @@ export async function validatePulseToken(token: string, sealId: string, secret: 
   
   if (tokenSealId !== sealId) return false;
   
-  const tokenAge = Date.now() - parseInt(timestamp);
-  if (tokenAge > 300000 || tokenAge < 0) return false; // 5 minute window
+  const tokenAge = Date.now() - parseInt(timestamp, 10);
+  if (tokenAge > PULSE_TOKEN_WINDOW || tokenAge < 0) return false;
   
   const data = `${tokenSealId}:${timestamp}:${nonce}`;
   const encoder = new TextEncoder();
@@ -155,7 +164,7 @@ export async function getRequestFingerprint(request: Request): Promise<string> {
 }
 
 export function sanitizeError(error: unknown): string {
-  if (process.env.NODE_ENV === 'production') {
+  if (cachedEnv.NODE_ENV === 'production') {
     return 'An error occurred. Please try again.';
   }
   return error instanceof Error ? error.message : 'Unknown error';
@@ -165,7 +174,7 @@ export function validateCSRF(request: Request): boolean {
   const origin = request.headers.get('origin');
   const referer = request.headers.get('referer');
   const allowedOrigins = [
-    process.env.NEXT_PUBLIC_APP_URL,
+    cachedEnv.NEXT_PUBLIC_APP_URL,
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'https://timeseal.teycir-932.workers.dev'
@@ -196,7 +205,7 @@ export function validateContentType(contentType: string): boolean {
 class NonceCache {
   private static instance: NonceCache;
   private cache = new Map<string, number>();
-  private readonly NONCE_EXPIRY = 300000; // 5 minutes
+  private readonly NONCE_EXPIRY = NONCE_EXPIRY;
 
   private constructor() {
     // Auto-cleanup every minute
@@ -239,7 +248,7 @@ class NonceCache {
 
 export function checkAndStoreNonce(nonce: string, db?: import('./database').DatabaseProvider): boolean | Promise<boolean> {
   if (db) {
-    const expiresAt = Date.now() + 300000; // 5 minutes
+    const expiresAt = Date.now() + NONCE_EXPIRY;
     return db.storeNonce(nonce, expiresAt);
   }
   // Fallback to in-memory for dev

@@ -1,24 +1,44 @@
-// Shared constants across the application
+// Shared Constants
+// Centralized configuration to avoid duplication
 
-export const TEMPLATES = [
-  { name: 'Crypto Inheritance', icon: '💎', type: 'deadman' as const, placeholder: 'Seed phrase: ...\\nWallet addresses: ...', pulseDays: 30 },
-  { name: 'Whistleblower', icon: '🕵️', type: 'deadman' as const, placeholder: 'Evidence of...', pulseDays: 7 },
-  { name: 'Product Launch', icon: '🚀', type: 'timed' as const, placeholder: 'Product details, access codes...' },
-  { name: 'Birthday Gift', icon: '🎁', type: 'timed' as const, placeholder: 'Happy Birthday! Here&apos;s your surprise...' },
-  { name: 'Legal Hold', icon: '⚖️', type: 'timed' as const, placeholder: 'Contract terms...' },
+// File Size Limits
+export const MAX_FILE_SIZE = 750 * 1024; // 750KB (D1 TEXT limit with base64 overhead)
+export const MAX_REQUEST_SIZE = 1 * 1024 * 1024; // 1MB
+export const MAX_DECOMPRESSED_SIZE = 10 * 1024 * 1024; // 10MB (zip bomb protection)
+
+// Time Limits
+export const MAX_DURATION_DAYS = 30; // Maximum seal duration
+export const MIN_UNLOCK_DELAY = 60 * 1000; // 1 minute
+export const MIN_PULSE_INTERVAL = 5 * 60 * 1000; // 5 minutes
+export const MAX_PULSE_INTERVAL = 30 * 24 * 3600 * 1000; // 30 days
+export const NONCE_EXPIRY = 300000; // 5 minutes
+export const PULSE_TOKEN_WINDOW = 300000; // 5 minutes
+
+// Rate Limits
+export const RATE_LIMIT_CREATE_SEAL = { limit: 10, window: 60000 }; // 10/min
+export const RATE_LIMIT_GET_SEAL = { limit: 20, window: 60000 }; // 20/min
+export const RATE_LIMIT_PULSE = { limit: 20, window: 60000 }; // 20/min
+export const RATE_LIMIT_BURN = { limit: 10, window: 60000 }; // 10/min
+export const RATE_LIMIT_QR = { limit: 10, window: 60000 }; // 10/min
+export const RATE_LIMIT_ANALYTICS = { limit: 100, window: 60000 }; // 100/min
+export const RATE_LIMIT_STATS = { limit: 100, window: 60000 }; // 100/min
+
+// Concurrent Requests
+export const MAX_CONCURRENT_REQUESTS = 5;
+export const MAX_CONCURRENT_TRACKER_ENTRIES = 10000;
+
+// Encoding
+export const BASE64_CHUNK_SIZE = 8192; // Prevent stack overflow
+
+// Honeypots
+export const HONEYPOT_IDS = [
+  '00000000000000000000000000000000',
+  'ffffffffffffffffffffffffffffffff'
 ];
 
-export const TIME_CONSTANTS = {
-  MIN_PULSE_DAYS: 1,
-  MAX_PULSE_DAYS: 90,
-  DEFAULT_PULSE_DAYS: 7,
-  PULSE_CHECK_INTERVAL: 30000, // 30 seconds
-  COUNTDOWN_INTERVAL: 1000, // 1 second
-  SUCCESS_MESSAGE_DURATION: 3000, // 3 seconds
-} as const;
-
-export const VALIDATION = {
-  MIN_UNLOCK_DELAY: 60 * 1000, // 1 minute
-  MAX_FILE_SIZE: 100 * 1024 * 1024, // 100MB
-  MAX_SEAL_DURATION_DAYS: 365,
-} as const;
+// Allowed Origins (fallback, should be overridden by env)
+export const DEFAULT_ALLOWED_ORIGINS = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'https://timeseal.teycir-932.workers.dev'
+];

@@ -38,3 +38,6 @@ next-env.d.ts
 
 # OpenNext Cloudflare
 .open-next
+
+# Internal documentation (for AI assistant)
+.selfdoc/

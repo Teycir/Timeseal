@@ -100,7 +100,7 @@ describe('Security Enhancements', () => {
         { size: 1024, expected: true },           // 1KB - valid
         { size: 500 * 1024, expected: true },     // 500KB - valid
         { size: 700 * 1024, expected: true },     // 700KB - valid
-        { size: MAX_SIZE + 1, expected: false },   // 10MB+1 - invalid
+        { size: MAX_SIZE + 1, expected: false },   // 750KB+1 - invalid
         { size: 50 * 1024 * 1024, expected: false }, // 50MB - invalid
       ];
 
@@ -192,7 +192,7 @@ describe('Security Enhancements', () => {
     });
 
     it('should reject oversized files even with valid key', async () => {
-      const oversizedFile = 11 * 1024 * 1024; // 11MB
+      const oversizedFile = 11 * 1024 * 1024; // 11MB (far exceeds 750KB limit)
       const sizeValidation = validateFileSize(oversizedFile);
       expect(sizeValidation.valid).toBe(false);
 
