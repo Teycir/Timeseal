@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2025-12-23
+
+### Added
+- Privacy-first analytics system (zero external dependencies)
+- Analytics tracking: page views, seal creation, unlocks, pulses
+- Public stats endpoint (`GET /api/stats`) for total seals created
+- Seal counter component on homepage (social proof)
+- Analytics database tables (`analytics_events`, `analytics_summary`)
+- Rate limiting on analytics endpoints (100 req/min)
+- Input validation for analytics events (whitelist + length limits)
+
+### Security
+- Analytics endpoints now rate limited (prevents DoS)
+- Event type whitelist validation (only 4 valid types)
+- Path/referrer length limits (500 chars max)
+- No cookies, no IP storage, no personal data (GDPR compliant)
+- Country tracking only (from Cloudflare headers, not IP)
+
+### Changed
+- BREAKING: Removed MockDatabase (D1 now required in all environments)
+- BREAKING: `CloudflareEnv.DB` now required (was optional)
+- BREAKING: `CloudflareEnv.MASTER_ENCRYPTION_KEY` now required (was optional)
+- Container interface simplified (no optional types)
+- AuditLogger now required (was optional)
+- Development must use `wrangler dev` with D1 binding
+
+### Removed
+- MockDatabase class (production-grade code only)
+- Optional environment variables (fail fast on misconfiguration)
+- Fallback to `process.env` (explicit configuration required)
+
+### Documentation
+- Added ANALYTICS.md with setup instructions
+- Updated README with analytics features
+- Updated docs/README.md with analytics link
+
+### Database
+- Added `analytics_events` table for event tracking
+- Added `analytics_summary` table for daily aggregates
+- Added indexes on `event_type` and `timestamp`
+
 ## [0.6.2] - 2025-12-23
 
 ### Fixed

@@ -88,6 +88,12 @@ export default function FAQPage() {
             <h3 className="text-base sm:text-lg font-bold text-neon-green mb-2">Is there a cost to use TimeSeal?</h3>
             <p className="text-neon-green/60 text-sm">Free for non-commercial use. Commercial use requires a license (see BSL license).</p>
           </div>
+
+          <div>
+            <h3 className="text-base sm:text-lg font-bold text-neon-green mb-2">Does TimeSeal track my activity?</h3>
+            <p className="text-neon-green/60 text-sm mb-2">We use privacy-first analytics with zero external dependencies. No cookies, no IP addresses, no personal data.</p>
+            <p className="text-neon-green/60 text-sm">We only track: page views, seal creation count, unlock events, and country (from Cloudflare headers). All data is aggregate and GDPR compliant.</p>
+          </div>
         </Card>
 
         <div className="text-center pt-4">

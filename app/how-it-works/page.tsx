@@ -75,6 +75,22 @@ export default function HowItWorksPage() {
               <li><strong className="text-neon-green">Cleanup:</strong> Automated via cron job</li>
             </ul>
           </div>
+
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
+              <ClipboardList className="w-6 h-6" /> Layer 5: Privacy-First Analytics
+            </h2>
+            <p className="text-neon-green/80 mb-2 text-sm sm:text-base">Zero External Dependencies</p>
+            <p className="text-neon-green/60 text-sm leading-relaxed mb-3">
+              Built-in analytics track aggregate metrics without compromising privacy:
+            </p>
+            <ul className="text-neon-green/60 text-sm space-y-2 list-disc list-inside">
+              <li><strong className="text-neon-green">No Cookies:</strong> Zero tracking cookies or session storage</li>
+              <li><strong className="text-neon-green">No IPs:</strong> IP addresses never stored or logged</li>
+              <li><strong className="text-neon-green">No Personal Data:</strong> GDPR compliant by design</li>
+              <li><strong className="text-neon-green">Aggregate Only:</strong> Page views, seal counts, country distribution</li>
+            </ul>
+          </div>
         </Card>
 
         <Card className="p-4 sm:p-6 md:p-8 space-y-4">

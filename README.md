@@ -618,7 +618,14 @@ See [LICENSE](LICENSE) for full terms.
 
 ## 🔮 Roadmap
 
-**Recently Implemented (v0.6.2):**
+**Recently Implemented (v0.7.0):**
+- ✅ Privacy-First Analytics - Zero external dependencies, GDPR compliant
+- ✅ Seal Counter - Homepage displays total seals created (social proof)
+- ✅ Analytics Security - Rate limiting and input validation on endpoints
+- ✅ Production-Grade Code - Removed MockDatabase, D1 required everywhere
+- ✅ Fail-Fast Configuration - No optional env vars, explicit errors on misconfiguration
+
+**Recently Implemented (v0.6.2):****
 - ✅ Replay Attack Prevention - Nonce-first validation eliminates race conditions
 - ✅ Atomic Pulse Updates - Single database operation prevents partial state
 - ✅ Strict Token Validation - Format checks reject malformed pulse tokens
