@@ -3,6 +3,7 @@ import { jsonResponse } from '@/lib/apiHandler';
 import { createAPIRoute } from '@/lib/routeHelper';
 import { ErrorCode, createErrorResponse } from '@/lib/errors';
 import { RATE_LIMIT_PULSE } from '@/lib/constants';
+import { handleAPIError } from '@/lib/errorHandler';
 
 export async function POST(request: NextRequest) {
   return createAPIRoute(async ({ container, request: ctx, ip }) => {
@@ -21,9 +22,11 @@ export async function POST(request: NextRequest) {
         message: 'Seal unlocked immediately',
       });
     } catch (error) {
-      console.error('[UNLOCK] Error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      return createErrorResponse(ErrorCode.INTERNAL_ERROR, `Unlock failed: ${errorMessage}`);
+      return handleAPIError(error, {
+        component: 'unlock',
+        action: 'POST /api/unlock',
+        ip,
+      });
     }
   }, { rateLimit: RATE_LIMIT_PULSE })(request);
 }

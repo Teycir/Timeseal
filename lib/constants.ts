@@ -3,6 +3,7 @@
 
 // File Size Limits
 export const MAX_FILE_SIZE = 750 * 1024; // 750KB (D1 TEXT limit with base64 overhead)
+export const MAX_FILE_SIZE_BEFORE_ENCRYPTION = Math.floor(MAX_FILE_SIZE / 1.34); // ~560KB (accounts for base64 33% overhead)
 export const MAX_REQUEST_SIZE = 1 * 1024 * 1024; // 1MB
 export const MAX_DECOMPRESSED_SIZE = 10 * 1024 * 1024; // 10MB (zip bomb protection)
 
@@ -30,15 +31,21 @@ export const MAX_CONCURRENT_TRACKER_ENTRIES = 10000;
 // Encoding
 export const BASE64_CHUNK_SIZE = 8192; // Prevent stack overflow
 
-// Honeypots
+// Honeypots (expanded set for better detection)
 export const HONEYPOT_IDS = [
   '00000000000000000000000000000000',
-  'ffffffffffffffffffffffffffffffff'
+  'ffffffffffffffffffffffffffffffff',
+  '11111111111111111111111111111111',
+  'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+  'deadbeefdeadbeefdeadbeefdeadbeef',
+  'cafebabecafebabecafebabecafebabe',
+  '12345678901234567890123456789012',
+  'abcdefabcdefabcdefabcdefabcdefab'
 ];
 
-// Allowed Origins (fallback, should be overridden by env)
+// Allowed Origins - Use getAppConfig() from appConfig.ts instead
+// These are fallback defaults only
 export const DEFAULT_ALLOWED_ORIGINS = [
   'http://localhost:3000',
   'http://127.0.0.1:3000',
-  'https://timeseal.teycir-932.workers.dev'
 ];

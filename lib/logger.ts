@@ -17,6 +17,13 @@ export interface LogEntry {
   metadata?: Record<string, any>;
 }
 
+// Sanitize user input to prevent log injection
+function sanitizeLogInput(value: any): string {
+  if (value === null || value === undefined) return 'null';
+  const str = String(value);
+  return str.replace(/[\r\n\t]/g, '_').slice(0, 200);
+}
+
 export class Logger {
   private minLevel: LogLevel;
 
@@ -28,7 +35,17 @@ export class Logger {
     if (process.env.ENABLE_AUDIT_LOGS === 'false' && entry.level === LogLevel.AUDIT) {
       return;
     }
-    console.log(JSON.stringify(entry));
+    // Sanitize all string fields to prevent log injection
+    const sanitized = {
+      ...entry,
+      sealId: entry.sealId ? sanitizeLogInput(entry.sealId) : undefined,
+      userId: entry.userId ? sanitizeLogInput(entry.userId) : undefined,
+      ip: entry.ip ? sanitizeLogInput(entry.ip) : undefined,
+      metadata: entry.metadata ? Object.fromEntries(
+        Object.entries(entry.metadata).map(([k, v]) => [k, sanitizeLogInput(v)])
+      ) : undefined,
+    };
+    console.log(JSON.stringify(sanitized));
   }
 
   audit(event: string, data: Partial<LogEntry>): void {

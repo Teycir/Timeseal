@@ -23,9 +23,10 @@ interface StoredSeal {
   publicUrl: string;
   pulseUrl?: string;
   pulseToken?: string;
-  type: "timed" | "deadman";
+  type: "timed" | "deadman" | "ephemeral";
   unlockTime: number;
   createdAt: number;
+  maxViews?: number;
 }
 
 export default function DashboardPage() {
@@ -109,11 +110,12 @@ export default function DashboardPage() {
   };
 
   const downloadSeal = (seal: StoredSeal) => {
+    const sealTypeLabel = getSealTypeLabel(seal);
     const content = `# TimeSeal Vault Backup
 
 **Seal ID:** ${seal.id}
 
-**Type:** ${seal.type === "deadman" ? "Dead Man's Switch" : "Timed Release"}
+**Type:** ${sealTypeLabel}
 
 **Created:** ${new Date(seal.createdAt).toLocaleString()}
 
@@ -137,13 +139,21 @@ ${seal.pulseUrl}/${encodeURIComponent(seal.pulseToken)}
 
 `
     : ""
-}## Security Notes
+}${seal.type === "ephemeral" ? `## Ephemeral Seal Warning
+
+⚠️ This seal will self-destruct after ${seal.maxViews || 1} view${seal.maxViews === 1 ? "" : "s"}.
+Once deleted, the content cannot be recovered.
+
+---
+
+` : ""}## Security Notes
 
 - Store this file securely (encrypted storage, password manager, or safe)
 - The vault link contains Key A in the URL hash (#)
 - Never share vault links over unencrypted channels
 - Anyone with the vault link can access the content after unlock time
 ${seal.pulseUrl && seal.pulseToken ? "- Anyone with the pulse link can control the seal (reset timer or burn)" : ""}
+${seal.type === "ephemeral" ? `- Ephemeral seals delete automatically after ${seal.maxViews || 1} view${seal.maxViews === 1 ? "" : "s"}` : ""}
 
 ---
 
@@ -174,6 +184,13 @@ ${seal.pulseUrl && seal.pulseToken ? "- Anyone with the pulse link can control t
     if (days > 0) return `${days}d ${hours}h`;
     if (hours > 0) return `${hours}h ${minutes}m`;
     return `${minutes}m`;
+  };
+
+  const getSealTypeLabel = (seal: StoredSeal) => {
+    if (seal.type === "ephemeral") {
+      return `Ephemeral (${seal.maxViews || 1} view${seal.maxViews === 1 ? "" : "s"})`;
+    }
+    return seal.type === "deadman" ? "Dead Man's Switch" : "Timed Release";
   };
 
   return (
@@ -284,9 +301,11 @@ ${seal.pulseUrl && seal.pulseToken ? "- Anyone with the pulse link can control t
                             <Clock className="w-4 h-4 text-neon-green flex-shrink-0" />
                           )}
                           <span className="text-xs font-mono text-neon-green/50">
-                            {seal.type === "deadman"
-                              ? "DEAD MAN'S SWITCH"
-                              : "TIMED RELEASE"}
+                            {seal.type === "ephemeral"
+                              ? `EPHEMERAL (${seal.maxViews || 1} VIEW${seal.maxViews === 1 ? "" : "S"})`
+                              : seal.type === "deadman"
+                                ? "DEAD MAN'S SWITCH"
+                                : "TIMED RELEASE"}
                           </span>
                         </div>
 
@@ -392,7 +411,7 @@ ${seal.pulseUrl && seal.pulseToken ? "- Anyone with the pulse link can control t
                 <div className="mx-auto w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
                   <Trash2 className="w-8 h-8 text-red-500" />
                 </div>
-                <h2 className="text-2xl font-bold text-red-500 mb-2">DESTROY SEAL?</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-red-500 mb-2">DESTROY SEAL?</h2>
                 <p className="text-neon-green/70 text-sm mb-4">
                   This action is permanent and cannot be undone.
                 </p>

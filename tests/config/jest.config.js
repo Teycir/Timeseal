@@ -1,4 +1,4 @@
-module.exports = {
+const config = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   roots: ['<rootDir>/tests/unit'],
@@ -30,9 +30,11 @@ module.exports = {
   testTimeout: 10000,
   forceExit: true,
   detectOpenHandles: false,
-  globals: {
-    'ts-jest': {
+  transform: {
+    '^.+\\.tsx?$': ['ts-jest', {
       isolatedModules: true,
-    },
+    }],
   },
 };
+
+export default config;

@@ -22,6 +22,8 @@ interface SealSuccessProps {
   pulseToken?: string;
   receipt?: Receipt;
   sealId: string;
+  sealType?: "timed" | "deadman" | "ephemeral";
+  maxViews?: number;
   onReset: () => void;
 }
 
@@ -31,6 +33,8 @@ export function SealSuccess({
   pulseToken,
   receipt,
   sealId,
+  sealType = "timed",
+  maxViews,
   onReset,
 }: SealSuccessProps) {
   const [qrCode, setQrCode] = useState<string>("");
@@ -100,11 +104,25 @@ export function SealSuccess({
           SEAL CREATED
         </h1>
         <p className="text-neon-green/70 text-sm sm:text-base px-4">
-          Your message is now cryptographically locked
+          {sealType === "ephemeral"
+            ? `Self-destructing seal (${maxViews} view${maxViews === 1 ? "" : "s"})`
+            : "Your message is now cryptographically locked"}
         </p>
       </motion.div>
 
       <Card className="space-y-6">
+        {sealType === "ephemeral" && (
+          <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+            <p className="text-yellow-500 text-sm font-bold mb-2">
+              ⚠️ EPHEMERAL SEAL
+            </p>
+            <p className="text-yellow-400/80 text-xs">
+              This seal will self-destruct after {maxViews} view
+              {maxViews === 1 ? "" : "s"}. Once deleted, it cannot be recovered.
+            </p>
+          </div>
+        )}
+
         {qrCode && (
           <div className="qr-print-container flex justify-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -185,11 +203,18 @@ export function SealSuccess({
             </p>
             <button
               onClick={() => {
+                const sealTypeLabel =
+                  sealType === "ephemeral"
+                    ? `Ephemeral (${maxViews} view${maxViews === 1 ? "" : "s"})`
+                    : pulseToken
+                      ? "Dead Man's Switch"
+                      : "Timed Release";
+
                 const content = `# TimeSeal Vault
 
 **Seal ID:** ${sealId}
 
-**Type:** ${pulseToken ? 'Dead Man\'s Switch' : 'Timed Release'}
+**Type:** ${sealTypeLabel}
 
 **Created:** ${new Date().toLocaleString()}
 
@@ -199,7 +224,9 @@ export function SealSuccess({
 
 ${publicUrl}
 
-${pulseUrl && pulseToken ? `## Pulse Link (Keep Secret)
+${
+  pulseUrl && pulseToken
+    ? `## Pulse Link (Keep Secret)
 
 ${pulseUrl}/${encodeURIComponent(pulseToken)}
 
@@ -207,13 +234,27 @@ ${pulseUrl}/${encodeURIComponent(pulseToken)}
 
 ---
 
-` : ''}## Security Notes
+`
+    : ""
+}${
+                  sealType === "ephemeral"
+                    ? `## Ephemeral Seal Warning
+
+⚠️ This seal will self-destruct after ${maxViews} view${maxViews === 1 ? "" : "s"}.
+Once deleted, the content cannot be recovered.
+
+---
+
+`
+                    : ""
+                }## Security Notes
 
 - Store this file securely (encrypted storage, password manager, or safe)
 - The vault link contains Key A in the URL hash (#)
 - Never share vault links over unencrypted channels
 - Anyone with the vault link can access the content after unlock time
-${pulseUrl && pulseToken ? '- Anyone with the pulse link can control the seal (reset timer or burn)' : ''}
+${pulseUrl && pulseToken ? "- Anyone with the pulse link can control the seal (reset timer or burn)" : ""}
+${sealType === "ephemeral" ? `- Ephemeral seals delete automatically after ${maxViews} view${maxViews === 1 ? "" : "s"}` : ""}
 
 ---
 
@@ -235,32 +276,32 @@ ${pulseUrl && pulseToken ? '- Anyone with the pulse link can control the seal (r
             </button>
           </div>
 
-        {receipt && (
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-neon-green/50">
-              Proof of seal creation with HMAC signature
-            </p>
-            <button
-              onClick={() => {
-                const blob = new Blob([JSON.stringify(receipt, null, 2)], {
-                  type: "application/json",
-                });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `timeseal-receipt-${receipt.sealId}.json`;
-                a.click();
-                setTimeout(() => URL.revokeObjectURL(url), 100);
-                toast.success("Receipt downloaded");
-              }}
-              className="text-neon-green hover:text-neon-green/80 underline text-sm font-mono flex items-center gap-1"
-              title="Download cryptographic receipt as JSON"
-            >
-              <Download className="w-4 h-4" />
-              download receipt
-            </button>
-          </div>
-        )}
+          {receipt && (
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-neon-green/50">
+                Proof of seal creation with HMAC signature
+              </p>
+              <button
+                onClick={() => {
+                  const blob = new Blob([JSON.stringify(receipt, null, 2)], {
+                    type: "application/json",
+                  });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `timeseal-receipt-${receipt.sealId}.json`;
+                  a.click();
+                  setTimeout(() => URL.revokeObjectURL(url), 100);
+                  toast.success("Receipt downloaded");
+                }}
+                className="text-neon-green hover:text-neon-green/80 underline text-sm font-mono flex items-center gap-1"
+                title="Download cryptographic receipt as JSON"
+              >
+                <Download className="w-4 h-4" />
+                download receipt
+              </button>
+            </div>
+          )}
         </div>
       </Card>
 

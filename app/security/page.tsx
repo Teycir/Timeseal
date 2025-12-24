@@ -186,7 +186,11 @@ export default function SecurityPage() {
                 <li>Transaction rollback on failures</li>
                 <li>Circuit breakers with retry logic</li>
                 <li>Error sanitization (no internal state leakage)</li>
-                <li>Warrant canary for transparency</li>
+                <li>
+                  <a href="/canary" className="text-neon-green hover:underline">
+                    Warrant canary for transparency
+                  </a>
+                </li>
               </ul>
             </div>
           </div>

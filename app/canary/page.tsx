@@ -11,7 +11,7 @@ export default function CanaryPage() {
         <div className="flex items-center gap-3 mb-8">
           <Shield className="w-10 h-10 text-neon-green" />
           <div>
-            <h1 className="text-3xl font-bold text-neon-green glow-text">WARRANT CANARY</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-neon-green glow-text">WARRANT CANARY</h1>
             <p className="text-sm text-neon-green/60">Live Transparency Status</p>
           </div>
         </div>
@@ -41,7 +41,7 @@ export default function CanaryPage() {
 
         {/* Checklist */}
         <div className="cyber-card p-6 mb-6">
-          <h3 className="text-lg font-bold text-neon-green mb-4">Security Checklist</h3>
+          <h3 className="text-base sm:text-lg font-bold text-neon-green mb-4">Security Checklist</h3>
           <div className="space-y-3">
             {[
               { text: 'No warrants, subpoenas, or national security letters received', tip: 'No legal demands for data or access' },
@@ -76,7 +76,7 @@ export default function CanaryPage() {
 
         {/* Technical Details */}
         <div className="cyber-card p-6 bg-dark-bg/50">
-          <h3 className="text-lg font-bold text-neon-green mb-4">Technical Implementation</h3>
+          <h3 className="text-base sm:text-lg font-bold text-neon-green mb-4">Technical Implementation</h3>
           <div className="text-sm text-neon-green/60 space-y-2">
             <p>• <strong className="text-neon-green">Auto-Generated:</strong> This page is rendered server-side on every request with the current timestamp</p>
             <p>• <strong className="text-neon-green">No Database:</strong> No stored canary file that could be seized or tampered with</p>

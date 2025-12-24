@@ -52,18 +52,27 @@ export default function FAQPage() {
             <p className="text-neon-green/60 text-sm mb-2"><strong className="text-neon-green">Timed Release:</strong></p>
             <ul className="list-disc list-inside ml-4 space-y-1 text-xs text-neon-green/60 mb-2">
               <li>Enter message or upload file (max 750KB)</li>
-              <li>Select &quot;Timed Release&quot; mode</li>
+              <li>Select &quot;TIMED&quot; mode</li>
               <li>Choose unlock date/time (up to 30 days)</li>
               <li>Complete Cloudflare Turnstile security check</li>
               <li>Choose how to save: COPY | DOWNLOAD (MD) | SAVE (encrypted vault)</li>
             </ul>
             <p className="text-neon-green/60 text-sm mb-2"><strong className="text-neon-green">Dead Man&apos;s Switch:</strong></p>
-            <ul className="list-disc list-inside ml-4 space-y-1 text-xs text-neon-green/60">
-              <li>Follow steps 1-3 above</li>
-              <li>Select &quot;Dead Man&apos;s Switch&quot; mode</li>
+            <ul className="list-disc list-inside ml-4 space-y-1 text-xs text-neon-green/60 mb-2">
+              <li>Follow steps 1-2 above</li>
+              <li>Select &quot;DEADMAN&quot; mode</li>
               <li>Set pulse interval (how often you check in)</li>
               <li>Save TWO links: vault link (public) and pulse link (private)</li>
               <li>Visit pulse link before interval expires to keep sealed</li>
+            </ul>
+            <p className="text-neon-green/60 text-sm mb-2"><strong className="text-neon-green">Ephemeral (Self-Destructing):</strong></p>
+            <ul className="list-disc list-inside ml-4 space-y-1 text-xs text-neon-green/60">
+              <li>Follow steps 1-2 above</li>
+              <li>Select &quot;EPHEMERAL&quot; mode</li>
+              <li>Set max views (1-100, default: 1 for read-once)</li>
+              <li>Complete security check and create seal</li>
+              <li>Seal unlocks immediately but auto-deletes after N views</li>
+              <li>Perfect for one-time passwords and confidential messages</li>
             </ul>
           </div>
 
@@ -145,7 +154,8 @@ export default function FAQPage() {
           <div>
             <h3 className="text-base sm:text-lg font-bold text-neon-green mb-2">Can I cancel or delete a seal?</h3>
             <p className="text-neon-green/60 text-sm mb-2"><strong className="text-neon-green">Timed Release:</strong> ❌ No. Cannot be deleted once created.</p>
-            <p className="text-neon-green/60 text-sm"><strong className="text-neon-green">Dead Man&apos;s Switch:</strong> ✅ Yes. Use pulse link to &quot;burn&quot; the seal (permanently destroy content).</p>
+            <p className="text-neon-green/60 text-sm mb-2"><strong className="text-neon-green">Dead Man&apos;s Switch:</strong> ✅ Yes. Use pulse link to &quot;burn&quot; the seal (permanently destroy content).</p>
+            <p className="text-neon-green/60 text-sm"><strong className="text-neon-green">Ephemeral:</strong> ⚠️ Auto-deletes after max views reached. Cannot be manually deleted.</p>
           </div>
 
           <div>

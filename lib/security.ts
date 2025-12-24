@@ -1,6 +1,7 @@
 // Security Utilities
 import { logger } from './logger';
 import { hmacSign, hmacVerify, sha256 } from './cryptoUtils';
+import { getAppConfig, isOriginAllowed, isRefererAllowed } from './appConfig';
 
 interface SecurityEnv {
   NEXT_PUBLIC_APP_URL?: string;
@@ -42,17 +43,20 @@ export function validateHTTPMethod(request: Request, allowed: string[]): boolean
 
 export function validateOrigin(request: Request): boolean {
   const origin = request.headers.get('origin');
-  if (!origin) return true;
-  const allowedOrigins = [
-    cachedEnv.NEXT_PUBLIC_APP_URL,
-    ...DEFAULT_ALLOWED_ORIGINS
-  ].filter(Boolean);
-  return allowedOrigins.some(allowed => origin.startsWith(allowed as string));
+  return isOriginAllowed(origin);
 }
 
 class ConcurrentRequestTracker {
   private requests = new Map<string, number>();
-  private readonly MAX_ENTRIES = 10000;
+  private readonly MAX_ENTRIES = MAX_CONCURRENT_TRACKER_ENTRIES;
+  private cleanupTimer?: ReturnType<typeof setTimeout>;
+  
+  constructor() {
+    // Auto-cleanup every 5 minutes
+    if (typeof setInterval !== 'undefined') {
+      this.cleanupTimer = setInterval(() => this.cleanup(), 5 * 60 * 1000);
+    }
+  }
   
   track(ip: string): boolean {
     // Prevent memory leak
@@ -61,7 +65,7 @@ class ConcurrentRequestTracker {
     }
     
     const current = this.requests.get(ip) || 0;
-    if (current >= 5) return false;
+    if (current >= MAX_CONCURRENT_REQUESTS) return false;
     this.requests.set(ip, current + 1);
     return true;
   }
@@ -69,7 +73,7 @@ class ConcurrentRequestTracker {
   release(ip: string): void {
     const current = this.requests.get(ip) || 0;
     if (current <= 1) {
-      this.requests.delete(ip); // Remove instead of keeping 0
+      this.requests.delete(ip);
     } else {
       this.requests.set(ip, current - 1);
     }
@@ -87,19 +91,39 @@ class ConcurrentRequestTracker {
       this.requests.clear();
     }
   }
+  
+  destroy(): void {
+    if (this.cleanupTimer) {
+      clearInterval(this.cleanupTimer);
+    }
+    this.requests.clear();
+  }
 }
 
 export const concurrentTracker = new ConcurrentRequestTracker();
 
-const accessCache = new Map<string, string>();
+// Access cache with TTL cleanup (prevents memory leak)
+const accessCache = new Map<string, { sealId: string; timestamp: number }>();
+const ACCESS_CACHE_TTL = 60 * 60 * 1000; // 1 hour
+const ACCESS_CACHE_MAX_SIZE = 10000;
 
 export function detectSuspiciousPattern(ip: string, sealId: string): boolean {
+  // Cleanup old entries to prevent memory leak
+  if (accessCache.size > ACCESS_CACHE_MAX_SIZE) {
+    const now = Date.now();
+    for (const [key, value] of accessCache.entries()) {
+      if (now - value.timestamp > ACCESS_CACHE_TTL) {
+        accessCache.delete(key);
+      }
+    }
+  }
+
   const lastAccess = accessCache.get(ip);
-  if (lastAccess && isSequential(lastAccess, sealId)) {
+  if (lastAccess && isSequential(lastAccess.sealId, sealId)) {
     logger.warn('sequential_access_detected', { ip, sealId });
     return true;
   }
-  accessCache.set(ip, sealId);
+  accessCache.set(ip, { sealId, timestamp: Date.now() });
   return false;
 }
 
@@ -148,16 +172,8 @@ export function sanitizeError(error: unknown): string {
 export function validateCSRF(request: Request): boolean {
   const origin = request.headers.get('origin');
   const referer = request.headers.get('referer');
-  const allowedOrigins = [
-    cachedEnv.NEXT_PUBLIC_APP_URL,
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'https://timeseal.teycir-932.workers.dev'
-  ].filter(Boolean);
   
-  return allowedOrigins.some(allowed => 
-    origin?.startsWith(allowed as string) || referer?.startsWith(allowed as string)
-  );
+  return isOriginAllowed(origin) || isRefererAllowed(referer);
 }
 
 const ALLOWED_MIME_TYPES = [
@@ -180,7 +196,7 @@ export function validateContentType(contentType: string): boolean {
 class NonceCache {
   private static instance: NonceCache;
   private cache = new Map<string, number>();
-  private readonly NONCE_EXPIRY = NONCE_EXPIRY;
+  private readonly nonceExpiry = NONCE_EXPIRY;
 
   private constructor() {
     // Auto-cleanup every minute
@@ -210,7 +226,7 @@ class NonceCache {
   private cleanup(): void {
     const now = Date.now();
     for (const [nonce, timestamp] of this.cache.entries()) {
-      if (now - timestamp > this.NONCE_EXPIRY) {
+      if (now - timestamp > this.nonceExpiry) {
         this.cache.delete(nonce);
       }
     }

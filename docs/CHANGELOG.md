@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Ephemeral Seals UI** - Complete user interface for self-destructing seals
+  - Third seal type button (TIMED | DEADMAN | EPHEMERAL)
+  - Max views input field (1-100 views)
+  - "One-Time Password" template for ephemeral seals
+  - Responsive 3-column layout for seal type selection
+  - Dashboard displays ephemeral seals with view count
+  - Success screen shows ephemeral warning banner
+  - Markdown downloads include ephemeral metadata
+
+### Changed
+- Seal type buttons now use responsive text sizes (`text-xs sm:text-sm`)
+- Form validation skips unlock time check for ephemeral seals
+- API validation conditionally skips time validation for ephemeral
+- SealService skips unlock time validation for ephemeral seals
+- All heading text sizes now responsive across all pages
+- Warrant canary link added to security page (Layer 4: Operational Security)
+
+### Fixed
+- Non-responsive text sizes across multiple components
+- Ephemeral seals now unlock immediately (validation bypass)
+- Form state properly resets after seal creation
+- Template application clears conflicting state
+
+### Testing
+- ✅ Ephemeral seal test script completed and passing
+- ✅ Full test suite passes (7/7 tests)
+- ✅ Build verification successful
+- ✅ Zero regressions detected
+
 ### Removed
 - **PWA and Service Worker** - Eliminated to ensure reliable Turnstile operation
   - Removed service worker registration from `lib/usePWA.ts`

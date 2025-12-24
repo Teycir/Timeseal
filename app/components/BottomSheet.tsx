@@ -51,7 +51,7 @@ export function BottomSheet({
             <div className="w-12 h-1 bg-neon-green/30 rounded-full mx-auto mt-3 mb-4" />
             {title && (
               <div className="flex items-center justify-between px-6 pb-4 border-b border-neon-green/10">
-                <h3 className="text-lg font-bold text-neon-green">{title}</h3>
+                <h3 className="text-base sm:text-lg font-bold text-neon-green">{title}</h3>
                 <button
                   onClick={onClose}
                   className="text-neon-green/50 hover:text-neon-green"

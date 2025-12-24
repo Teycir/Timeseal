@@ -170,14 +170,14 @@ export default function PulsePage({ params }: { params: { token: string } }) {
         {status === "loading" && (
           <>
             <Loader2 className="w-16 h-16 text-neon-green mx-auto mb-6 animate-spin" />
-            <h1 className="text-3xl font-bold mb-4 glow-text">LOADING PULSE</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold mb-4 glow-text">LOADING PULSE</h1>
           </>
         )}
 
         {status === "confirm" && (
           <>
             <Clock className="w-16 h-16 text-yellow-500 mx-auto mb-6" />
-            <h1 className="text-3xl font-bold mb-4 glow-text text-yellow-500">
+            <h1 className="text-2xl sm:text-3xl font-bold mb-4 glow-text text-yellow-500">
               PULSE CONTROL
             </h1>
             <Card className="mb-6 border-yellow-500/30">
@@ -266,7 +266,7 @@ export default function PulsePage({ params }: { params: { token: string } }) {
         {status === "success" && (
           <>
             <CheckCircle className="w-16 h-16 text-neon-green mx-auto mb-6" />
-            <h1 className="text-3xl font-bold mb-4 glow-text text-neon-green">
+            <h1 className="text-2xl sm:text-3xl font-bold mb-4 glow-text text-neon-green">
               {actionType === "delete" ? "SEAL DELETED" : actionType === "unlock" ? "SEAL UNLOCKED" : "PULSE UPDATED"}
             </h1>
             <Card className="mb-8 border-neon-green/30">
@@ -305,7 +305,7 @@ export default function PulsePage({ params }: { params: { token: string } }) {
         {status === "error" && (
           <>
             <XCircle className="w-16 h-16 text-red-500 mx-auto mb-6" />
-            <h1 className="text-3xl font-bold mb-4 glow-text text-red-500">
+            <h1 className="text-2xl sm:text-3xl font-bold mb-4 glow-text text-red-500">
               OPERATION FAILED
             </h1>
             <Card className="mb-8 border-red-500/30">

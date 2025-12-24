@@ -15,6 +15,7 @@ import {
   trackAnalytics,
 } from "@/lib/apiHelpers";
 import { generateFingerprint } from "@/lib/ephemeral";
+import { handleAPIError } from "@/lib/errorHandler";
 
 export async function GET(
   request: NextRequest,
@@ -101,7 +102,25 @@ export async function GET(
             });
           }
 
-          const blob = await sealService.getBlob(sealId);
+          // CRITICAL FIX: Use blob from metadata if available (ephemeral deletion)
+          const blob = metadata.blob || await sealService.getBlob(sealId);
+          
+          // Verify blob integrity if hash is available
+          if (metadata.blobHash) {
+            const blobArray = new Uint8Array(blob);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', blobArray);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const computedHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            
+            if (computedHash !== metadata.blobHash) {
+              logger.error('blob_integrity_failed', new Error('Hash mismatch'), { sealId, expected: metadata.blobHash, actual: computedHash });
+              return jsonResponse(
+                { error: 'Blob integrity verification failed. Data may be corrupted.' },
+                { status: 500 }
+              );
+            }
+          }
+          
           const blobBase64 = encodeBase64Chunked(new Uint8Array(blob));
 
           await trackAnalytics(container.db, "seal_unlocked");
@@ -120,13 +139,12 @@ export async function GET(
             remainingViews: metadata.remainingViews,
           });
         } catch (error) {
-          console.error("[SEAL-API] Error:", error);
-          const errorMessage =
-            error instanceof Error ? error.message : "Unknown error";
-          return jsonResponse(
-            { error: `Seal retrieval failed: ${errorMessage}` },
-            { status: 500 },
-          );
+          return handleAPIError(error, {
+            component: 'seal',
+            action: 'GET /api/seal/[id]',
+            ip,
+            sealId,
+          });
         }
       } finally {
         concurrentTracker.release(ip);

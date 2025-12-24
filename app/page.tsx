@@ -25,6 +25,8 @@ export default function HomePage() {
     receipt?: any;
     keyA: string;
     sealId: string;
+    sealType?: "timed" | "deadman" | "ephemeral";
+    maxViews?: number;
   } | null>(null);
 
   const triggerConfetti = () => {
@@ -70,20 +72,31 @@ export default function HomePage() {
     });
   }, []);
 
-  const handleSuccess = async (data: { publicUrl: string; pulseUrl?: string; pulseToken?: string; receipt?: any; keyA: string; sealId: string }) => {
+  const handleSuccess = async (data: { 
+    publicUrl: string; 
+    pulseUrl?: string; 
+    pulseToken?: string; 
+    receipt?: any; 
+    keyA: string; 
+    sealId: string;
+    sealType?: "timed" | "deadman" | "ephemeral";
+    maxViews?: number;
+  }) => {
     setResult(data);
     triggerConfetti();
 
     // Auto-save to encrypted local storage
     try {
+      const sealType = data.sealType || (data.pulseToken ? 'deadman' : 'timed');
       await addSeal({
         id: data.sealId,
         publicUrl: data.publicUrl,
         pulseUrl: data.pulseUrl,
         pulseToken: data.pulseToken,
-        type: data.pulseToken ? 'deadman' : 'timed',
+        type: sealType,
         unlockTime: data.receipt?.unlockTime || Date.now() + 3600000,
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        maxViews: data.maxViews
       });
       toast.success('Seal saved to your encrypted vault');
     } catch (err) {
@@ -144,6 +157,8 @@ export default function HomePage() {
               pulseToken={result.pulseToken}
               receipt={result.receipt}
               sealId={result.sealId}
+              sealType={result.sealType}
+              maxViews={result.maxViews}
               onReset={handleReset}
             />
           ) : (

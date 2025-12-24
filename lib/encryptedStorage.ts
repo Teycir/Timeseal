@@ -6,9 +6,10 @@ interface StoredSeal {
   publicUrl: string;
   pulseUrl?: string;
   pulseToken?: string;
-  type: 'timed' | 'deadman';
+  type: 'timed' | 'deadman' | 'ephemeral';
   unlockTime: number;
   createdAt: number;
+  maxViews?: number;
 }
 
 const STORAGE_KEY = 'timeseal_links';

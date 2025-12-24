@@ -27,7 +27,7 @@ export function SealCounter() {
         <span className="text-neon-green/60 text-xs font-mono">
           ACTIVE SEALS IN DATABASE:
         </span>
-        <span className="text-neon-green text-lg font-bold font-mono">
+        <span className="text-neon-green text-base sm:text-lg font-bold font-mono">
           {count.toLocaleString()}
         </span>
       </div>

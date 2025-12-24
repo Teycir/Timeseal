@@ -30,7 +30,7 @@ export function Countdown({ unlockTime, onUnlock }: CountdownProps) {
       <motion.div 
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="text-neon-green font-mono text-2xl"
+        className="text-neon-green font-mono text-xl sm:text-2xl"
       >
         UNLOCKED
       </motion.div>

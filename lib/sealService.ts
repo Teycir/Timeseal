@@ -21,8 +21,7 @@ import { sealEvents } from "./patterns/observer";
 import {
   validateEphemeralConfig,
   recordViewAndCheck,
-  getEphemeralStatus,
-  deleteIfExhausted,
+  getRemainingViews,
 } from "./ephemeral";
 
 export interface CreateSealRequest {
@@ -55,6 +54,8 @@ export interface SealMetadata {
   maxViews?: number | null;
   remainingViews?: number | null;
   firstViewedAt?: number | null;
+  // CRITICAL: Blob included if fetched before deletion
+  blob?: ArrayBuffer | null;
 }
 
 export interface SealReceipt {
@@ -95,9 +96,19 @@ export class SealService {
       throw new Error(sizeValidation.error);
     }
 
-    const timeValidation = validateUnlockTime(request.unlockTime);
-    if (!timeValidation.valid) {
-      throw new Error(timeValidation.error);
+    // CRITICAL: Prevent ephemeral + DMS conflict
+    if (request.isEphemeral && request.isDMS) {
+      throw new Error("Seal cannot be both ephemeral and Dead Man's Switch");
+    }
+
+    // Skip unlock time validation for ephemeral seals (set to now)
+    if (request.isEphemeral) {
+      request.unlockTime = Date.now();
+    } else {
+      const timeValidation = validateUnlockTime(request.unlockTime);
+      if (!timeValidation.valid) {
+        throw new Error(timeValidation.error);
+      }
     }
 
     if (request.isDMS) {
@@ -183,6 +194,10 @@ export class SealService {
         await this.db.deleteSeal(sealId);
       } catch (rollbackError) {
         logger.error("rollback_failed", rollbackError as Error, { sealId });
+        // Critical: Both operations failed, throw compound error
+        throw new Error(
+          `Seal creation failed and rollback failed: ${(error as Error).message}`,
+        );
       }
       throw error;
     }
@@ -236,32 +251,10 @@ export class SealService {
       throw new Error(ErrorCode.SEAL_NOT_FOUND);
     }
 
-    // Check if ephemeral and exhausted FIRST
-    const ephemeralStatus = getEphemeralStatus(
-      seal.isEphemeral || false,
-      seal.viewCount || 0,
-      seal.maxViews || null,
-      seal.firstViewedAt || null,
-    );
-
-    if (ephemeralStatus.isExhausted) {
-      return {
-        id: sealId,
-        unlockTime: seal.unlockTime,
-        isDMS: seal.isDMS,
-        status: "exhausted",
-        isEphemeral: true,
-        viewCount: ephemeralStatus.viewCount,
-        maxViews: ephemeralStatus.maxViews,
-        firstViewedAt: ephemeralStatus.firstViewedAt,
-      };
-    }
-
-    // Check time BEFORE any other operations to prevent timing attacks
+    // Check time FIRST to prevent timing attacks
     const now = Date.now();
     const isUnlocked = now >= seal.unlockTime;
 
-    // Add jitter for locked seals (already done in API route, but double-check here)
     if (!isUnlocked) {
       auditSealAccessed(sealId, ip, "locked");
       this.auditLogger?.log({
@@ -281,11 +274,15 @@ export class SealService {
         accessCount: seal.accessCount,
         isEphemeral: seal.isEphemeral,
         maxViews: seal.maxViews || null,
-        remainingViews: ephemeralStatus.remainingViews,
+        remainingViews: getRemainingViews(
+          seal.isEphemeral || false,
+          seal.viewCount || 0,
+          seal.maxViews || null,
+        ),
       };
     }
 
-    // Record view and check if allowed (for ephemeral seals)
+    // ATOMIC: Record view and check exhaustion (fixes race condition)
     const viewCheck = await recordViewAndCheck(
       this.db,
       sealId,
@@ -307,10 +304,32 @@ export class SealService {
       };
     }
 
-    // Increment access count for all seals (ephemeral uses viewCount, but track accessCount too)
-    await this.db.incrementAccessCount(sealId);
+    // CRITICAL FIX: Fetch blob BEFORE incrementing access count
+    // If fetch fails, we rollback the view count increment
+    let blob: ArrayBuffer | null = null;
+    try {
+      blob = await storageCircuitBreaker.execute(() =>
+        withRetry(() => this.storage.downloadBlob(sealId), 3, 1000),
+      );
+    } catch (error) {
+      // Rollback view count if blob fetch fails
+      if (seal.isEphemeral && viewCheck.viewCount > (seal.viewCount || 0)) {
+        try {
+          await this.db.decrementViewCount(sealId);
+          logger.info("view_count_rollback_success", { sealId });
+        } catch (rollbackError) {
+          logger.error("view_count_rollback_failed", rollbackError as Error, {
+            sealId,
+          });
+        }
+      }
+      logger.error("blob_fetch_failed", error as Error, { sealId });
+      throw new Error(
+        `Failed to fetch seal content: ${(error as Error).message}`,
+      );
+    }
 
-    // Only decrypt if unlocked
+    // Decrypt key
     const decryptedKeyB = await decryptKeyBWithFallback(seal.keyB, sealId, [
       this.masterKey,
     ]);
@@ -325,28 +344,54 @@ export class SealService {
       metadata: { unlockTime: seal.unlockTime, isEphemeral: seal.isEphemeral },
     });
 
-    // Delete if exhausted
+    // Delete if exhausted (DB first, then blob with rollback)
     if (viewCheck.shouldDelete) {
-      // Delete blob first (idempotent)
+      let dbDeleted = false;
+      try {
+        await this.db.deleteSeal(sealId);
+        dbDeleted = true;
+      } catch (dbError) {
+        logger.error("db_delete_failed", dbError as Error, { sealId });
+        throw new Error("Failed to delete seal from database");
+      }
+
       try {
         await this.storage.deleteBlob(sealId);
       } catch (error) {
         logger.error("blob_delete_failed", error as Error, { sealId });
+        if (dbDeleted) {
+          try {
+            await this.db.createSeal({
+              id: seal.id,
+              unlockTime: seal.unlockTime,
+              isDMS: seal.isDMS,
+              pulseInterval: seal.pulseInterval,
+              lastPulse: seal.lastPulse,
+              keyB: seal.keyB,
+              iv: seal.iv,
+              pulseToken: seal.pulseToken,
+              createdAt: seal.createdAt,
+              blobHash: seal.blobHash,
+              unlockMessage: seal.unlockMessage,
+              expiresAt: seal.expiresAt,
+              accessCount: seal.accessCount,
+              isEphemeral: seal.isEphemeral,
+              maxViews: seal.maxViews,
+              viewCount: viewCheck.viewCount,
+            });
+            logger.info("db_rollback_success", { sealId });
+          } catch (rollbackError) {
+            logger.error("db_rollback_failed", rollbackError as Error, {
+              sealId,
+            });
+          }
+        }
+        throw new Error("Failed to delete blob");
       }
 
-      // Then delete database record
-      await deleteIfExhausted(
-        this.db,
-        sealId,
-        seal.isEphemeral || false,
-        viewCheck.viewCount,
-        viewCheck.maxViews,
-      );
-
-      // Track deletion in analytics
       try {
         const { trackAnalytics } = await import("./apiHelpers");
-        await trackAnalytics(this.db, 'seal_deleted');
+        await trackAnalytics(this.db, "seal_deleted");
       } catch (error) {
         logger.error("analytics_track_failed", error as Error, { sealId });
       }
@@ -357,7 +402,15 @@ export class SealService {
       });
     }
 
-    // Emit event for observers
+    // Increment access count only for non-ephemeral seals
+    if (!seal.isEphemeral) {
+      try {
+        await this.db.incrementAccessCount(sealId);
+      } catch (error) {
+        logger.error("access_count_failed", error as Error, { sealId });
+      }
+    }
+
     sealEvents.emit("seal:unlocked", { sealId, ip });
 
     return {
@@ -376,6 +429,7 @@ export class SealService {
       remainingViews: viewCheck.maxViews
         ? viewCheck.maxViews - viewCheck.viewCount
         : null,
+      blob,
     };
   }
 
@@ -392,50 +446,57 @@ export class SealService {
   ): Promise<{ newUnlockTime: number; newPulseToken: string }> {
     const parts = pulseToken.split(":");
     if (parts.length !== 4) {
-      throw new Error(ErrorCode.INVALID_INPUT);
+      throw new Error("Invalid pulse token");
     }
 
     const [sealId, timestamp, nonce, signature] = parts;
 
     // Validate format strictly
-    if (!/^[a-f0-9]{32}$/.test(sealId)) {
-      throw new Error("Invalid seal ID format");
+    if (!sealId || !/^[a-f0-9]{32}$/.test(sealId)) {
+      throw new Error("Invalid pulse token");
+    }
+    if (!timestamp) {
+      throw new Error("Invalid pulse token");
     }
     const ts = parseInt(timestamp, 10);
     if (isNaN(ts) || ts < 0 || ts.toString() !== timestamp) {
-      throw new Error("Invalid timestamp format");
+      throw new Error("Invalid pulse token");
     }
     if (
+      !nonce ||
       !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(
         nonce,
       )
     ) {
-      throw new Error("Invalid nonce format");
+      throw new Error("Invalid pulse token");
+    }
+    if (!signature) {
+      throw new Error("Invalid pulse token");
     }
 
-    // Validate token signature FIRST (cheap operation)
+    // Check nonce FIRST (prevents replay)
+    const nonceValid = await checkAndStoreNonce(nonce, this.db);
+    if (!nonceValid) {
+      throw new Error("Invalid pulse token");
+    }
+
+    // THEN validate token signature
     const isValid = await validatePulseToken(
       pulseToken,
       sealId,
       this.masterKey,
     );
     if (!isValid) {
-      throw new Error(ErrorCode.INVALID_INPUT);
+      throw new Error("Invalid pulse token");
     }
 
-    // THEN check nonce (expensive DB operation, only after signature validated)
-    const nonceValid = await checkAndStoreNonce(nonce, this.db);
-    if (!nonceValid) {
-      throw new Error("Replay attack detected");
-    }
-
+    // Fetch seal AFTER validation to prevent timing attacks
     const seal = await this.db.getSeal(sealId);
     if (!seal || !seal.isDMS) {
-      throw new Error(ErrorCode.SEAL_NOT_FOUND);
+      throw new Error("Invalid pulse token");
     }
 
     const now = Date.now();
-    // newInterval is already in milliseconds from the API
     const intervalToUse = newInterval || seal.pulseInterval || 0;
 
     if (intervalToUse === 0) {
@@ -457,14 +518,9 @@ export class SealService {
     const newUnlockTime = now + intervalToUse;
     const newPulseToken = await generatePulseToken(sealId, this.masterKey);
 
-    // Atomic update (both or neither)
-    try {
-      await this.db.updatePulseAndUnlockTime(seal.id, now, newUnlockTime);
-    } catch (error) {
-      logger.error("pulse_update_failed", error as Error, { sealId: seal.id });
-      throw new Error("Failed to update pulse");
-    }
-
+    // Atomic update (both or neither) - throws if seal deleted
+    await this.db.updatePulseAndUnlockTime(seal.id, now, newUnlockTime);
+    
     metrics.incrementPulseReceived();
     this.auditLogger?.log({
       timestamp: Date.now(),
@@ -484,30 +540,34 @@ export class SealService {
   async unlockSeal(pulseToken: string, ip: string): Promise<void> {
     const parts = pulseToken.split(":");
     if (parts.length !== 4) {
-      throw new Error(ErrorCode.INVALID_INPUT);
+      throw new Error("Invalid pulse token");
     }
 
     const [sealId, , nonce] = parts;
 
-    // Validate token signature FIRST (cheap operation)
+    if (!sealId || !nonce) {
+      throw new Error("Invalid pulse token");
+    }
+
+    // Check nonce FIRST (prevents replay)
+    const nonceValid = await checkAndStoreNonce(nonce, this.db);
+    if (!nonceValid) {
+      throw new Error("Invalid pulse token");
+    }
+
+    // THEN validate token signature
     const isValid = await validatePulseToken(
       pulseToken,
       sealId,
       this.masterKey,
     );
     if (!isValid) {
-      throw new Error(ErrorCode.INVALID_INPUT);
-    }
-
-    // THEN check nonce (expensive DB operation)
-    const nonceValid = await checkAndStoreNonce(nonce, this.db);
-    if (!nonceValid) {
-      throw new Error("Replay attack detected");
+      throw new Error("Invalid pulse token");
     }
 
     const seal = await this.db.getSeal(sealId);
     if (!seal || !seal.isDMS) {
-      throw new Error(ErrorCode.SEAL_NOT_FOUND);
+      throw new Error("Invalid pulse token");
     }
 
     const now = Date.now();
@@ -517,7 +577,7 @@ export class SealService {
       await this.db.updatePulseAndUnlockTime(seal.id, now, now);
     } catch (error) {
       logger.error("unlock_update_failed", error as Error, { sealId: seal.id });
-      throw new Error("Failed to unlock seal");
+      throw error;
     }
 
     this.auditLogger?.log({
@@ -536,44 +596,47 @@ export class SealService {
   async burnSeal(pulseToken: string, ip: string): Promise<void> {
     const parts = pulseToken.split(":");
     if (parts.length !== 4) {
-      throw new Error(ErrorCode.INVALID_INPUT);
+      throw new Error("Invalid pulse token");
     }
 
     const [sealId, , nonce] = parts;
 
-    // Validate token signature FIRST (cheap operation)
+    if (!sealId || !nonce) {
+      throw new Error("Invalid pulse token");
+    }
+
+    // Check nonce FIRST (prevents replay)
+    const nonceValid = await checkAndStoreNonce(nonce, this.db);
+    if (!nonceValid) {
+      throw new Error("Invalid pulse token");
+    }
+
+    // THEN validate token signature
     const isValid = await validatePulseToken(
       pulseToken,
       sealId,
       this.masterKey,
     );
     if (!isValid) {
-      throw new Error(ErrorCode.INVALID_INPUT);
-    }
-
-    // THEN check nonce (expensive DB operation)
-    const nonceValid = await checkAndStoreNonce(nonce, this.db);
-    if (!nonceValid) {
-      throw new Error("Replay attack detected");
+      throw new Error("Invalid pulse token");
     }
 
     const seal = await this.db.getSeal(sealId);
     if (!seal || !seal.isDMS) {
-      throw new Error(ErrorCode.SEAL_NOT_FOUND);
+      throw new Error("Invalid pulse token");
     }
 
-    // Delete DB first (reversible), then blob (idempotent)
+    // Delete DB first, then blob
     try {
       await this.db.deleteSeal(sealId);
     } catch (dbError) {
       logger.error("db_delete_failed", dbError as Error, { sealId });
-      throw dbError; // Critical - don't proceed
+      throw dbError;
     }
 
     try {
       await this.storage.deleteBlob(sealId);
     } catch (storageError) {
-      // Non-critical - blob orphaned but seal is gone
       logger.error("blob_delete_failed", storageError as Error, { sealId });
     }
 
@@ -589,7 +652,7 @@ export class SealService {
     // Track deletion in analytics
     try {
       const { trackAnalytics } = await import("./apiHelpers");
-      await trackAnalytics(this.db, 'seal_deleted');
+      await trackAnalytics(this.db, "seal_deleted");
     } catch (error) {
       logger.error("analytics_track_failed", error as Error, { sealId });
     }

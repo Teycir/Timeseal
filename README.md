@@ -219,7 +219,7 @@ sequenceDiagram
 **Timed Release:**
 1. Visit [timeseal.dev](https://timeseal.dev)
 2. Enter your message or upload a file (max 750KB)
-3. Select "Timed Release" mode
+3. Select "TIMED" mode
 4. Choose unlock date and time (up to 30 days)
 5. Complete security check (Cloudflare Turnstile)
 6. Click "Create Time-Seal"
@@ -230,8 +230,8 @@ sequenceDiagram
 8. Share vault link with recipient
 
 **Dead Man's Switch:**
-1. Follow steps 1-3 above
-2. Select "Dead Man's Switch" mode
+1. Follow steps 1-2 above
+2. Select "DEADMAN" mode
 3. Set pulse interval (how often you check in)
 4. Complete security check
 5. Click "Create Time-Seal"
@@ -239,6 +239,15 @@ sequenceDiagram
    - **Public vault link** (share with recipient)
    - **Private pulse link** (keep secret, use to check in)
 7. Visit pulse link before interval expires to keep seal locked
+
+**Ephemeral (Self-Destructing):**
+1. Follow steps 1-2 above
+2. Select "EPHEMERAL" mode
+3. Set max views (1-100, default: 1 for read-once)
+4. Complete security check
+5. Click "Create Time-Seal"
+6. Save vault link (COPY/DOWNLOAD/SAVE)
+7. Share with recipient - seal auto-deletes after N views
 
 ### How do I unlock a seal?
 
@@ -834,7 +843,15 @@ See [LICENSE](LICENSE) for full terms.
 
 ## 🔮 Roadmap
 
-**Recently Implemented (v0.9.1):**
+**Recently Implemented (v0.9.2):**
+- ✅ Ephemeral Seals UI - Complete user interface for self-destructing seals
+- ✅ Three Seal Types - TIMED | DEADMAN | EPHEMERAL buttons
+- ✅ Max Views Input - Configure 1-100 views before auto-deletion
+- ✅ Responsive Design - All text sizes responsive across all pages
+- ✅ Dashboard Integration - Ephemeral seals display with view count
+- ✅ Test Suite - Full ephemeral seal test script passing
+
+**Recently Implemented (v0.9.1):****
 - ✅ Encrypted Local Storage - Browser-based encrypted vault for saving seals
 - ✅ Three-Button Interface - COPY | DOWNLOAD (MD) | SAVE (encrypted)
 - ✅ Privacy-First Storage - No server storage of user's vault links

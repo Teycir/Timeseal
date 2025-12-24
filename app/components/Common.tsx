@@ -35,7 +35,7 @@ export function CountdownDisplay({
 }) {
   return (
     <div
-      className={`text-4xl font-mono ${isUrgent ? "text-red-500 pulse-glow" : "pulse-glow"}`}
+      className={`text-2xl sm:text-3xl md:text-4xl font-mono ${isUrgent ? "text-red-500 pulse-glow" : "pulse-glow"}`}
     >
       {timeLeft}
     </div>
@@ -54,7 +54,7 @@ export function PageHeader({
   return (
     <div className="text-center mb-8">
       <div className="flex justify-center mb-4">{icon}</div>
-      <h1 className="text-3xl font-bold glow-text mb-4">{title}</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold glow-text mb-4">{title}</h1>
       {subtitle && <p className="text-neon-green/70">{subtitle}</p>}
     </div>
   );

@@ -1,19 +1,33 @@
 // Reusable Cryptography Utilities
+import { BASE64_CHUNK_SIZE } from './constants';
+
 export function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
+  const chunkSize = BASE64_CHUNK_SIZE;
   let binary = '';
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
+  
+  // Process in chunks to prevent stack overflow
+  for (let i = 0; i < bytes.byteLength; i += chunkSize) {
+    const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.byteLength));
+    binary += String.fromCharCode(...chunk);
   }
+  
   return btoa(binary);
 }
 
 export function base64ToArrayBuffer(base64: string): ArrayBuffer {
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
+  
+  // Process in chunks to prevent stack overflow
+  const chunkSize = BASE64_CHUNK_SIZE;
+  for (let i = 0; i < binary.length; i += chunkSize) {
+    const end = Math.min(i + chunkSize, binary.length);
+    for (let j = i; j < end; j++) {
+      bytes[j] = binary.charCodeAt(j);
+    }
   }
+  
   return bytes.buffer;
 }
 

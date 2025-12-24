@@ -34,11 +34,11 @@ export function validateEphemeralConfig(config: EphemeralConfig): { valid: boole
   }
 
   if (config.maxViews !== null) {
-    if (!Number.isInteger(config.maxViews) || config.maxViews < 1) {
-      return { valid: false, error: 'maxViews must be a positive integer' };
+    if (!Number.isInteger(config.maxViews)) {
+      return { valid: false, error: 'maxViews must be an integer' };
     }
-    if (config.maxViews > 100) {
-      return { valid: false, error: 'maxViews cannot exceed 100' };
+    if (config.maxViews < 1 || config.maxViews > 100) {
+      return { valid: false, error: 'maxViews must be between 1 and 100' };
     }
   }
 
@@ -48,12 +48,15 @@ export function validateEphemeralConfig(config: EphemeralConfig): { valid: boole
 /**
  * Generates privacy-preserving fingerprint from request
  * 
- * NOTE: Fingerprints are based on IP + User-Agent + Language.
+ * SECURITY NOTE: Fingerprints are based on IP + User-Agent + Language.
  * Users behind the same NAT (office/school networks) with the same browser
- * will have identical fingerprints. This is acceptable for ephemeral seals
- * as it prevents the same user from viewing multiple times, not different users.
+ * will have identical fingerprints. This is a known limitation.
  * 
- * For stricter per-user tracking, consider adding authentication.
+ * For ephemeral seals, this prevents the same user from viewing multiple times.
+ * NAT users sharing fingerprints is acceptable - they can still view once each
+ * from different devices/browsers.
+ * 
+ * Alternative: Add session tokens or authentication for stricter per-user tracking.
  */
 export async function generateFingerprint(request: Request): Promise<string> {
   const ip = request.headers.get('cf-connecting-ip') || 'unknown';

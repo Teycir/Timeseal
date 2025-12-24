@@ -83,9 +83,12 @@ describe('Security Utilities', () => {
       expect(validateCSRF(request)).toBe(true);
     });
 
-    it('should reject invalid origin', () => {
+    it('should reject invalid origin and referer', () => {
       const request = new Request('http://localhost:3000/api/test', {
-        headers: { origin: 'http://evil.com' },
+        headers: { 
+          origin: 'http://evil.com',
+          referer: 'http://evil.com/page'
+        },
       });
       expect(validateCSRF(request)).toBe(false);
     });

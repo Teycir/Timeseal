@@ -44,13 +44,25 @@ const Turnstile = dynamic(
 interface Template {
   name: string;
   icon: React.ReactNode;
-  type: "timed" | "deadman";
+  type: "timed" | "deadman" | "ephemeral";
   placeholder: string;
   pulseDays?: number;
+  maxViews?: number;
   tooltip: string;
 }
 
 const TEMPLATES: Template[] = [
+  {
+    name: "One-Time Password",
+    icon: (
+      <ShieldAlert className="w-6 h-6 text-neon-green drop-shadow-[0_0_5px_rgba(0,255,65,0.5)]" />
+    ),
+    type: "ephemeral",
+    placeholder: "Temporary access code: ...\nValid for single use only",
+    maxViews: 1,
+    tooltip:
+      "Self-destructing message that deletes after first view - perfect for passwords",
+  },
   {
     name: "Crypto Inheritance",
     icon: (
@@ -125,6 +137,8 @@ interface CreateSealFormProps {
     receipt?: any;
     keyA: string;
     sealId: string;
+    sealType?: "timed" | "deadman" | "ephemeral";
+    maxViews?: number;
   }) => void;
   onProgressChange: (progress: number) => void;
 }
@@ -136,9 +150,12 @@ export function CreateSealForm({
   const [message, setMessage] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [unlockDate, setUnlockDate] = useState<Date | null>(null);
-  const [sealType, setSealType] = useState<"timed" | "deadman">("timed");
+  const [sealType, setSealType] = useState<"timed" | "deadman" | "ephemeral">(
+    "timed",
+  );
   const [pulseValue, setPulseValue] = useState(7);
   const [pulseUnit, setPulseUnit] = useState<"minutes" | "days">("days");
+  const [maxViews, setMaxViews] = useState(1);
   const [isCreating, setIsCreating] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
@@ -215,15 +232,22 @@ export function CreateSealForm({
   const applyTemplate = (template: Template) => {
     setSealType(template.type);
     setMessage(template.placeholder);
+    setFile(null); // Clear file when applying template
+
     if (template.pulseDays) {
       setPulseValue(template.pulseDays);
       setPulseUnit("days");
+    }
+    if (template.maxViews !== undefined) {
+      setMaxViews(template.maxViews);
     }
 
     // Auto-set unlock date for timed releases (24 hours from now)
     if (template.type === "timed") {
       const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
       setUnlockDate(tomorrow);
+    } else {
+      setUnlockDate(null); // Clear unlock date for non-timed seals
     }
 
     toast.success(`Template applied: ${template.name}`);
@@ -257,6 +281,18 @@ export function CreateSealForm({
     if (file && file.size > 750 * 1024) {
       toast.error("File too large (max 750KB)");
       return;
+    }
+
+    if (sealType === "ephemeral") {
+      if (
+        !maxViews ||
+        maxViews < 1 ||
+        maxViews > 100 ||
+        !Number.isInteger(maxViews)
+      ) {
+        toast.error("Max views must be a whole number between 1 and 100");
+        return;
+      }
     }
 
     if (sealType === "timed") {
@@ -314,7 +350,10 @@ export function CreateSealForm({
       let unlockTime: number;
       let pulseDuration: number | undefined;
 
-      if (sealType === "timed") {
+      if (sealType === "ephemeral") {
+        // Ephemeral seals unlock immediately
+        unlockTime = Date.now();
+      } else if (sealType === "timed") {
         unlockTime = unlockDate!.getTime();
       } else {
         const pulseMinutes =
@@ -329,11 +368,14 @@ export function CreateSealForm({
       formData.append("iv", encrypted.iv);
       formData.append("unlockTime", unlockTime.toString());
       formData.append("isDMS", (sealType === "deadman").toString());
+      formData.append("isEphemeral", (sealType === "ephemeral").toString());
 
       if (turnstileToken)
         formData.append("cf-turnstile-response", turnstileToken);
       if (pulseDuration)
         formData.append("pulseInterval", pulseDuration.toString());
+      if (sealType === "ephemeral")
+        formData.append("maxViews", maxViews.toString());
 
       onProgressChange(80);
       const response = await fetch("/api/create-seal", {
@@ -385,7 +427,16 @@ export function CreateSealForm({
           receipt: data.receipt,
           keyA: encrypted.keyA,
           sealId: data.publicUrl.split("/").pop() || "",
+          sealType,
+          maxViews: sealType === "ephemeral" ? maxViews : undefined,
         });
+
+        // Reset form state
+        setMessage("");
+        setFile(null);
+        setUnlockDate(null);
+        setMaxViews(1);
+        setTurnstileToken(null);
       } else {
         toast.dismiss(loadingToast);
         let errorMsg = "Failed to create seal";
@@ -610,39 +661,90 @@ export function CreateSealForm({
             Seal Configuration
           </h2>
           <div className="space-y-4">
-            <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center justify-between mb-2">
               <div className="text-xs text-neon-green/60 tooltip">
                 Choose seal type
                 <span className="tooltip-text">
-                  Timed Release: unlocks at specific date. Dead Man&apos;s
-                  Switch: unlocks if you don&apos;t check in
+                  Timed: unlocks at date. Deadman: unlocks if no pulse.
+                  Ephemeral: self-destructs after views.
                 </span>
               </div>
             </div>
 
-            <div className="flex space-x-4 bg-dark-bg/30 p-1 rounded-xl border border-neon-green/10">
+            <div className="grid grid-cols-3 gap-2 bg-dark-bg/30 p-1 rounded-xl border border-neon-green/10">
               <button
                 onClick={() => setSealType("timed")}
-                className={`flex-1 py-2 rounded text-sm font-bold transition-all tooltip ${sealType === "timed" ? "bg-neon-green text-dark-bg shadow-[0_0_10px_rgba(0,255,65,0.3)]" : "text-neon-green/50 hover:text-neon-green hover:bg-neon-green/5"}`}
+                className={`py-2 rounded text-xs sm:text-sm font-bold transition-all tooltip ${sealType === "timed" ? "bg-neon-green text-dark-bg shadow-[0_0_10px_rgba(0,255,65,0.3)]" : "text-neon-green/50 hover:text-neon-green hover:bg-neon-green/5"}`}
               >
                 <span className="tooltip-text">
                   Unlock at a specific future date and time
                 </span>
-                TIMED RELEASE
+                TIMED
               </button>
               <button
                 onClick={() => setSealType("deadman")}
-                className={`flex-1 py-2 rounded text-sm font-bold transition-all tooltip ${sealType === "deadman" ? "bg-neon-green text-dark-bg shadow-[0_0_10px_rgba(0,255,65,0.3)]" : "text-neon-green/50 hover:text-neon-green hover:bg-neon-green/5"}`}
+                className={`py-2 rounded text-xs sm:text-sm font-bold transition-all tooltip ${sealType === "deadman" ? "bg-neon-green text-dark-bg shadow-[0_0_10px_rgba(0,255,65,0.3)]" : "text-neon-green/50 hover:text-neon-green hover:bg-neon-green/5"}`}
               >
                 <span className="tooltip-text">
                   Auto-unlock if you don&apos;t check in periodically
                 </span>
-                DEAD MAN&apos;S SWITCH
+                DEADMAN
+              </button>
+              <button
+                onClick={() => setSealType("ephemeral")}
+                className={`py-2 rounded text-xs sm:text-sm font-bold transition-all tooltip ${sealType === "ephemeral" ? "bg-neon-green text-dark-bg shadow-[0_0_10px_rgba(0,255,65,0.3)]" : "text-neon-green/50 hover:text-neon-green hover:bg-neon-green/5"}`}
+              >
+                <span className="tooltip-text">
+                  Self-destruct after limited views (read-once messages)
+                </span>
+                EPHEMERAL
               </button>
             </div>
 
             <AnimatePresence mode="wait">
-              {sealType === "timed" ? (
+              {sealType === "ephemeral" ? (
+                <motion.div
+                  key="ephemeral"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                >
+                  <label
+                    htmlFor="max-views"
+                    className="block text-sm mb-2 text-neon-green/80 font-bold tooltip"
+                  >
+                    MAX VIEWS
+                    <span className="tooltip-text">
+                      Seal self-destructs after this many views. Perfect for
+                      one-time passwords.
+                    </span>
+                  </label>
+                  <p className="text-xs text-neon-green/50 mb-2">
+                    Seal unlocks immediately but auto-deletes after being viewed
+                    this many times.
+                  </p>
+                  <input
+                    id="max-views"
+                    type="number"
+                    value={maxViews}
+                    onChange={(e) => {
+                      const val = Number.parseInt(e.target.value) || 1;
+                      setMaxViews(Math.max(1, Math.min(100, val)));
+                    }}
+                    min={1}
+                    max={100}
+                    step={1}
+                    className="cyber-input w-32 text-center"
+                  />
+                  <p className="text-xs text-neon-green/40 border-l-2 border-neon-green/20 pl-2 mt-2">
+                    💡 Set to 1 for read-once messages (most common). Max 100
+                    views.
+                  </p>
+                  <p className="text-xs text-yellow-500/50 border-l-2 border-yellow-500/20 pl-2 mt-2">
+                    ⚠️ Ephemeral seals cannot be recovered after deletion
+                  </p>
+                </motion.div>
+              ) : sealType === "timed" ? (
                 <motion.div
                   key="timed"
                   initial={{ opacity: 0, height: 0 }}
@@ -755,9 +857,13 @@ export function CreateSealForm({
                     ? "Enter a message or upload a file first"
                     : sealType === "timed" && !unlockDate
                       ? "Select an unlock date and time"
-                      : !turnstileToken
-                        ? "Complete security check below"
-                        : "Click to create your encrypted time-locked seal"}
+                      : sealType === "ephemeral" && (!maxViews || maxViews < 1)
+                        ? "Set max views (1-100)"
+                        : !turnstileToken
+                          ? "Complete security check below"
+                          : sealType === "ephemeral"
+                            ? `Create self-destructing seal (${maxViews} view${maxViews === 1 ? "" : "s"})`
+                            : "Click to create your encrypted time-locked seal"}
               </span>
               <Button
                 onClick={handleCreateSeal}
@@ -765,9 +871,11 @@ export function CreateSealForm({
                   isCreating ||
                   (!message.trim() && !file) ||
                   (sealType === "timed" && !unlockDate) ||
+                  (sealType === "ephemeral" &&
+                    (!maxViews || maxViews < 1 || maxViews > 100)) ||
                   !turnstileToken
                 }
-                className="text-lg shadow-[0_0_20px_rgba(0,255,65,0.2)]"
+                className="text-base sm:text-lg shadow-[0_0_20px_rgba(0,255,65,0.2)]"
               >
                 {isCreating ? "ENCRYPTING & SEALING..." : "CREATE TIME-SEAL"}
               </Button>

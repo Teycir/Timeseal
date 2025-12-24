@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { BackgroundBeams } from '../components/ui/background-beams';
 import { Card } from '../components/Card';
 import DecryptedText from '../components/DecryptedText';
-import { Lock, Handshake, Activity, ShieldCheck, ClipboardList, Trash2 } from 'lucide-react';
+import { Lock, Handshake, Activity, ShieldCheck, ClipboardList, Trash2, Eye } from 'lucide-react';
 
 export default function HowItWorksPage() {
   return (
@@ -63,6 +63,23 @@ export default function HowItWorksPage() {
               If used as a Dead Man&apos;s Switch, the user must click a private &quot;Pulse Link&quot; periodically.
               If they fail to check in, the seal unlocks automatically for the recipient.
             </p>
+          </div>
+
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold text-neon-green mb-4 flex items-center gap-2">
+              <Eye className="w-6 h-6" /> Layer 3.5: Ephemeral Seals (Self-Destructing)
+            </h2>
+            <p className="text-neon-green/80 mb-2 text-sm sm:text-base">View-Limited Access</p>
+            <p className="text-neon-green/60 text-sm leading-relaxed mb-3">
+              Ephemeral seals unlock immediately but auto-delete after a set number of views:
+            </p>
+            <ul className="text-neon-green/60 text-sm space-y-2 list-disc list-inside">
+              <li><strong className="text-neon-green">Max Views:</strong> Configure 1-100 views before deletion</li>
+              <li><strong className="text-neon-green">Atomic Counting:</strong> Race-condition safe view tracking</li>
+              <li><strong className="text-neon-green">Privacy-Preserving:</strong> SHA-256 hashed viewer fingerprints</li>
+              <li><strong className="text-neon-green">Auto-Deletion:</strong> Blob and database cleanup on exhaustion</li>
+              <li><strong className="text-neon-green">Perfect For:</strong> One-time passwords, confidential messages</li>
+            </ul>
           </div>
 
           <div>

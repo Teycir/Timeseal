@@ -1,5 +1,14 @@
 import { NextRequest } from "next/server";
 import { jsonResponse } from "@/lib/apiHandler";
+import type { D1Database } from "@cloudflare/workers-types";
+
+interface CloudflareEnv {
+  DB: D1Database;
+}
+
+interface CloudflareRequest extends NextRequest {
+  env: CloudflareEnv;
+}
 
 export async function GET(request: NextRequest) {
   // Verify cron secret
@@ -19,35 +28,14 @@ export async function GET(request: NextRequest) {
   const now = Date.now();
 
   try {
-    const env = (request as any).env;
+    const env = (request as CloudflareRequest).env;
     if (!env?.DB) {
       return jsonResponse({ error: "Database not available" }, { status: 500 });
     }
 
-    // Get seals to delete (with blobs)
-    // Delete if:
-    // 1. Unlocked and older than retention period (default 30 days) AND custom expiration is not set
-    // 2. Custom expiration date has passed
-    const sealsToDelete = await env.DB.prepare(
-      `SELECT id FROM seals 
-       WHERE (expires_at IS NULL AND unlock_time < ?)
-       OR (expires_at IS NOT NULL AND expires_at < ?)`
-    ).bind(cutoffTime, now).all();
 
-    let blobsDeleted = 0;
-    // Delete blobs first
-    for (const seal of sealsToDelete.results) {
-      try {
-        await env.DB.prepare(
-          'UPDATE seals SET encrypted_blob = NULL WHERE id = ?'
-        ).bind(seal.id).run();
-        blobsDeleted++;
-      } catch (error) {
-        console.error(`[CRON] Failed to delete blob for seal ${seal.id}:`, error);
-      }
-    }
 
-    // Then delete seal records
+    // Delete seals (blobs deleted automatically via encrypted_blob column)
     const sealsResult = await env.DB.prepare(
       `DELETE FROM seals 
        WHERE (expires_at IS NULL AND unlock_time < ?)
@@ -67,7 +55,6 @@ export async function GET(request: NextRequest) {
     return jsonResponse({
       success: true,
       sealsDeleted: sealsResult.meta.changes,
-      blobsDeleted,
       rateLimitsDeleted: rateLimitsResult.meta.changes,
       noncesDeleted: noncesResult.meta.changes,
       cutoffTime: new Date(cutoffTime).toISOString(),

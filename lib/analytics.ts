@@ -25,6 +25,12 @@ export class AnalyticsService {
 
   async trackEvent(event: AnalyticsEvent): Promise<void> {
     try {
+      const timestamp = Date.now();
+      if (!Number.isSafeInteger(timestamp)) {
+        console.error('[Analytics] Invalid timestamp');
+        return;
+      }
+      
       await this.db
         .prepare(
           'INSERT INTO analytics_events (event_type, path, referrer, country, timestamp) VALUES (?, ?, ?, ?, ?)'
@@ -34,7 +40,7 @@ export class AnalyticsService {
           event.path || null,
           event.referrer || null,
           event.country || null,
-          Date.now()
+          timestamp
         )
         .run();
     } catch (error) {

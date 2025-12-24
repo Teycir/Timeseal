@@ -8,6 +8,7 @@ import {
 import { z } from "zod";
 import {
   MAX_FILE_SIZE,
+  MAX_FILE_SIZE_BEFORE_ENCRYPTION,
   MAX_DURATION_DAYS,
   MIN_UNLOCK_DELAY,
   MAX_REQUEST_SIZE,
@@ -59,9 +60,9 @@ export function validateKey(key: string, name: string): ValidationResult {
   if (!/^[A-Za-z0-9+/=]+$/.test(key)) {
     return { valid: false, error: `${name} must be base64 encoded` };
   }
-  // IV is 12 bytes = 16 chars base64, Keys are 32 bytes = 44 chars base64
-  const minLength = name === "IV" ? 16 : 32;
-  const maxLength = name === "IV" ? 16 : 100;
+  // IV is 12 bytes = 16 chars base64 (with padding), Keys are 32 bytes = 44 chars base64
+  const minLength = name === "IV" ? 15 : 32;
+  const maxLength = name === "IV" ? 17 : 100;
   if (key.length < minLength || key.length > maxLength) {
     return { valid: false, error: `${name} has invalid length` };
   }
@@ -72,7 +73,22 @@ export function validateTimestamp(timestamp: number): ValidationResult {
   if (!Number.isInteger(timestamp) || timestamp < 0) {
     return { valid: false, error: "Invalid timestamp" };
   }
-  const maxFuture = Date.now() + 100 * 365 * 24 * 60 * 60 * 1000; // 100 years
+  if (!Number.isSafeInteger(timestamp)) {
+    return { valid: false, error: "Timestamp exceeds safe integer range" };
+  }
+  
+  // Safe calculation: check if addition would overflow
+  const maxYears = 100;
+  const msPerYear = 365 * 24 * 60 * 60 * 1000;
+  const maxOffset = maxYears * msPerYear;
+  
+  if (timestamp > Number.MAX_SAFE_INTEGER - maxOffset) {
+    return { valid: false, error: "Timestamp too far in future" };
+  }
+  
+  const now = Date.now();
+  const maxFuture = now + maxOffset;
+  
   if (timestamp > maxFuture) {
     return { valid: false, error: "Timestamp too far in future" };
   }
@@ -88,10 +104,10 @@ export function validateSealAge(createdAt: number): ValidationResult {
 }
 
 export function validateFileSize(size: number): ValidationResult {
-  if (size > MAX_FILE_SIZE) {
+  if (size > MAX_FILE_SIZE_BEFORE_ENCRYPTION) {
     return {
       valid: false,
-      error: `File size exceeds maximum of ${MAX_FILE_SIZE / 1024 / 1024}MB`,
+      error: `File size exceeds maximum of ${Math.floor(MAX_FILE_SIZE_BEFORE_ENCRYPTION / 1024)}KB (before encryption)`,
     };
   }
   return { valid: true };
@@ -119,6 +135,10 @@ export function validateUnlockTime(unlockTime: number): ValidationResult {
 }
 
 export function validatePulseInterval(interval: number): ValidationResult {
+  if (!Number.isFinite(interval) || isNaN(interval)) {
+    return { valid: false, error: "Pulse interval must be a valid number" };
+  }
+
   if (interval < MIN_PULSE_INTERVAL) {
     return { valid: false, error: "Pulse interval must be at least 5 minutes" };
   }

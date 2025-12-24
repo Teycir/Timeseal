@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Download, QrCode } from "lucide-react";
 
 interface QRCodeDisplayProps {
@@ -56,10 +57,13 @@ export function QRCodeDisplay({ vaultLink }: QRCodeDisplayProps) {
         </button>
       ) : (
         <div className="space-y-4">
-          <img
+          <Image
             src={qrCode}
             alt="Vault QR Code"
+            width={256}
+            height={256}
             className="border-2 border-[#00FF00] p-2 bg-black"
+            unoptimized
           />
           <button
             onClick={downloadQR}

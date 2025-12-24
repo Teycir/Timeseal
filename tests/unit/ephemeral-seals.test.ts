@@ -67,7 +67,7 @@ describe("Ephemeral Seals", () => {
         maxViews: 0,
       });
       expect(result.valid).toBe(false);
-      expect(result.error).toContain("positive integer");
+      expect(result.error).toContain("must be between 1 and 100");
     });
 
     test("rejects maxViews > 100", () => {
@@ -76,7 +76,7 @@ describe("Ephemeral Seals", () => {
         maxViews: 101,
       });
       expect(result.valid).toBe(false);
-      expect(result.error).toContain("cannot exceed 100");
+      expect(result.error).toContain("must be between 1 and 100");
     });
 
     test("rejects non-integer maxViews", () => {

@@ -25,6 +25,8 @@ export async function POST(request: NextRequest) {
         const MIN_INTERVAL = 5 * 60 * 1000; // 5 minutes
         if (
           typeof newInterval !== "number" ||
+          !Number.isFinite(newInterval) ||
+          isNaN(newInterval) ||
           newInterval < MIN_INTERVAL ||
           newInterval > MAX_PULSE_INTERVAL
         ) {

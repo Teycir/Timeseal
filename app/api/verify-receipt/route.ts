@@ -22,7 +22,12 @@ export async function POST(request: NextRequest) {
       ['verify']
     );
     
-    const sigBytes = new Uint8Array(receipt.signature.match(/.{1,2}/g).map((byte: string) => parseInt(byte, 16)));
+    const sigMatch = receipt.signature.match(/.{1,2}/g);
+    if (!sigMatch) {
+      return jsonResponse({ valid: false, error: 'Invalid signature format' }, { status: 400 });
+    }
+    
+    const sigBytes = new Uint8Array(sigMatch.map((byte: string) => parseInt(byte, 16)));
     const valid = await crypto.subtle.verify('HMAC', key, sigBytes, encoder.encode(data));
 
     return jsonResponse({ valid, sealId: receipt.sealId });

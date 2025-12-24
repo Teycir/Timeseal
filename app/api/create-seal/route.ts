@@ -46,6 +46,12 @@ export async function POST(request: NextRequest) {
             "maxViews must be a valid number",
           );
         }
+        if (parsed < 1 || parsed > 100) {
+          return createErrorResponse(
+            ErrorCode.INVALID_INPUT,
+            "maxViews must be between 1 and 100",
+          );
+        }
         maxViews = parsed;
       }
 
@@ -62,7 +68,8 @@ export async function POST(request: NextRequest) {
         { validation: validateKey(iv, "IV") },
         { validation: validateTimestamp(unlockTime) },
         { validation: validateFileSize(encryptedBlob.size) },
-        { validation: validateUnlockTime(unlockTime) },
+        // Skip unlock time validation for ephemeral seals (they unlock immediately)
+        ...(isEphemeral ? [] : [{ validation: validateUnlockTime(unlockTime) }]),
       ]);
       if (validationError) return validationError;
 
