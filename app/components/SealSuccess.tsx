@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { addSeal } from "@/lib/encryptedStorage";
 import { Card } from "./Card";
 import { Button } from "./Button";
 import { Input } from "./Input";
@@ -121,8 +120,8 @@ export function SealSuccess({
         )}
 
         <div>
-          <div className="flex flex-col sm:flex-row gap-2 items-stretch">
-            <div className="flex-1 tooltip min-w-0">
+          <div className="space-y-3">
+            <div className="tooltip">
               <Input
                 label="PUBLIC VAULT LINK"
                 value={publicUrl}
@@ -134,15 +133,14 @@ export function SealSuccess({
                 sent to server). Press Ctrl+K to copy.
               </span>
             </div>
-            <div className="flex gap-2 sm:flex-col sm:w-auto">
-              <Button
+            <div className="flex gap-4 text-sm font-mono">
+              <button
                 onClick={() => copyToClipboard(publicUrl, "Link")}
-                className="bg-neon-green/20 flex-1 sm:flex-none min-h-[44px]"
-                variant="secondary"
+                className="text-neon-green hover:text-neon-green/80 underline"
               >
-                COPY
-              </Button>
-              <Button
+                copy
+              </button>
+              <button
                 onClick={() => {
                   const content = `# TimeSeal Vault
 
@@ -186,67 +184,42 @@ ${pulseUrl && pulseToken ? '- Anyone with the pulse link can control the seal (r
                   setTimeout(() => URL.revokeObjectURL(url), 100);
                   toast.success("Saved as markdown");
                 }}
-                className="bg-neon-green/20 flex-1 sm:flex-none min-h-[44px]"
-                variant="secondary"
+                className="text-neon-green hover:text-neon-green/80 underline"
               >
-                <Download className="w-4 h-4 sm:mr-0" />
-                <span className="sm:hidden ml-2">MD</span>
-              </Button>
-              <Button
-                onClick={async () => {
-                  try {
-                    await addSeal({
-                      id: sealId,
-                      publicUrl,
-                      pulseUrl,
-                      pulseToken,
-                      type: pulseToken ? 'deadman' : 'timed',
-                      unlockTime: receipt?.unlockTime || Date.now() + 3600000,
-                      createdAt: Date.now()
-                    });
-                    toast.success("Saved to My Seals");
-                  } catch {
-                    toast.error("Failed to save");
-                  }
-                }}
-                className="bg-neon-green/20 flex-1 sm:flex-none min-h-[44px]"
-                variant="secondary"
-              >
-                SAVE
-              </Button>
+                download
+              </button>
             </div>
           </div>
         </div>
 
         {pulseUrl && pulseToken && (
-          <div className="mt-4">
-            <div className="flex flex-col sm:flex-row gap-2 items-stretch">
-              <div className="flex-1 tooltip min-w-0">
-                <Input
-                  label="PULSE LINK (KEEP SECRET)"
-                  value={`${pulseUrl}/${encodeURIComponent(pulseToken)}`}
-                  onChange={() => {}}
-                  testId="pulse-token-input"
-                />
-                <span className="tooltip-text">
-                  PRIVATE link for Dead Man&rsquo;s Switch. Visit this URL to
-                  check in. Press Ctrl+Shift+K to copy.
-                </span>
-              </div>
-              <Button
+          <div className="mt-4 space-y-3">
+            <div className="tooltip">
+              <Input
+                label="PULSE LINK (KEEP SECRET)"
+                value={`${pulseUrl}/${encodeURIComponent(pulseToken)}`}
+                onChange={() => {}}
+                testId="pulse-token-input"
+              />
+              <span className="tooltip-text">
+                PRIVATE link for Dead Man&rsquo;s Switch. Visit this URL to
+                check in. Press Ctrl+Shift+K to copy.
+              </span>
+            </div>
+            <div className="flex gap-4 text-sm font-mono">
+              <button
                 onClick={() =>
                   copyToClipboard(
                     `${pulseUrl}/${encodeURIComponent(pulseToken || "")}`,
                     "Pulse Link",
                   )
                 }
-                className="bg-neon-green/20 min-h-[44px]"
-                variant="secondary"
+                className="text-neon-green hover:text-neon-green/80 underline"
               >
-                COPY
-              </Button>
+                copy
+              </button>
             </div>
-            <p className="text-xs text-neon-green/50 mt-2">
+            <p className="text-xs text-neon-green/50">
               Visit this link to reset the countdown. Works from any
               device/location.
             </p>
@@ -254,8 +227,11 @@ ${pulseUrl && pulseToken ? '- Anyone with the pulse link can control the seal (r
         )}
 
         {receipt && (
-          <div className="border-t border-neon-green/20 pt-4">
-            <Button
+          <div className="border-t border-neon-green/20 pt-4 flex items-center justify-between">
+            <p className="text-xs text-neon-green/50">
+              Proof of seal creation with HMAC signature
+            </p>
+            <button
               onClick={() => {
                 const blob = new Blob([JSON.stringify(receipt, null, 2)], {
                   type: "application/json",
@@ -268,15 +244,11 @@ ${pulseUrl && pulseToken ? '- Anyone with the pulse link can control the seal (r
                 setTimeout(() => URL.revokeObjectURL(url), 100);
                 toast.success("Receipt downloaded");
               }}
-              className="w-full bg-neon-green/10 flex items-center justify-center gap-2"
-              variant="secondary"
+              className="text-neon-green hover:text-neon-green/80 underline text-sm font-mono flex items-center gap-1"
             >
               <Download className="w-4 h-4" />
-              DOWNLOAD RECEIPT
-            </Button>
-            <p className="text-xs text-neon-green/50 mt-2 text-center">
-              Proof of seal creation with HMAC signature
-            </p>
+              download receipt
+            </button>
           </div>
         )}
       </Card>

@@ -202,12 +202,13 @@ function VaultPageClient({ id }: { id: string }) {
 
       const interval = setInterval(() => {
         setTimeLeft(prev => {
-          if (prev <= 1000) {
+          const newValue = prev - 1000;
+          if (newValue <= 0) {
             clearInterval(interval);
-            fetchSealStatus(); // Refresh status when time is up
+            fetchSealStatus();
             return 0;
           }
-          return prev - 1000;
+          return newValue;
         });
       }, 1000);
 

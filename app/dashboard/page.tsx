@@ -35,9 +35,13 @@ export default function DashboardPage() {
 
   const deleteSeal = async (id: string) => {
     if (confirm('Remove this seal from your dashboard?')) {
-      await removeSeal(id);
-      setSeals(seals.filter(s => s.id !== id));
-      toast.success('Seal removed');
+      try {
+        await removeSeal(id);
+        setSeals(prev => prev.filter(s => s.id !== id));
+        toast.success('Seal removed');
+      } catch {
+        toast.error('Failed to remove seal');
+      }
     }
   };
 
@@ -165,8 +169,11 @@ ${seal.pulseUrl && seal.pulseToken ? '- Anyone with the pulse link can control t
           <Card className="text-center py-12">
             <Clock className="w-16 h-16 text-neon-green/30 mx-auto mb-4" />
             <p className="text-neon-green/70 mb-4">No seals saved yet</p>
-            <p className="text-xs text-neon-green/50 mb-6">
+            <p className="text-xs text-neon-green/50 mb-2">
               Seals are automatically saved when you create them
+            </p>
+            <p className="text-xs text-neon-green/40 mb-6">
+              Note: Removing from dashboard only deletes the link, not the actual seal
             </p>
             <Link href="/" className="cyber-button inline-block">
               CREATE YOUR FIRST SEAL
@@ -259,8 +266,11 @@ ${seal.pulseUrl && seal.pulseToken ? '- Anyone with the pulse link can control t
         </div>
 
         <div className="mt-8 text-center">
-          <p className="text-xs text-neon-green/40">
+          <p className="text-xs text-neon-green/40 mb-2">
             🔒 Stored encrypted in your browser. Download backups for offline storage.
+          </p>
+          <p className="text-xs text-neon-green/30">
+            💡 Removing seals here only deletes your saved links, not the actual seals in the database.
           </p>
         </div>
       </div>

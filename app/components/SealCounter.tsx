@@ -25,7 +25,7 @@ export function SealCounter() {
       <div className="inline-flex items-center gap-2 px-4 py-2 bg-neon-green/5 border border-neon-green/20 rounded-full">
         <Globe className="w-4 h-4 text-neon-green/60" />
         <span className="text-neon-green/60 text-xs font-mono">
-          ACTIVE GLOBAL SEALS:
+          ACTIVE SEALS IN DATABASE:
         </span>
         <span className="text-neon-green text-lg font-bold font-mono">
           {count.toLocaleString()}

@@ -70,23 +70,26 @@ export default function HomePage() {
     });
   }, []);
 
-  const handleSuccess = (data: { publicUrl: string; pulseUrl?: string; pulseToken?: string; receipt?: any; keyA: string; sealId: string }) => {
+  const handleSuccess = async (data: { publicUrl: string; pulseUrl?: string; pulseToken?: string; receipt?: any; keyA: string; sealId: string }) => {
     setResult(data);
     triggerConfetti();
 
-    // Save to encrypted local storage
-    const sealId = data.publicUrl.split('/v/')[1]?.split('#')[0];
-    addSeal({
-      id: sealId || '',
-      publicUrl: data.publicUrl,
-      pulseUrl: data.pulseUrl,
-      pulseToken: data.pulseToken,
-      type: data.pulseToken ? 'deadman' : 'timed',
-      unlockTime: Date.now() + 3600000,
-      createdAt: Date.now()
-    }).catch(err => {
-      console.error('Failed to save seal to encrypted storage:', err);
-    });
+    // Auto-save to encrypted local storage
+    try {
+      await addSeal({
+        id: data.sealId,
+        publicUrl: data.publicUrl,
+        pulseUrl: data.pulseUrl,
+        pulseToken: data.pulseToken,
+        type: data.pulseToken ? 'deadman' : 'timed',
+        unlockTime: data.receipt?.unlockTime || Date.now() + 3600000,
+        createdAt: Date.now()
+      });
+      toast.success('Seal saved to your encrypted vault');
+    } catch (err) {
+      console.error('Failed to save seal:', err);
+      toast.error('Failed to save seal to vault');
+    }
   };
 
   const handleReset = () => {
