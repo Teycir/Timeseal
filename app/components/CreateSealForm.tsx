@@ -25,6 +25,7 @@ import {
   FileText,
   Trash2,
   AlertTriangle,
+  Calendar,
 } from "lucide-react";
 import { triggerHaptic } from "@/lib/mobile";
 
@@ -608,15 +609,18 @@ export function CreateSealForm({
                   Select when the seal will automatically unlock. Must be within
                   30 days.
                 </p>
-                <input
-                  id="unlock-date"
-                  type="datetime-local"
-                  value={unlockDate}
-                  onChange={(e) => setUnlockDate(e.target.value)}
-                  min={new Date().toISOString().slice(0, 16)}
-                  className="cyber-input w-full"
-                  lang="en-US"
-                />
+                <div className="relative">
+                  <input
+                    id="unlock-date"
+                    type="datetime-local"
+                    value={unlockDate}
+                    onChange={(e) => setUnlockDate(e.target.value)}
+                    min={new Date().toISOString().slice(0, 16)}
+                    className="cyber-input w-full pr-12"
+                    lang="en-US"
+                  />
+                  <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neon-green pointer-events-none" />
+                </div>
               </motion.div>
             ) : (
               <motion.div

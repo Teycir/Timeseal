@@ -27,6 +27,22 @@ body {
   font-family: "JetBrains Mono", monospace;
   background-color: var(--dark-bg);
   color: var(--dark-text);
+  cursor: auto;
+}
+
+* {
+  cursor: inherit;
+}
+
+button, a, input, select, textarea {
+  cursor: pointer;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="datetime-local"],
+textarea {
+  cursor: text;
 }
 
 /* Print Styles for QR Codes */
@@ -167,6 +183,45 @@ body {
 .cyber-input {
   /* stylelint-disable-next-line at-rule-no-unknown */
   @apply w-full px-4 py-3 bg-black/50 border-2 border-neon-green/30 text-neon-green font-mono focus:border-neon-green focus:outline-none focus:shadow-[0_0_15px_rgba(0,255,65,0.3)] transition-colors rounded-xl;
+}
+
+/* Datetime input normalization */
+input[type="datetime-local"] {
+  color-scheme: dark;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* Hide native calendar icon */
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+input[type="datetime-local"]::-webkit-datetime-edit {
+  color: var(--neon-green);
+}
+
+input[type="datetime-local"]::-webkit-datetime-edit-fields-wrapper {
+  color: var(--neon-green);
+}
+
+input[type="datetime-local"]::-webkit-datetime-edit-text {
+  color: var(--neon-green);
+  opacity: 0.7;
+}
+
+input[type="datetime-local"]::-webkit-datetime-edit-month-field,
+input[type="datetime-local"]::-webkit-datetime-edit-day-field,
+input[type="datetime-local"]::-webkit-datetime-edit-year-field,
+input[type="datetime-local"]::-webkit-datetime-edit-hour-field,
+input[type="datetime-local"]::-webkit-datetime-edit-minute-field {
+  color: var(--neon-green);
 }
 
 /* Cyber Label */
