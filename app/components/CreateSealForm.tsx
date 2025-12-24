@@ -16,7 +16,6 @@ import { Input } from "./Input";
 import DecryptedText from "./DecryptedText";
 import { AnimatedTagline } from "./AnimatedTagline";
 import { SealCounter } from "./SealCounter";
-import { ActivityTicker } from "./ActivityTicker";
 import {
   Bitcoin,
   ShieldAlert,
@@ -436,7 +435,6 @@ export function CreateSealForm({
           ⚠️ Seals auto-delete 30 days after unlock
         </p>
         <SealCounter />
-        <ActivityTicker />
       </motion.div>
 
       <Card className="space-y-6">

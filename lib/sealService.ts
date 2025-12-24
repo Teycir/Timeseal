@@ -343,6 +343,14 @@ export class SealService {
         viewCheck.maxViews,
       );
 
+      // Track deletion in analytics
+      try {
+        const { trackAnalytics } = await import("./apiHelpers");
+        await trackAnalytics(this.db, 'seal_deleted');
+      } catch (error) {
+        logger.error("analytics_track_failed", error as Error, { sealId });
+      }
+
       sealEvents.emit("seal:exhausted", {
         sealId,
         viewCount: viewCheck.viewCount,
@@ -427,9 +435,8 @@ export class SealService {
     }
 
     const now = Date.now();
-    const intervalToUse = newInterval
-      ? newInterval * 24 * 60 * 60 * 1000
-      : seal.pulseInterval || 0;
+    // newInterval is already in milliseconds from the API
+    const intervalToUse = newInterval || seal.pulseInterval || 0;
 
     if (intervalToUse === 0) {
       throw new Error("Pulse interval not configured");
@@ -578,6 +585,14 @@ export class SealService {
       metadata: { burned: true },
     });
     logger.info("seal_burned", { sealId });
+
+    // Track deletion in analytics
+    try {
+      const { trackAnalytics } = await import("./apiHelpers");
+      await trackAnalytics(this.db, 'seal_deleted');
+    } catch (error) {
+      logger.error("analytics_track_failed", error as Error, { sealId });
+    }
 
     // Emit event for observers
     sealEvents.emit("seal:deleted", { sealId });

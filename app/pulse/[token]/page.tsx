@@ -38,6 +38,15 @@ export default function PulsePage({ params }: { params: { token: string } }) {
 
         if (res.ok && data.isDMS) {
           setSealInfo(data);
+
+          // If seal is already unlocked, redirect to vault
+          // Note: We can't include keyA in redirect as we don't have it from pulse token
+          if (!data.isLocked) {
+            setStatus("error");
+            setMessage("This seal is already unlocked. Use your original vault link to access the content.");
+            return;
+          }
+          
           const daysRemaining = Math.max(
             1,
             Math.floor((data.unlockTime - Date.now()) / (1000 * 60 * 60 * 24)),
@@ -100,10 +109,15 @@ export default function PulsePage({ params }: { params: { token: string } }) {
           toast.error("Unlock failed");
         }
       } else {
+        // Convert interval to milliseconds
+        const intervalMs = pulseUnit === "minutes" 
+          ? pulseInterval * 60 * 1000 
+          : pulseInterval * 24 * 60 * 60 * 1000;
+        
         const res = await fetch("/api/pulse", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pulseToken: currentToken, newInterval: pulseInterval }),
+          body: JSON.stringify({ pulseToken: currentToken, newInterval: intervalMs }),
         });
         const data = await res.json();
         if (res.ok) {
@@ -218,14 +232,6 @@ export default function PulsePage({ params }: { params: { token: string } }) {
               <span className="whitespace-nowrap">{isUpdating && actionType === "delete" ? "PROCESSING..." : "DELETE SEAL FOREVER"}</span>
             </button>
             <div className="flex gap-3 mb-2">
-              {sealInfo?.id && (
-                <a
-                  href={`/v/${sealInfo.id}`}
-                  className="cyber-button flex-1 bg-neon-green/10"
-                >
-                  GO TO VAULT
-                </a>
-              )}
               <a href="/" className="cyber-button flex-1 bg-neon-green/10">
                 CREATE NEW SEAL
               </a>
@@ -254,14 +260,6 @@ export default function PulsePage({ params }: { params: { token: string } }) {
               )}
             </Card>
             <div className="flex gap-3 mb-4">
-              {actionType === "unlock" && sealInfo?.id && (
-                <a
-                  href={`/v/${sealInfo.id}`}
-                  className="cyber-button flex-1"
-                >
-                  GO TO VAULT
-                </a>
-              )}
               {actionType === "renew" && (
                 <button
                   onClick={() => {
@@ -300,7 +298,11 @@ export default function PulsePage({ params }: { params: { token: string } }) {
             </Card>
             <div className="flex gap-3 mb-4">
               <button
-                onClick={() => { setStatus("confirm"); setErrorDetails(null); }}
+                onClick={() => {
+                  setStatus("loading");
+                  setErrorDetails(null);
+                  window.location.reload();
+                }}
                 className="cyber-button flex-1"
               >
                 TRY AGAIN

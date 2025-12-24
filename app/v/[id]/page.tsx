@@ -42,7 +42,13 @@ function VaultPageClient({ id }: { id: string }) {
       console.error(err);
       setError('Client integrity verification failed');
     });
-  }, []);
+
+    // Cleanup sessionStorage on unmount
+    return () => {
+      const storageKey = `timeseal_keyA_${id}`;
+      sessionStorage.removeItem(storageKey);
+    };
+  }, [id]);
 
   const copyVaultLink = async () => {
     try {
@@ -88,10 +94,26 @@ function VaultPageClient({ id }: { id: string }) {
       // Verify client integrity before decryption
       await ensureIntegrity();
 
-      const keyA = globalThis.window.location.hash.substring(1);
+      // Try to get keyA from URL hash first, then fallback to sessionStorage
+      let keyA = globalThis.window.location.hash.substring(1);
+
+      if (!keyA) {
+        // Fallback to sessionStorage (in case user refreshed or navigated back)
+        const storageKey = `timeseal_keyA_${id}`;
+        keyA = sessionStorage.getItem(storageKey) || '';
+      } else {
+        // Store keyA in sessionStorage for future use
+        const storageKey = `timeseal_keyA_${id}`;
+        sessionStorage.setItem(storageKey, keyA);
+      }
+      
       if (!keyA) {
         setError('Key A not found in URL. Invalid vault link.');
-        setErrorDetails({ reason: 'missing_key_a', url: globalThis.window.location.href });
+        setErrorDetails({ 
+          reason: 'missing_key_a', 
+          url: globalThis.window.location.href,
+          hint: 'The vault link must include #keyA at the end. Check your link or use the original link you received.'
+        });
         return;
       }
 
@@ -246,6 +268,19 @@ function VaultPageClient({ id }: { id: string }) {
           <h1 className="text-2xl sm:text-3xl font-bold mb-4 glow-text text-red-500 px-2">VAULT ERROR</h1>
           <Card className="mb-8 border-red-500/30">
             <p className="text-red-400/90 font-mono mb-4">{error}</p>
+            {error.includes('Key A not found') && (
+              <div className="text-left mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded">
+                <p className="text-yellow-400 text-sm font-bold mb-2">💡 Common Causes:</p>
+                <ul className="text-yellow-400/80 text-xs space-y-1 list-disc list-inside">
+                  <li>Vault link is incomplete (missing #keyA at the end)</li>
+                  <li>Link was copied from browser history or bookmark</li>
+                  <li>Link was shared through a service that strips URL fragments</li>
+                </ul>
+                <p className="text-yellow-400/80 text-xs mt-3">
+                  <strong>Solution:</strong> Use the original vault link you received when the seal was created.
+                </p>
+              </div>
+            )}
             {errorDetails && (
               <details className="text-left">
                 <summary className="text-red-400/60 text-xs cursor-pointer hover:text-red-400/80 mb-2">
@@ -417,7 +452,7 @@ function VaultPageClient({ id }: { id: string }) {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative w-full overflow-x-hidden pb-20">
       <BackgroundBeams className="absolute top-0 left-0 w-full h-full z-0" />
-      
+
       <motion.a
         href="/dashboard"
         className="absolute top-4 left-4 z-10 px-3 py-2 bg-dark-bg/80 backdrop-blur-sm border-2 border-neon-green/30 rounded-xl hover:border-neon-green transition-all"
@@ -426,7 +461,6 @@ function VaultPageClient({ id }: { id: string }) {
       >
         <span className="text-xs text-neon-green/70 font-mono">MY SEALS</span>
       </motion.a>
-      
       <div className="max-w-md w-full text-center relative z-10">
         <motion.div
           animate={{

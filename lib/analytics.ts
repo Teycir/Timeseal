@@ -4,7 +4,7 @@
 import type { D1Database } from '@cloudflare/workers-types';
 
 export interface AnalyticsEvent {
-  eventType: 'page_view' | 'seal_created' | 'seal_unlocked' | 'pulse_received';
+  eventType: 'page_view' | 'seal_created' | 'seal_unlocked' | 'pulse_received' | 'seal_deleted';
   path?: string;
   referrer?: string;
   country?: string;
@@ -16,6 +16,7 @@ export interface AnalyticsSummary {
   totalSealsCreated: number;
   totalSealsUnlocked: number;
   totalPulsesReceived: number;
+  totalSealsDeleted: number;
   uniqueCountries: number;
 }
 
@@ -53,6 +54,7 @@ export class AnalyticsService {
           COUNT(CASE WHEN event_type = 'seal_created' THEN 1 END) as totalSealsCreated,
           COUNT(CASE WHEN event_type = 'seal_unlocked' THEN 1 END) as totalSealsUnlocked,
           COUNT(CASE WHEN event_type = 'pulse_received' THEN 1 END) as totalPulsesReceived,
+          COUNT(CASE WHEN event_type = 'seal_deleted' THEN 1 END) as totalSealsDeleted,
           COUNT(DISTINCT country) as uniqueCountries
         FROM analytics_events
         WHERE timestamp >= ?
@@ -66,11 +68,16 @@ export class AnalyticsService {
   }
 
   async getTotalSealsCreated(): Promise<number> {
-    const result = await this.db
+    const created = await this.db
       .prepare('SELECT COUNT(*) as count FROM analytics_events WHERE event_type = ?')
       .bind('seal_created')
       .first<{ count: number }>();
     
-    return result?.count || 0;
+    const deleted = await this.db
+      .prepare('SELECT COUNT(*) as count FROM analytics_events WHERE event_type = ?')
+      .bind('seal_deleted')
+      .first<{ count: number }>();
+    
+    return (created?.count || 0) - (deleted?.count || 0);
   }
 }

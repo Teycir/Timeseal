@@ -41,7 +41,7 @@ export function checkValidation(
  */
 export async function trackAnalytics(
   db: any,
-  eventType: 'page_view' | 'seal_created' | 'seal_unlocked' | 'pulse_received',
+  eventType: 'page_view' | 'seal_created' | 'seal_unlocked' | 'pulse_received' | 'seal_deleted',
 ): Promise<void> {
   try {
     console.log('[Analytics] trackAnalytics called with eventType:', eventType);
