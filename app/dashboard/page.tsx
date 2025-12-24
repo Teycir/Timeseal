@@ -1,22 +1,29 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { BackgroundBeams } from '../components/ui/background-beams';
-import { FloatingIcons } from '../components/FloatingIcons';
-import { Card } from '../components/Card';
-import { Copy, ExternalLink, Trash2, Clock, Shield, Download } from 'lucide-react';
-import { toast } from 'sonner';
-import Link from 'next/link';
-import DecryptedText from '../components/DecryptedText';
-import { loadSeals, removeSeal } from '@/lib/encryptedStorage';
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { BackgroundBeams } from "../components/ui/background-beams";
+import { FloatingIcons } from "../components/FloatingIcons";
+import { Card } from "../components/Card";
+import {
+  Copy,
+  ExternalLink,
+  Trash2,
+  Clock,
+  Shield,
+  Download,
+} from "lucide-react";
+import { toast } from "sonner";
+import Link from "next/link";
+import DecryptedText from "../components/DecryptedText";
+import { loadSeals, removeSeal, saveSeals } from "@/lib/encryptedStorage";
 
 interface StoredSeal {
   id: string;
   publicUrl: string;
   pulseUrl?: string;
   pulseToken?: string;
-  type: 'timed' | 'deadman';
+  type: "timed" | "deadman";
   unlockTime: number;
   createdAt: number;
 }
@@ -24,30 +31,62 @@ interface StoredSeal {
 export default function DashboardPage() {
   const [seals, setSeals] = useState<StoredSeal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [burnConfirm, setBurnConfirm] = useState<StoredSeal | null>(null);
 
   useEffect(() => {
     loadSeals()
       .then(setSeals)
-      .catch(() => toast.error('Failed to load saved seals'))
+      .catch(() => toast.error("Failed to load saved seals"))
       .finally(() => setIsLoading(false));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const deleteSeal = async (id: string) => {
-    if (confirm('Remove this seal from your dashboard?')) {
+    if (confirm("Remove this seal from your dashboard?")) {
       try {
         await removeSeal(id);
-        setSeals(prev => prev.filter(s => s.id !== id));
-        toast.success('Seal removed');
+        setSeals((prev) => prev.filter((s) => s.id !== id));
+        toast.success("Seal removed");
       } catch {
-        toast.error('Failed to remove seal');
+        toast.error("Failed to remove seal");
       }
+    }
+  };
+
+  const burnSeal = async (seal: StoredSeal) => {
+    try {
+      if (!seal.pulseToken) {
+        toast.error("Cannot burn: No pulse token available");
+        return;
+      }
+      const res = await fetch("/api/burn", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pulseToken: seal.pulseToken }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        const updatedSeals = seals.map((s) =>
+          s.id === seal.id ? { ...s, unlockTime: -1 } : s
+        );
+        setSeals(updatedSeals);
+        await saveSeals(updatedSeals);
+        toast.success("Seal destroyed permanently");
+        setBurnConfirm(null);
+      } else {
+        const errorMsg = data.error?.message || data.error || "Failed to destroy seal";
+        console.error("Burn failed:", { status: res.status, error: data });
+        toast.error(`Burn failed: ${errorMsg}`);
+      }
+    } catch (err) {
+      console.error("Burn error:", err);
+      toast.error("Network error occurred");
     }
   };
 
   const copyLink = (url: string) => {
     navigator.clipboard.writeText(url);
-    toast.success('Link copied');
+    toast.success("Link copied");
   };
 
   const downloadSeal = (seal: StoredSeal) => {
@@ -55,7 +94,7 @@ export default function DashboardPage() {
 
 **Seal ID:** ${seal.id}
 
-**Type:** ${seal.type === 'deadman' ? 'Dead Man\'s Switch' : 'Timed Release'}
+**Type:** ${seal.type === "deadman" ? "Dead Man's Switch" : "Timed Release"}
 
 **Created:** ${new Date(seal.createdAt).toLocaleString()}
 
@@ -67,47 +106,52 @@ export default function DashboardPage() {
 
 ${seal.publicUrl}
 
-${seal.pulseUrl && seal.pulseToken ? `## Pulse Link (Keep Secret)
+${
+  seal.pulseUrl && seal.pulseToken
+    ? `## Pulse Link (Keep Secret)
 
-${seal.pulseUrl}/${seal.pulseToken}
+${seal.pulseUrl}/${encodeURIComponent(seal.pulseToken)}
 
 ⚠️ **WARNING:** This link allows you to reset the countdown or burn the seal. Keep it private.
 
 ---
 
-` : ''}## Security Notes
+`
+    : ""
+}## Security Notes
 
 - Store this file securely (encrypted storage, password manager, or safe)
 - The vault link contains Key A in the URL hash (#)
 - Never share vault links over unencrypted channels
 - Anyone with the vault link can access the content after unlock time
-${seal.pulseUrl && seal.pulseToken ? '- Anyone with the pulse link can control the seal (reset timer or burn)' : ''}
+${seal.pulseUrl && seal.pulseToken ? "- Anyone with the pulse link can control the seal (reset timer or burn)" : ""}
 
 ---
 
 *Generated by TimeSeal - Cryptographically Enforced Time-Locked Vaults*
 *https://timeseal.teycir-932.workers.dev*`;
 
-    const blob = new Blob([content], { type: 'text/markdown' });
+    const blob = new Blob([content], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `timeseal-${seal.id}-${Date.now()}.md`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toast.success('Seal backup downloaded');
+    toast.success("Seal backup downloaded");
   };
 
   const formatTimeLeft = (unlockTime: number) => {
+    if (unlockTime === -1) return "DESTROYED";
     const ms = unlockTime - Date.now();
-    if (ms <= 0) return 'UNLOCKED';
-    
+    if (ms <= 0) return "UNLOCKED";
+
     const days = Math.floor(ms / (1000 * 60 * 60 * 24));
     const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-    
+
     if (days > 0) return `${days}d ${hours}h`;
     if (hours > 0) return `${hours}h ${minutes}m`;
     return `${minutes}m`;
@@ -123,11 +167,22 @@ ${seal.pulseUrl && seal.pulseToken ? '- Anyone with the pulse link can control t
         target="_blank"
         rel="noopener noreferrer"
         className="absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-2 bg-dark-bg/80 backdrop-blur-sm border-2 border-neon-green/30 rounded-xl hover:border-neon-green transition-all group"
-        whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(0, 255, 65, 0.3)' }}
+        whileHover={{
+          scale: 1.05,
+          boxShadow: "0 0 20px rgba(0, 255, 65, 0.3)",
+        }}
         whileTap={{ scale: 0.95 }}
       >
-        <span className="text-xs text-neon-green/70 font-mono group-hover:text-neon-green transition-colors">SOURCE CODE</span>
-        <svg className="w-5 h-5 text-neon-green animate-subtle-shimmer" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+        <span className="text-xs text-neon-green/70 font-mono group-hover:text-neon-green transition-colors">
+          SOURCE CODE
+        </span>
+        <svg
+          className="w-5 h-5 text-neon-green animate-subtle-shimmer"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="currentColor"
+          viewBox="0 0 16 16"
+          aria-hidden="true"
+        >
           <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
         </svg>
       </motion.a>
@@ -136,13 +191,18 @@ ${seal.pulseUrl && seal.pulseToken ? '- Anyone with the pulse link can control t
         <motion.a
           href="/"
           className="flex items-center justify-center gap-2 px-3 py-2 bg-dark-bg/80 backdrop-blur-sm border-2 border-neon-green/30 rounded-xl hover:border-neon-green transition-all group"
-          whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(0, 255, 65, 0.3)' }}
+          whileHover={{
+            scale: 1.05,
+            boxShadow: "0 0 20px rgba(0, 255, 65, 0.3)",
+          }}
           whileTap={{ scale: 0.95 }}
         >
-          <span className="text-xs text-neon-green/70 font-mono group-hover:text-neon-green transition-colors">HOME</span>
+          <span className="text-xs text-neon-green/70 font-mono group-hover:text-neon-green transition-colors">
+            HOME
+          </span>
         </motion.a>
       </div>
-      
+
       <div className="max-w-4xl w-full relative z-10">
         <div className="text-center mb-8">
           <h1 className="text-4xl sm:text-5xl font-bold glow-text pulse-glow mb-4">
@@ -155,7 +215,9 @@ ${seal.pulseUrl && seal.pulseToken ? '- Anyone with the pulse link can control t
               encryptedClassName="text-neon-green/30"
             />
           </h1>
-          <p className="text-neon-green/70 text-sm">Manage your time-locked vaults</p>
+          <p className="text-neon-green/70 text-sm">
+            Manage your time-locked vaults
+          </p>
         </div>
 
         {isLoading ? (
@@ -173,7 +235,8 @@ ${seal.pulseUrl && seal.pulseToken ? '- Anyone with the pulse link can control t
               Seals are automatically saved when you create them
             </p>
             <p className="text-xs text-neon-green/40 mb-6">
-              Note: Removing from dashboard only deletes the link, not the actual seal
+              Note: Removing from dashboard only deletes the link, not the
+              actual seal
             </p>
             <Link href="/" className="cyber-button inline-block">
               CREATE YOUR FIRST SEAL
@@ -181,107 +244,163 @@ ${seal.pulseUrl && seal.pulseToken ? '- Anyone with the pulse link can control t
           </Card>
         ) : (
           <div className="space-y-4">
-            {seals.map((seal) => (
-              <motion.div
-                key={seal.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                <Card className="p-4">
-                  <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0 w-full">
-                      <div className="flex items-center gap-2 mb-2">
-                        {seal.type === 'deadman' ? (
-                          <Shield className="w-4 h-4 text-yellow-500 flex-shrink-0" />
-                        ) : (
-                          <Clock className="w-4 h-4 text-neon-green flex-shrink-0" />
-                        )}
-                        <span className="text-xs font-mono text-neon-green/50">
-                          {seal.type === 'deadman' ? 'DEAD MAN\'S SWITCH' : 'TIMED RELEASE'}
-                        </span>
-                      </div>
-                      
-                      <div className="text-sm font-mono text-neon-green/70 mb-1 truncate">
-                        ID: {seal.id}
-                      </div>
-                      
-                      <div className="text-xs text-neon-green/40 mb-2">
-                        Created: {new Date(seal.createdAt).toLocaleString()}
-                      </div>
-                      
-                      <div className="text-xs text-neon-green/50 mb-3">
-                        <span className={formatTimeLeft(seal.unlockTime) === 'UNLOCKED' ? 'font-bold text-neon-green' : ''}>
-                          {formatTimeLeft(seal.unlockTime)}
-                        </span>
-                        {formatTimeLeft(seal.unlockTime) !== 'UNLOCKED' && ' remaining'}
-                      </div>
+            {seals.map((seal) => {
+              const timeDisplay = formatTimeLeft(seal.unlockTime);
+              const isUnlocked = timeDisplay === "UNLOCKED";
+              const isDestroyed = timeDisplay === "DESTROYED";
 
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          onClick={() => copyLink(seal.publicUrl)}
-                          className="cyber-button text-xs py-1 px-3 flex items-center gap-1"
-                        >
-                          <Copy className="w-3 h-3" />
-                          VAULT
-                        </button>
-                        
-                        {seal.pulseUrl && seal.pulseToken && (
+              return (
+                <motion.div
+                  key={seal.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <Card className="p-4">
+                    <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0 w-full">
+                        <div className="flex items-center gap-2 mb-2">
+                          {seal.type === "deadman" ? (
+                            <Shield className="w-4 h-4 text-yellow-500 flex-shrink-0" />
+                          ) : (
+                            <Clock className="w-4 h-4 text-neon-green flex-shrink-0" />
+                          )}
+                          <span className="text-xs font-mono text-neon-green/50">
+                            {seal.type === "deadman"
+                              ? "DEAD MAN'S SWITCH"
+                              : "TIMED RELEASE"}
+                          </span>
+                        </div>
+
+                        <div className="text-sm font-mono text-neon-green/70 mb-1 truncate">
+                          ID: {seal.id}
+                        </div>
+
+                        <div className="text-xs text-neon-green/40 mb-2">
+                          Created: {new Date(seal.createdAt).toLocaleString()}
+                        </div>
+
+                        <div className="text-xs mb-3">
+                          <span className={isDestroyed ? "font-bold text-red-500" : isUnlocked ? "font-bold text-neon-green" : "text-neon-green/50"}>
+                            {timeDisplay}
+                          </span>
+                          {(!isUnlocked && !isDestroyed) && <span className="text-neon-green/50"> remaining</span>}
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
                           <button
-                            onClick={() => copyLink(`${seal.pulseUrl}/${seal.pulseToken}`)}
-                            className="cyber-button text-xs py-1 px-3 flex items-center gap-1 bg-yellow-500/10"
+                            onClick={() => window.open(seal.publicUrl, '_blank')}
+                            disabled={isDestroyed}
+                            className="cyber-button text-xs py-1 px-3 flex items-center gap-1 disabled:opacity-30 disabled:cursor-not-allowed"
                           >
-                            <Shield className="w-3 h-3" />
-                            PULSE
+                            <ExternalLink className="w-3 h-3" />
+                            VAULT
                           </button>
-                        )}
-                        
-                        <button
-                          onClick={() => downloadSeal(seal)}
-                          className="cyber-button text-xs py-1 px-3 flex items-center gap-1 bg-neon-green/10"
-                        >
-                          <Download className="w-3 h-3" />
-                          DOWNLOAD
-                        </button>
-                        
-                        <a
-                          href={seal.publicUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="cyber-button text-xs py-1 px-3 flex items-center gap-1 bg-neon-green/10"
-                        >
-                          <ExternalLink className="w-3 h-3" />
-                          OPEN
-                        </a>
-                      </div>
-                    </div>
 
-                    <button
-                      onClick={() => deleteSeal(seal.id)}
-                      className="text-red-500 hover:text-red-400 transition-colors p-2 self-start sm:self-auto"
-                      aria-label="Delete seal"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
+                          {seal.pulseUrl && seal.pulseToken && (
+                            <button
+                              onClick={() => seal.pulseUrl && seal.pulseToken && window.open(`${seal.pulseUrl}/${encodeURIComponent(seal.pulseToken)}`, '_blank')}
+                              disabled={isDestroyed}
+                              className="cyber-button text-xs py-1 px-3 flex items-center gap-1 bg-yellow-500/10 disabled:opacity-30 disabled:cursor-not-allowed"
+                            >
+                              <Shield className="w-3 h-3" />
+                              PULSE
+                            </button>
+                          )}
+
+                          <button
+                            onClick={() => downloadSeal(seal)}
+                            disabled={isDestroyed}
+                            className="cyber-button text-xs py-1 px-3 flex items-center gap-1 bg-neon-green/10 disabled:opacity-30 disabled:cursor-not-allowed"
+                          >
+                            <Download className="w-3 h-3" />
+                            DOWNLOAD
+                          </button>
+
+                          {seal.pulseToken && !isDestroyed && (
+                            <button
+                              onClick={() => setBurnConfirm(seal)}
+                              className="cyber-button text-xs py-1 px-3 flex items-center gap-1 bg-red-500/10 text-red-500 border-red-500/50"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              BURN
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => deleteSeal(seal.id)}
+                        className="text-red-500 hover:text-red-400 transition-colors p-2 self-start sm:self-auto"
+                        aria-label="Delete seal"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </Card>
+                </motion.div>
+              );
+            })}
           </div>
         )}
 
         <div className="text-center mt-8">
-          <Link href="/" className="cyber-button inline-block">CREATE NEW SEAL</Link>
+          <Link href="/" className="cyber-button inline-block">
+            CREATE NEW SEAL
+          </Link>
         </div>
 
         <div className="mt-8 text-center">
           <p className="text-xs text-neon-green/40 mb-2">
-            🔒 Stored encrypted in your browser. Download backups for offline storage.
+            🔒 Stored encrypted in your browser. Download backups for offline
+            storage.
           </p>
           <p className="text-xs text-neon-green/30">
-            💡 Removing seals here only deletes your saved links, not the actual seals in the database.
+            💡 Removing seals here only deletes your saved links, not the actual
+            seals in the database.
           </p>
         </div>
       </div>
+
+      {burnConfirm && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="max-w-md w-full"
+          >
+            <Card className="border-red-500/50 bg-dark-bg">
+              <div className="text-center mb-6">
+                <div className="mx-auto w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
+                  <Trash2 className="w-8 h-8 text-red-500" />
+                </div>
+                <h2 className="text-2xl font-bold text-red-500 mb-2">DESTROY SEAL?</h2>
+                <p className="text-neon-green/70 text-sm mb-4">
+                  This action is permanent and cannot be undone.
+                </p>
+                <div className="bg-red-500/10 border border-red-500/30 rounded p-3 mb-4">
+                  <p className="text-red-400 text-xs font-mono">
+                    ID: {burnConfirm.id}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setBurnConfirm(null)}
+                  className="cyber-button flex-1 bg-neon-green/10"
+                >
+                  CANCEL
+                </button>
+                <button
+                  onClick={() => burnSeal(burnConfirm)}
+                  className="cyber-button flex-1 bg-red-500/20 border-red-500/50 text-red-500 hover:bg-red-500/30"
+                >
+                  DESTROY
+                </button>
+              </div>
+            </Card>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

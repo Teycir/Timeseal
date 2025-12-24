@@ -36,6 +36,16 @@ export default function PulsePage({ params }: { params: { token: string } }) {
         const res = await fetch(`/api/seal/${sealId}`);
         const data = await res.json();
 
+        if (!res.ok) {
+          setStatus("error");
+          if (res.status === 404) {
+            setMessage("This seal has been deleted or never existed.");
+          } else {
+            setMessage("Invalid pulse link or seal not found");
+          }
+          return;
+        }
+
         if (res.ok && data.isDMS) {
           setSealInfo(data);
 
@@ -270,9 +280,16 @@ export default function PulsePage({ params }: { params: { token: string } }) {
                   PULSE AGAIN
                 </button>
               )}
-              <a href="/" className="cyber-button flex-1 bg-neon-green/10">
-                RETURN HOME
-              </a>
+              {actionType !== "delete" && (
+                <a href="/" className="cyber-button flex-1 bg-neon-green/10">
+                  RETURN HOME
+                </a>
+              )}
+              {actionType === "delete" && (
+                <a href="/" className="cyber-button w-full">
+                  RETURN HOME
+                </a>
+              )}
             </div>
           </>
         )}

@@ -201,8 +201,11 @@ function VaultPageClient({ id }: { id: string }) {
           await decryptMessage(data.keyB, data.iv, data.encryptedBlob);
         }
       } else {
-        // Sanitized error - no internal details exposed
-        const errorMsg = 'Seal not found or unavailable';
+        // Handle specific error cases
+        let errorMsg = 'Seal not found or unavailable';
+        if (response.status === 404) {
+          errorMsg = 'This seal has been destroyed or never existed';
+        }
         console.error('[VAULT] Error:', data.error);
         ErrorLogger.log(data.error, { component: 'Vault', action: 'fetchStatus', sealId: id });
         setError(errorMsg);
@@ -268,14 +271,25 @@ function VaultPageClient({ id }: { id: string }) {
   };
 
   if (error) {
+    const isDestroyed = error.includes('destroyed');
     return (
       <div className="min-h-screen flex items-center justify-center p-4 relative w-full overflow-x-hidden pb-32">
         <BackgroundBeams className="absolute top-0 left-0 w-full h-full z-0" />
         <div className="max-w-md w-full text-center relative z-10">
           <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-6" />
-          <h1 className="text-2xl sm:text-3xl font-bold mb-4 glow-text text-red-500 px-2">VAULT ERROR</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-4 glow-text text-red-500 px-2">
+            {isDestroyed ? 'SEAL DESTROYED' : 'VAULT ERROR'}
+          </h1>
           <Card className="mb-8 border-red-500/30">
             <p className="text-red-400/90 font-mono mb-4">{error}</p>
+            {isDestroyed && (
+              <div className="text-left mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded">
+                <p className="text-red-400 text-sm font-bold mb-2">🔥 This seal has been permanently deleted</p>
+                <p className="text-red-400/80 text-xs">
+                  The seal was either burned by its creator or never existed. The content cannot be recovered.
+                </p>
+              </div>
+            )}
             {error.includes('Key A not found') && (
               <div className="text-left mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded">
                 <p className="text-yellow-400 text-sm font-bold mb-2">💡 Common Causes:</p>
