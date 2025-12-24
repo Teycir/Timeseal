@@ -50,10 +50,7 @@ export function ActivityTicker() {
   const formatted = (() => {
     switch (current.type) {
       case "sealed":
-        return {
-          icon: <Lock className="w-4 h-4" />,
-          text: `🔒 Anonymous sealed a message${current.location ? ` in ${current.location}` : ""}`,
-        };
+        return null;
       case "unlocked":
         return {
           icon: <Unlock className="w-4 h-4" />,
@@ -66,6 +63,8 @@ export function ActivityTicker() {
         };
     }
   })();
+
+  if (!formatted) return null;
 
   return (
     <div className="w-full max-w-2xl mx-auto mt-6 overflow-hidden">
