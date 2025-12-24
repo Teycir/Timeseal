@@ -148,52 +148,63 @@ export function CreateSealForm({
     return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
   };
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    const ALLOWED_EXTENSIONS = ['.txt', '.md'];
-    const ALLOWED_MIME_TYPES = ['text/plain', 'text/markdown'];
-    
-    if (acceptedFiles?.length > 0) {
-      const selectedFile = acceptedFiles[0];
-      const maxSize = 750 * 1024;
+  const onDrop = useCallback(
+    (acceptedFiles: File[]) => {
+      const ALLOWED_EXTENSIONS = [".txt", ".md"];
+      const ALLOWED_MIME_TYPES = ["text/plain", "text/markdown"];
 
-      // Check file extension if present
-      const fileName = selectedFile.name;
-      const hasExtension = fileName.includes('.');
-      const ext = hasExtension ? '.' + fileName.split('.').pop()?.toLowerCase() : '';
-      
-      // Validate: if has extension, must be allowed; if no extension, must be text MIME type
-      if (hasExtension && !ALLOWED_EXTENSIONS.includes(ext)) {
+      // Check if message already exists
+      if (message.trim()) {
         toast.error(
-          `File type not allowed: ${ext}. Allowed: .txt, .md`,
-        );
-        return;
-      }
-      
-      if (!hasExtension && !ALLOWED_MIME_TYPES.includes(selectedFile.type)) {
-        toast.error(
-          `File without extension must be plain text. Detected type: ${selectedFile.type || 'unknown'}`,
+          "Choose either message **OR** file, not both. Clear the message first.",
         );
         return;
       }
 
-      if (selectedFile.size > maxSize) {
-        toast.error(
-          `File too large: ${formatFileSize(selectedFile.size)} (max 750KB)`,
+      if (acceptedFiles?.length > 0) {
+        const selectedFile = acceptedFiles[0];
+        const maxSize = 750 * 1024;
+
+        // Check file extension if present
+        const fileName = selectedFile.name;
+        const hasExtension = fileName.includes(".");
+        const ext = hasExtension
+          ? "." + fileName.split(".").pop()?.toLowerCase()
+          : "";
+
+        // Validate: if has extension, must be allowed; if no extension, must be text MIME type
+        if (hasExtension && !ALLOWED_EXTENSIONS.includes(ext)) {
+          toast.error(`File type not allowed: ${ext}. Allowed: .txt, .md`);
+          return;
+        }
+
+        if (!hasExtension && !ALLOWED_MIME_TYPES.includes(selectedFile.type)) {
+          toast.error(
+            `File without extension must be plain text. Detected type: ${selectedFile.type || "unknown"}`,
+          );
+          return;
+        }
+
+        if (selectedFile.size > maxSize) {
+          toast.error(
+            `File too large: ${formatFileSize(selectedFile.size)} (max 750KB)`,
+          );
+          return;
+        }
+        if (selectedFile.size > maxSize * 0.9) {
+          toast.warning(
+            `File size: ${formatFileSize(selectedFile.size)} (approaching 750KB limit)`,
+          );
+        }
+        setFile(selectedFile);
+        setMessage("");
+        toast.success(
+          `Selected: ${selectedFile.name} (${formatFileSize(selectedFile.size)})`,
         );
-        return;
       }
-      if (selectedFile.size > maxSize * 0.9) {
-        toast.warning(
-          `File size: ${formatFileSize(selectedFile.size)} (approaching 750KB limit)`,
-        );
-      }
-      setFile(selectedFile);
-      setMessage("");
-      toast.success(
-        `Selected: ${selectedFile.name} (${formatFileSize(selectedFile.size)})`,
-      );
-    }
-  }, []);
+    },
+    [message],
+  );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -295,18 +306,6 @@ export function CreateSealForm({
     try {
       onProgressChange(20);
       await new Promise((resolve) => setTimeout(resolve, 200));
-
-      if (message.trim() && file) {
-        const combinedSize = message.length + file.size;
-        if (combinedSize > 750 * 1024) {
-          toast.error(
-            `Combined size too large: ${formatFileSize(combinedSize)} (max 750KB)`,
-          );
-          toast.dismiss(loadingToast);
-          setIsCreating(false);
-          return;
-        }
-      }
 
       onProgressChange(40);
       const encrypted = await encryptData(file || message);
@@ -524,13 +523,29 @@ export function CreateSealForm({
             </span>
           </h2>
           <p className="text-xs text-neon-green/50 mb-2">
-            💡 Tip: Only .txt and .md files accepted. For larger files (images, videos, documents), add hyperlinks in your message instead
+            💡 Tip: Only .txt and .md files accepted. For larger files (images,
+            videos, documents), add hyperlinks in your message instead
           </p>
           <textarea
             id="message-input"
             aria-labelledby="message-heading"
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={(e) => {
+              if (file) {
+                toast.error(
+                  "Choose either message **OR** file, not both. Remove the file first.",
+                );
+                return;
+              }
+              const newValue = e.target.value;
+              if (newValue.length > 750000) {
+                toast.error(
+                  "Message too large (max 750KB = ~750,000 characters)",
+                );
+                return;
+              }
+              setMessage(newValue);
+            }}
             placeholder="Enter your secret message..."
             className="cyber-input w-full h-24 resize-none font-mono mb-2 placeholder:text-neon-green/40"
           />
