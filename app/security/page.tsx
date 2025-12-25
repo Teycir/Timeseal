@@ -76,7 +76,7 @@ export default function SecurityPage() {
           <div className="space-y-4 text-neon-green/60 text-sm">
             <div>
               <p className="text-neon-green font-bold mb-2">Cloudflare D1 Database Storage</p>
-              <p>All seals stored encrypted in Cloudflare D1 (SQLite at the edge) with triple-layer encryption. Encrypted blobs stored as base64 TEXT. Maximum 750KB per seal due to D1 column limits.</p>
+              <p>All seals stored encrypted in Cloudflare D1 (SQLite at the edge) with triple-layer encryption. Encrypted blobs stored as base64 TEXT. Maximum 560KB per seal (due to D1 column limits).</p>
             </div>
             <div>
               <p className="text-neon-green font-bold mb-2">Edge Runtime</p>
@@ -140,7 +140,7 @@ export default function SecurityPage() {
             </div>
             <div>
               <p className="text-neon-green font-bold mb-2 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> File Size Enforcement</p>
-              <p>750KB limit enforced at all layers: UI validation, API validation, and database storage.</p>
+              <p>560KB limit (before encryption) enforced at all layers: UI validation, API validation, and database storage.</p>
             </div>
           </div>
         </Card>

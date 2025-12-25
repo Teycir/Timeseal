@@ -124,13 +124,31 @@ export function SealSuccess({
         )}
 
         {qrCode && (
-          <div className="qr-print-container flex justify-center">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={qrCode}
-              alt="QR code for TimeSeal vault link - scan to access encrypted time-locked message"
-              className="border-2 border-neon-green/30 rounded w-48 h-48 sm:w-64 sm:h-64"
-            />
+          <div className="qr-print-container space-y-3">
+            <div className="flex justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={qrCode}
+                alt="QR code for TimeSeal vault link - scan to access encrypted time-locked message"
+                className="border-2 border-neon-green/30 rounded w-48 h-48 sm:w-64 sm:h-64"
+              />
+            </div>
+            <div className="flex justify-center">
+              <button
+                onClick={() => {
+                  const a = document.createElement("a");
+                  a.href = qrCode;
+                  a.download = `timeseal-qr-${sealId}.png`;
+                  a.click();
+                  toast.success("QR code downloaded");
+                }}
+                className="text-neon-green hover:text-neon-green/80 underline text-sm font-mono flex items-center gap-1"
+                title="Download QR code as PNG image"
+              >
+                <Download className="w-4 h-4" />
+                download qr code
+              </button>
+            </div>
             <p className="qr-print-label print-only hidden">
               TimeSeal Vault - Scan to Access
             </p>

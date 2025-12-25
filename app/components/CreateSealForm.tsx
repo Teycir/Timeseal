@@ -222,7 +222,7 @@ export function CreateSealForm({
 
       if (acceptedFiles?.length > 0) {
         const selectedFile = acceptedFiles[0];
-        const maxSize = 750 * 1024;
+        const maxSize = Math.floor((750 * 1024) / 1.34); // ~560KB (accounts for encryption overhead)
 
         // Check file extension if present
         const fileName = selectedFile.name;
@@ -246,13 +246,13 @@ export function CreateSealForm({
 
         if (selectedFile.size > maxSize) {
           toast.error(
-            `File too large: ${formatFileSize(selectedFile.size)} (max 750KB)`,
+            `File too large: ${formatFileSize(selectedFile.size)} (max ${Math.floor(maxSize / 1024)}KB before encryption)`,
           );
           return;
         }
         if (selectedFile.size > maxSize * 0.9) {
           toast.warning(
-            `File size: ${formatFileSize(selectedFile.size)} (approaching 750KB limit)`,
+            `File size: ${formatFileSize(selectedFile.size)} (approaching ${Math.floor(maxSize / 1024)}KB limit)`,
           );
         }
         setFile(selectedFile);
@@ -265,10 +265,79 @@ export function CreateSealForm({
     [message],
   );
 
+  const [dragValidation, setDragValidation] = useState<{
+    isValid: boolean;
+    message: string;
+    fileName?: string;
+  } | null>(null);
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     multiple: false,
-    maxSize: 750 * 1024,
+    maxSize: Math.floor((750 * 1024) / 1.34),
+    onDragEnter: (e) => {
+      const items = e.dataTransfer?.items;
+      if (!items || items.length === 0) return;
+
+      const item = items[0];
+      const fileName = item.getAsFile()?.name || "unknown";
+      const fileSize = item.getAsFile()?.size || 0;
+      const fileType = item.type;
+
+      const ALLOWED_EXTENSIONS = [".txt", ".md"];
+      const ALLOWED_MIME_TYPES = ["text/plain", "text/markdown"];
+      const maxSize = Math.floor((750 * 1024) / 1.34);
+
+      if (message.trim()) {
+        setDragValidation({
+          isValid: false,
+          message: "Clear message first",
+          fileName,
+        });
+        return;
+      }
+
+      const hasExtension = fileName.includes(".");
+      const ext = hasExtension
+        ? "." + fileName.split(".").pop()?.toLowerCase()
+        : "";
+
+      if (hasExtension && !ALLOWED_EXTENSIONS.includes(ext)) {
+        setDragValidation({
+          isValid: false,
+          message: `Type not supported (${ext})`,
+          fileName,
+        });
+        return;
+      }
+
+      if (!hasExtension && !ALLOWED_MIME_TYPES.includes(fileType)) {
+        setDragValidation({
+          isValid: false,
+          message: "Must be plain text",
+          fileName,
+        });
+        return;
+      }
+
+      if (fileSize > maxSize) {
+        setDragValidation({
+          isValid: false,
+          message: `File too large (${formatFileSize(fileSize)})`,
+          fileName,
+        });
+        return;
+      }
+
+      setDragValidation({
+        isValid: true,
+        message: "Drop to upload",
+        fileName,
+      });
+    },
+    onDragLeave: () => {
+      setDragValidation(null);
+    },
   });
 
   const applyTemplate = (template: Template) => {
@@ -315,13 +384,15 @@ export function CreateSealForm({
       return;
     }
 
-    if (message.trim() && message.length > 750000) {
-      toast.error("Message too large (max 750KB)");
+    const maxSize = Math.floor((750 * 1024) / 1.34); // ~560KB
+    
+    if (message.trim() && message.length > maxSize) {
+      toast.error(`Message too large (max ${Math.floor(maxSize / 1024)}KB before encryption)`);
       return;
     }
 
-    if (file && file.size > 750 * 1024) {
-      toast.error("File too large (max 750KB)");
+    if (file && file.size > maxSize) {
+      toast.error(`File too large (max ${Math.floor(maxSize / 1024)}KB before encryption)`);
       return;
     }
 
@@ -611,12 +682,12 @@ export function CreateSealForm({
           >
             MESSAGE OR FILE
             <span className="tooltip-text">
-              Enter text message or upload a file (max 750KB). File takes
+              Enter text message or upload a file (max 560KB before encryption). File takes
               priority if both provided.
             </span>
           </h2>
           <p className="text-xs text-neon-green/50 mb-2">
-            💡 Tip: Only .txt and .md files accepted. For larger files (images,
+            💡 Tip: Only .txt and .md files accepted (max 560KB). For larger files (images,
             videos, documents), add hyperlinks in your message instead
           </p>
           <textarea
@@ -631,9 +702,10 @@ export function CreateSealForm({
                 return;
               }
               const newValue = e.target.value;
-              if (newValue.length > 750000) {
+              const maxSize = Math.floor((750 * 1024) / 1.34); // ~560KB
+              if (newValue.length > maxSize) {
                 toast.error(
-                  "Message too large (max 750KB = ~750,000 characters)",
+                  `Message too large (max ${Math.floor(maxSize / 1024)}KB = ~${maxSize.toLocaleString()} characters)`,
                 );
                 return;
               }
@@ -645,7 +717,13 @@ export function CreateSealForm({
 
           <div
             {...getRootProps()}
-            className={`cyber-border p-6 text-center cursor-pointer transition-all border-dashed ${isDragActive ? "bg-neon-green/10 border-neon-green scale-[1.02]" : "hover:bg-neon-green/5"} ${file ? "border-none bg-neon-green/5" : ""}`}
+            className={`cyber-border p-6 text-center cursor-pointer transition-all border-dashed ${
+              isDragActive && dragValidation?.isValid
+                ? "bg-neon-green/10 border-neon-green scale-[1.02]"
+                : isDragActive && !dragValidation?.isValid
+                  ? "bg-red-500/10 border-red-500 scale-[1.02]"
+                  : "hover:bg-neon-green/5"
+            } ${file ? "border-none bg-neon-green/5" : ""}`}
           >
             <input {...getInputProps()} />
             {file ? (
@@ -674,10 +752,30 @@ export function CreateSealForm({
               </div>
             ) : (
               <div className="space-y-1">
-                {isDragActive ? (
-                  <p className="text-neon-green animate-pulse">
-                    DROP FILES HERE...
-                  </p>
+                {isDragActive && dragValidation ? (
+                  <div className="space-y-2">
+                    {dragValidation.isValid ? (
+                      <>
+                        <FileText className="w-10 h-10 text-neon-green mx-auto animate-bounce" />
+                        <p className="text-neon-green font-bold animate-pulse">
+                          {dragValidation.message}
+                        </p>
+                        <p className="text-xs text-neon-green/70 font-mono truncate px-4">
+                          {dragValidation.fileName}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <AlertTriangle className="w-10 h-10 text-red-500 mx-auto animate-bounce" />
+                        <p className="text-red-500 font-bold animate-pulse">
+                          {dragValidation.message}
+                        </p>
+                        <p className="text-xs text-red-500/70 font-mono truncate px-4">
+                          {dragValidation.fileName}
+                        </p>
+                      </>
+                    )}
+                  </div>
                 ) : (
                   <>
                     <FileText className="w-8 h-8 text-neon-green/50 mx-auto mb-2" />
@@ -688,7 +786,7 @@ export function CreateSealForm({
                     <div className="flex items-center justify-center gap-1 mt-2">
                       <AlertTriangle className="w-3 h-3 text-neon-green/30" />
                       <p className="text-xs text-neon-green/30">
-                        Max size: 750KB
+                        Max size: 560KB (before encryption)
                       </p>
                     </div>
                   </>
@@ -711,6 +809,25 @@ export function CreateSealForm({
                   Ephemeral: self-destructs after views.
                 </span>
               </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setMessage("");
+                  setFile(null);
+                  setUnlockDate(null);
+                  setSealType("timed");
+                  setPulseValue(7);
+                  setPulseUnit("days");
+                  setMaxViews(1);
+                  toast.info("Form reset");
+                }}
+                className="text-xs text-neon-green/50 hover:text-neon-green transition-colors underline tooltip"
+              >
+                <span className="tooltip-text">
+                  Clear all fields and start fresh
+                </span>
+                Reset Form
+              </button>
             </div>
 
             <div className="grid grid-cols-3 gap-2 bg-dark-bg/30 p-1 rounded-xl border border-neon-green/10">
@@ -792,17 +909,51 @@ export function CreateSealForm({
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
+                  className="space-y-4"
                 >
-                  <label
-                    htmlFor="unlock-date"
-                    className="block text-sm mb-2 text-neon-green/80 font-bold"
-                  >
-                    UNLOCK DATE & TIME
-                  </label>
-                  <p className="text-xs text-neon-green/50 mb-2">
-                    Select when the seal will automatically unlock. Must be
-                    within 30 days.
-                  </p>
+                  <div>
+                    <label
+                      htmlFor="unlock-date"
+                      className="block text-sm text-neon-green/80 font-bold mb-1"
+                    >
+                      UNLOCK DATE & TIME
+                    </label>
+                    <p className="text-xs text-neon-green/50">
+                      Quick presets or custom date below (max 30 days)
+                    </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setUnlockDate(new Date(Date.now() + 60 * 60 * 1000))}
+                      className="cyber-border py-2.5 text-xs font-mono font-bold text-neon-green/70 hover:text-neon-green hover:bg-neon-green/10 hover:border-neon-green/50 active:scale-95 transition-all rounded-lg"
+                    >
+                      +1 HOUR
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setUnlockDate(new Date(Date.now() + 24 * 60 * 60 * 1000))}
+                      className="cyber-border py-2.5 text-xs font-mono font-bold text-neon-green/70 hover:text-neon-green hover:bg-neon-green/10 hover:border-neon-green/50 active:scale-95 transition-all rounded-lg"
+                    >
+                      TOMORROW
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setUnlockDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000))}
+                      className="cyber-border py-2.5 text-xs font-mono font-bold text-neon-green/70 hover:text-neon-green hover:bg-neon-green/10 hover:border-neon-green/50 active:scale-95 transition-all rounded-lg"
+                    >
+                      1 WEEK
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setUnlockDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000))}
+                      className="cyber-border py-2.5 text-xs font-mono font-bold text-neon-green/70 hover:text-neon-green hover:bg-neon-green/10 hover:border-neon-green/50 active:scale-95 transition-all rounded-lg"
+                    >
+                      30 DAYS
+                    </button>
+                  </div>
+
                   <div className="relative">
                     <DatePicker
                       selected={unlockDate}

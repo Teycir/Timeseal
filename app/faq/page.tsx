@@ -24,11 +24,11 @@ export default function FAQPage() {
         <Card className="p-4 sm:p-6 md:p-8 space-y-6">
           <div>
             <h3 className="text-base sm:text-lg font-bold text-neon-green mb-2">What is the maximum file size?</h3>
-            <p className="text-neon-green/60 text-sm mb-2">750KB per seal (D1 database limit with base64 encoding overhead).</p>
+            <p className="text-neon-green/60 text-sm mb-2">560KB per seal.</p>
             <p className="text-neon-green/60 text-sm mb-2"><strong className="text-neon-green">Workarounds for larger files:</strong></p>
             <ul className="list-disc list-inside ml-4 space-y-1 text-xs text-neon-green/60">
               <li>Compress before upload (ZIP can reduce size 50-90%)</li>
-              <li>Split into multiple seals (700KB chunks)</li>
+              <li>Split into multiple seals (500KB chunks)</li>
               <li>Upload to cloud storage and seal the download link</li>
               <li>Self-host with R2 storage for files up to 5GB</li>
             </ul>
@@ -51,7 +51,7 @@ export default function FAQPage() {
             <h3 className="text-base sm:text-lg font-bold text-neon-green mb-2">How do I create a seal?</h3>
             <p className="text-neon-green/60 text-sm mb-2"><strong className="text-neon-green">Timed Release:</strong></p>
             <ul className="list-disc list-inside ml-4 space-y-1 text-xs text-neon-green/60 mb-2">
-              <li>Enter message or upload file (max 750KB)</li>
+              <li>Enter message or upload file (max 560KB)</li>
               <li>Select &quot;TIMED&quot; mode</li>
               <li>Choose unlock date/time (up to 30 days)</li>
               <li>Complete Cloudflare Turnstile security check</li>
