@@ -112,7 +112,7 @@ export function SealSuccess({
 
       <Card className="space-y-6">
         {sealType === "ephemeral" && (
-          <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+          <div className="p-4 bg-yellow-500/10 border-2 border-yellow-500/30 rounded-xl mb-6">
             <p className="text-yellow-500 text-sm font-bold mb-2">
               ⚠️ EPHEMERAL SEAL
             </p>
@@ -142,11 +142,13 @@ export function SealSuccess({
                   a.click();
                   toast.success("QR code downloaded");
                 }}
-                className="text-neon-green hover:text-neon-green/80 underline text-sm font-mono flex items-center gap-1"
-                title="Download QR code as PNG image"
+                className="text-neon-green hover:text-neon-green/80 underline text-sm font-mono flex items-center gap-1 tooltip"
               >
                 <Download className="w-4 h-4" />
                 download qr code
+                <span className="tooltip-text">
+                  Save QR code as PNG image for printing or sharing
+                </span>
               </button>
             </div>
             <p className="qr-print-label print-only hidden">
@@ -286,11 +288,13 @@ ${sealType === "ephemeral" ? `- Ephemeral seals delete automatically after ${max
                 setTimeout(() => URL.revokeObjectURL(url), 100);
                 toast.success("Saved as markdown");
               }}
-              className="text-neon-green hover:text-neon-green/80 underline text-sm font-mono flex items-center gap-1"
-              title="Download seal info as markdown file"
+              className="text-neon-green hover:text-neon-green/80 underline text-sm font-mono flex items-center gap-1 tooltip"
             >
               <Download className="w-4 h-4" />
               download seal info
+              <span className="tooltip-text">
+                Save markdown file with vault link, pulse link (if DMS), and security notes for offline backup
+              </span>
             </button>
           </div>
 
@@ -312,11 +316,13 @@ ${sealType === "ephemeral" ? `- Ephemeral seals delete automatically after ${max
                   setTimeout(() => URL.revokeObjectURL(url), 100);
                   toast.success("Receipt downloaded");
                 }}
-                className="text-neon-green hover:text-neon-green/80 underline text-sm font-mono flex items-center gap-1"
-                title="Download cryptographic receipt as JSON"
+                className="text-neon-green hover:text-neon-green/80 underline text-sm font-mono flex items-center gap-1 tooltip"
               >
                 <Download className="w-4 h-4" />
                 download receipt
+                <span className="tooltip-text">
+                  Save cryptographic receipt (JSON) with HMAC signature for verification and proof of seal creation
+                </span>
               </button>
             </div>
           )}
