@@ -32,15 +32,21 @@ export default function CanaryPage() {
           </div>
           
           <div className="grid md:grid-cols-2 gap-4 text-base mb-6 bg-black/30 p-4 rounded-lg border border-neon-green/30">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-neon-green" />
-              <span className="text-neon-green/80 font-bold">Last Updated:</span>
-              <span className="text-neon-green font-mono text-lg">{today.toISOString().split('T')[0]}</span>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-neon-green" />
+                <span className="text-neon-green/80 font-bold">Last Updated:</span>
+                <span className="text-neon-green font-mono text-lg">{today.toISOString().split('T')[0]}</span>
+              </div>
+              <p className="text-xs text-neon-green/50 ml-7">This page was generated right now. If this date is old, the canary may be compromised.</p>
             </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-neon-green" />
-              <span className="text-neon-green/80 font-bold">Next Check:</span>
-              <span className="text-neon-green font-mono text-lg">{nextMonth.toISOString().split('T')[0]}</span>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-neon-green" />
+                <span className="text-neon-green/80 font-bold">Next Check:</span>
+                <span className="text-neon-green font-mono text-lg">{nextMonth.toISOString().split('T')[0]}</span>
+              </div>
+              <p className="text-xs text-neon-green/50 ml-7">Recommended date to check back. If we miss this date, assume compromise.</p>
             </div>
           </div>
 
