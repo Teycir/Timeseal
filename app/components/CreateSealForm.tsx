@@ -705,6 +705,7 @@ export function CreateSealForm({
               id="message-input"
               aria-labelledby="message-heading"
               value={message}
+              maxLength={Math.floor((750 * 1024) / 1.34)}
               onChange={(e) => {
                 if (file) {
                   toast.error(
