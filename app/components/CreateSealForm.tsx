@@ -548,7 +548,6 @@ export function CreateSealForm({
         await new Promise((resolve) => setTimeout(resolve, 300));
         toast.dismiss(loadingToast);
         await new Promise((resolve) => setTimeout(resolve, 100));
-        toast.success("Seal created successfully!");
         onSuccess({
           publicUrl,
           pulseUrl: data.pulseToken ? `${origin}/pulse` : undefined,
@@ -978,6 +977,7 @@ export function CreateSealForm({
                         className="cyber-input w-full pr-12"
                         calendarClassName="cyber-calendar"
                         wrapperClassName="w-full"
+                        popperPlacement="top"
                       />
                       <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neon-green pointer-events-none" />
                     </div>
