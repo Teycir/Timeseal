@@ -13,8 +13,10 @@ import { ErrorLogger } from "@/lib/errorLogger";
 import { Card } from "./Card";
 import { Button } from "./Button";
 import { Input } from "./Input";
+import { MagneticButton } from "./MagneticButton";
 import DecryptedText from "./DecryptedText";
 import { AnimatedTagline } from "./AnimatedTagline";
+import { SecurityFeaturesBanner } from "./SecurityFeaturesBanner";
 import {
   Bitcoin,
   ShieldAlert,
@@ -28,6 +30,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { triggerHaptic } from "@/lib/mobile";
+
 
 const Turnstile = dynamic(
   () => import("@marsidev/react-turnstile").then((mod) => mod.Turnstile),
@@ -163,12 +166,25 @@ const TEMPLATES: Template[] = [
 
 const containerVariants = {
   hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.1 } },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.1
+    }
+  },
 };
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: [0.25, 0.1, 0.25, 1]
+    }
+  },
 };
 
 interface CreateSealFormProps {
@@ -201,11 +217,11 @@ export function CreateSealForm({
   const [isCreating, setIsCreating] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
-  const formatFileSize = (bytes: number) => {
+  const formatFileSize = useCallback((bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-  };
+  }, []);
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
@@ -262,7 +278,7 @@ export function CreateSealForm({
         );
       }
     },
-    [message],
+    [message, formatFileSize],
   );
 
   const [dragValidation, setDragValidation] = useState<{
@@ -340,10 +356,10 @@ export function CreateSealForm({
     },
   });
 
-  const applyTemplate = (template: Template) => {
+  const applyTemplate = useCallback((template: Template) => {
     setSealType(template.type);
     setMessage(template.placeholder);
-    setFile(null); // Clear file when applying template
+    setFile(null);
 
     if (template.pulseDays) {
       setPulseValue(template.pulseDays);
@@ -353,16 +369,15 @@ export function CreateSealForm({
       setMaxViews(template.maxViews);
     }
 
-    // Auto-set unlock date for timed releases (24 hours from now)
     if (template.type === "timed") {
       const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
       setUnlockDate(tomorrow);
     } else {
-      setUnlockDate(null); // Clear unlock date for non-timed seals
+      setUnlockDate(null);
     }
 
     toast.success(`Template applied: ${template.name}`);
-  };
+  }, []);
 
   const handleCreateSeal = async () => {
     try {
@@ -385,7 +400,7 @@ export function CreateSealForm({
     }
 
     const maxSize = Math.floor((750 * 1024) / 1.34); // ~560KB
-    
+
     if (message.trim() && message.length > maxSize) {
       toast.error(`Message too large (max ${Math.floor(maxSize / 1024)}KB before encryption)`);
       return;
@@ -508,13 +523,13 @@ export function CreateSealForm({
         pulseToken?: string;
         receipt?: any;
         error?:
-          | string
-          | {
-              code: string;
-              message: string;
-              details?: string;
-              debugInfo?: any;
-            };
+        | string
+        | {
+          code: string;
+          message: string;
+          details?: string;
+          debugInfo?: any;
+        };
       };
 
       if (data.success) {
@@ -601,13 +616,14 @@ export function CreateSealForm({
     <motion.div
       key="form"
       layoutId="main-card"
-      initial={{ opacity: 0, x: -20, filter: "blur(10px)" }}
-      animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
       exit={{ opacity: 0, x: 20, filter: "blur(10px)" }}
-      transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      <motion.div layoutId="header" className="text-center">
+      <motion.div variants={itemVariants} layoutId="header" className="text-center">
+        <SecurityFeaturesBanner />
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold glow-text pulse-glow mb-4 px-2">
           <DecryptedText
             text="TIME-SEAL"
@@ -619,462 +635,463 @@ export function CreateSealForm({
           />
         </h1>
         <AnimatedTagline text='"If I go silent, this speaks for me."' />
-        <p className="text-xs text-neon-green/30 max-w-md mx-auto">
-          Encrypt messages that unlock at a future date or after inactivity
-        </p>
-        <p
-          className="text-xs text-yellow-500/50 max-w-md mx-auto mt-2"
-          role="note"
-        >
-          ⚠️ Seals auto-delete 30 days after unlock
-        </p>
       </motion.div>
 
-      <Card className="space-y-6">
-        <section aria-labelledby="templates-heading">
-          <div className="flex items-center justify-between mb-2">
-            <h2
-              id="templates-heading"
-              className="text-sm text-neon-green/70 font-mono"
-            >
-              QUICK START TEMPLATES
-            </h2>
-          </div>
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="show"
-            className="grid grid-cols-2 md:grid-cols-5 gap-2"
-          >
-            {TEMPLATES.map((t) => (
-              <motion.button
-                key={t.name}
-                onClick={() => applyTemplate(t)}
-                variants={itemVariants}
-                whileHover={{
-                  scale: 1.05,
-                  backgroundColor: "rgba(0, 255, 65, 0.1)",
-                }}
-                whileTap={{ scale: 0.95 }}
-                className="cyber-border p-3 transition-colors text-center h-full flex flex-col items-center justify-center tooltip"
+      <Card className="space-y-6 shimmer-border">
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="show"
+          className="space-y-6"
+        >
+          <motion.section variants={itemVariants} aria-labelledby="templates-heading">
+            <div className="flex items-center justify-between mb-2">
+              <h2
+                id="templates-heading"
+                className="text-sm text-neon-green/70 font-mono"
               >
-                <span className="tooltip-text">{t.tooltip}</span>
-                <motion.div
-                  className="mb-1"
+                QUICK START TEMPLATES
+              </h2>
+            </div>
+            <motion.div
+              variants={containerVariants}
+              className="grid grid-cols-2 md:grid-cols-5 gap-2"
+            >
+              {TEMPLATES.map((t) => (
+                <motion.button
+                  key={t.name}
+                  onClick={() => applyTemplate(t)}
+                  variants={itemVariants}
                   whileHover={{
-                    rotate: [0, -10, 10, -10, 0],
-                    scale: 1.2,
-                    transition: { duration: 0.5 },
+                    scale: 1.05,
+                    backgroundColor: "rgba(0, 255, 65, 0.1)",
                   }}
+                  whileTap={{ scale: 0.95 }}
+                  className="cyber-border p-3 transition-colors text-center h-full flex flex-col items-center justify-center tooltip"
                 >
-                  {t.icon}
-                </motion.div>
-                <div className="text-xs text-neon-green/70">{t.name}</div>
-              </motion.button>
-            ))}
-          </motion.div>
-        </section>
+                  <span className="tooltip-text">{t.tooltip}</span>
+                  <motion.div
+                    className="mb-1"
+                    whileHover={{
+                      rotate: [0, -10, 10, -10, 0],
+                      scale: 1.2,
+                      transition: { duration: 0.5 },
+                    }}
+                  >
+                    {t.icon}
+                  </motion.div>
+                  <div className="text-xs text-neon-green/70">{t.name}</div>
+                </motion.button>
+              ))}
+            </motion.div>
+          </motion.section>
 
-        <section aria-labelledby="message-heading">
-          <h2
-            id="message-heading"
-            className="block text-sm mb-2 text-neon-green/80 tooltip"
-          >
-            MESSAGE OR FILE
-            <span className="tooltip-text">
-              Enter text message or upload a file (max 560KB before encryption). File takes
-              priority if both provided.
-            </span>
-          </h2>
-          <p className="text-xs text-neon-green/50 mb-2">
-            💡 Tip: Only .txt and .md files accepted (max 560KB). For larger files (images,
-            videos, documents), add hyperlinks in your message instead
-          </p>
-          <textarea
-            id="message-input"
-            aria-labelledby="message-heading"
-            value={message}
-            onChange={(e) => {
-              if (file) {
-                toast.error(
-                  "Choose either message **OR** file, not both. Remove the file first.",
-                );
-                return;
-              }
-              const newValue = e.target.value;
-              const maxSize = Math.floor((750 * 1024) / 1.34); // ~560KB
-              if (newValue.length > maxSize) {
-                toast.error(
-                  `Message too large (max ${Math.floor(maxSize / 1024)}KB = ~${maxSize.toLocaleString()} characters)`,
-                );
-                return;
-              }
-              setMessage(newValue);
-            }}
-            placeholder="Enter your secret message..."
-            className="cyber-input w-full h-24 resize-none font-mono mb-2 placeholder:text-neon-green/40"
-          />
+          <motion.section variants={itemVariants} aria-labelledby="message-heading">
+            <h2
+              id="message-heading"
+              className="block text-sm mb-2 text-neon-green/80 tooltip"
+            >
+              MESSAGE OR FILE
+              <span className="tooltip-text">
+                Enter text message or upload a file (max 560KB before encryption). File takes
+                priority if both provided.
+              </span>
+            </h2>
+            <p className="text-xs text-neon-green/50 mb-2">
+              💡 Tip: Only .txt and .md files accepted (max 560KB). For larger files (images,
+              videos, documents), add hyperlinks in your message instead
+            </p>
+            <textarea
+              id="message-input"
+              aria-labelledby="message-heading"
+              value={message}
+              onChange={(e) => {
+                if (file) {
+                  toast.error(
+                    "Choose either message **OR** file, not both. Remove the file first.",
+                  );
+                  return;
+                }
+                const newValue = e.target.value;
+                const maxSize = Math.floor((750 * 1024) / 1.34); // ~560KB
+                if (newValue.length > maxSize) {
+                  toast.error(
+                    `Message too large (max ${Math.floor(maxSize / 1024)}KB = ~${maxSize.toLocaleString()} characters)`,
+                  );
+                  return;
+                }
+                setMessage(newValue);
+              }}
+              placeholder="Enter your secret message..."
+              className="cyber-input w-full h-24 resize-none font-mono mb-2 placeholder:text-neon-green/40"
+            />
 
-          <div
-            {...getRootProps()}
-            className={`cyber-border p-6 text-center cursor-pointer transition-all border-dashed ${
-              isDragActive && dragValidation?.isValid
+            <div
+              {...getRootProps()}
+              className={`cyber-border p-6 text-center cursor-pointer transition-all border-dashed ${isDragActive && dragValidation?.isValid
                 ? "bg-neon-green/10 border-neon-green scale-[1.02]"
                 : isDragActive && !dragValidation?.isValid
                   ? "bg-red-500/10 border-red-500 scale-[1.02]"
                   : "hover:bg-neon-green/5"
-            } ${file ? "border-none bg-neon-green/5" : ""}`}
-          >
-            <input {...getInputProps()} />
-            {file ? (
-              <div className="flex items-center justify-between">
-                <div className="flex flex-col items-start gap-1">
-                  <div className="flex items-center gap-2">
-                    <Paperclip className="w-4 h-4 text-neon-green" />
-                    <span className="text-neon-green font-mono">
-                      {file.name}
+                } ${file ? "border-none bg-neon-green/5" : ""}`}
+            >
+              <input {...getInputProps()} />
+              {file ? (
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-col items-start gap-1">
+                    <div className="flex items-center gap-2">
+                      <Paperclip className="w-4 h-4 text-neon-green" />
+                      <span className="text-neon-green font-mono">
+                        {file.name}
+                      </span>
+                    </div>
+                    <span className="text-xs text-neon-green/50 font-mono ml-6">
+                      {formatFileSize(file.size)}
                     </span>
                   </div>
-                  <span className="text-xs text-neon-green/50 font-mono ml-6">
-                    {formatFileSize(file.size)}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFile(null);
+                      toast.info("File removed");
+                    }}
+                    className="text-red-500 hover:text-red-400 transition-colors p-2"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {isDragActive && dragValidation ? (
+                    <div className="space-y-2">
+                      {dragValidation.isValid ? (
+                        <>
+                          <FileText className="w-10 h-10 text-neon-green mx-auto animate-bounce" />
+                          <p className="text-neon-green font-bold animate-pulse">
+                            {dragValidation.message}
+                          </p>
+                          <p className="text-xs text-neon-green/70 font-mono truncate px-4">
+                            {dragValidation.fileName}
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <AlertTriangle className="w-10 h-10 text-red-500 mx-auto animate-bounce" />
+                          <p className="text-red-500 font-bold animate-pulse">
+                            {dragValidation.message}
+                          </p>
+                          <p className="text-xs text-red-500/70 font-mono truncate px-4">
+                            {dragValidation.fileName}
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    <>
+                      <FileText className="w-8 h-8 text-neon-green/50 mx-auto mb-2" />
+                      <p className="text-neon-green/70">DRAG & DROP FILE HERE</p>
+                      <p className="text-xs text-neon-green/40">
+                        OR CLICK TO SELECT
+                      </p>
+                      <div className="flex items-center justify-center gap-1 mt-2">
+                        <AlertTriangle className="w-3 h-3 text-neon-green/30" />
+                        <p className="text-xs text-neon-green/30">
+                          Max size: 560KB (before encryption)
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          </motion.section>
+
+          <motion.section variants={itemVariants} aria-labelledby="seal-type-heading">
+            <h2 id="seal-type-heading" className="sr-only">
+              Seal Configuration
+            </h2>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-xs text-neon-green/60 tooltip">
+                  Choose seal type
+                  <span className="tooltip-text">
+                    Timed: unlocks at date. Deadman: unlocks if no pulse.
+                    Ephemeral: self-destructs after views.
                   </span>
                 </div>
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
+                  type="button"
+                  onClick={() => {
+                    setMessage("");
                     setFile(null);
-                    toast.info("File removed");
+                    setUnlockDate(null);
+                    setSealType("timed");
+                    setPulseValue(7);
+                    setPulseUnit("days");
+                    setMaxViews(1);
+                    toast.info("Form reset");
                   }}
-                  className="text-red-500 hover:text-red-400 transition-colors p-2"
+                  className="text-xs text-neon-green/50 hover:text-neon-green transition-colors underline tooltip"
                 >
-                  <Trash2 className="w-5 h-5" />
+                  <span className="tooltip-text">
+                    Clear all fields and start fresh
+                  </span>
+                  Reset Form
                 </button>
               </div>
-            ) : (
-              <div className="space-y-1">
-                {isDragActive && dragValidation ? (
-                  <div className="space-y-2">
-                    {dragValidation.isValid ? (
-                      <>
-                        <FileText className="w-10 h-10 text-neon-green mx-auto animate-bounce" />
-                        <p className="text-neon-green font-bold animate-pulse">
-                          {dragValidation.message}
-                        </p>
-                        <p className="text-xs text-neon-green/70 font-mono truncate px-4">
-                          {dragValidation.fileName}
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <AlertTriangle className="w-10 h-10 text-red-500 mx-auto animate-bounce" />
-                        <p className="text-red-500 font-bold animate-pulse">
-                          {dragValidation.message}
-                        </p>
-                        <p className="text-xs text-red-500/70 font-mono truncate px-4">
-                          {dragValidation.fileName}
-                        </p>
-                      </>
-                    )}
-                  </div>
-                ) : (
-                  <>
-                    <FileText className="w-8 h-8 text-neon-green/50 mx-auto mb-2" />
-                    <p className="text-neon-green/70">DRAG & DROP FILE HERE</p>
-                    <p className="text-xs text-neon-green/40">
-                      OR CLICK TO SELECT
-                    </p>
-                    <div className="flex items-center justify-center gap-1 mt-2">
-                      <AlertTriangle className="w-3 h-3 text-neon-green/30" />
-                      <p className="text-xs text-neon-green/30">
-                        Max size: 560KB (before encryption)
-                      </p>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-        </section>
 
-        <section aria-labelledby="seal-type-heading">
-          <h2 id="seal-type-heading" className="sr-only">
-            Seal Configuration
-          </h2>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-xs text-neon-green/60 tooltip">
-                Choose seal type
-                <span className="tooltip-text">
-                  Timed: unlocks at date. Deadman: unlocks if no pulse.
-                  Ephemeral: self-destructs after views.
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setMessage("");
-                  setFile(null);
-                  setUnlockDate(null);
-                  setSealType("timed");
-                  setPulseValue(7);
-                  setPulseUnit("days");
-                  setMaxViews(1);
-                  toast.info("Form reset");
-                }}
-                className="text-xs text-neon-green/50 hover:text-neon-green transition-colors underline tooltip"
-              >
-                <span className="tooltip-text">
-                  Clear all fields and start fresh
-                </span>
-                Reset Form
-              </button>
-            </div>
-
-            <div className="grid grid-cols-3 gap-2 bg-dark-bg/30 p-1 rounded-xl border border-neon-green/10">
-              <button
-                onClick={() => setSealType("timed")}
-                className={`py-2 rounded text-xs sm:text-sm font-bold transition-all tooltip ${sealType === "timed" ? "bg-neon-green text-dark-bg shadow-[0_0_10px_rgba(0,255,65,0.3)]" : "text-neon-green/50 hover:text-neon-green hover:bg-neon-green/5"}`}
-              >
-                <span className="tooltip-text">
-                  Unlock at a specific future date and time
-                </span>
-                TIMED
-              </button>
-              <button
-                onClick={() => setSealType("deadman")}
-                className={`py-2 rounded text-xs sm:text-sm font-bold transition-all tooltip ${sealType === "deadman" ? "bg-neon-green text-dark-bg shadow-[0_0_10px_rgba(0,255,65,0.3)]" : "text-neon-green/50 hover:text-neon-green hover:bg-neon-green/5"}`}
-              >
-                <span className="tooltip-text">
-                  Auto-unlock if you don&apos;t check in periodically
-                </span>
-                DEADMAN
-              </button>
-              <button
-                onClick={() => setSealType("ephemeral")}
-                className={`py-2 rounded text-xs sm:text-sm font-bold transition-all tooltip ${sealType === "ephemeral" ? "bg-neon-green text-dark-bg shadow-[0_0_10px_rgba(0,255,65,0.3)]" : "text-neon-green/50 hover:text-neon-green hover:bg-neon-green/5"}`}
-              >
-                <span className="tooltip-text">
-                  Self-destruct after limited views (read-once messages)
-                </span>
-                EPHEMERAL
-              </button>
-            </div>
-
-            <AnimatePresence mode="wait">
-              {sealType === "ephemeral" ? (
-                <motion.div
-                  key="ephemeral"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
+              <div className="grid grid-cols-3 gap-2 bg-dark-bg/30 p-1 rounded-xl border border-neon-green/10">
+                <button
+                  onClick={() => setSealType("timed")}
+                  className={`py-2 rounded text-xs sm:text-sm font-bold transition-all tooltip ${sealType === "timed" ? "bg-neon-green text-dark-bg shadow-[0_0_10px_rgba(0,255,65,0.3)]" : "text-neon-green/50 hover:text-neon-green hover:bg-neon-green/5"}`}
                 >
-                  <label
-                    htmlFor="max-views"
-                    className="block text-sm mb-2 text-neon-green/80 font-bold tooltip"
+                  <span className="tooltip-text">
+                    Unlock at a specific future date and time
+                  </span>
+                  TIMED
+                </button>
+                <button
+                  onClick={() => setSealType("deadman")}
+                  className={`py-2 rounded text-xs sm:text-sm font-bold transition-all tooltip ${sealType === "deadman" ? "bg-neon-green text-dark-bg shadow-[0_0_10px_rgba(0,255,65,0.3)]" : "text-neon-green/50 hover:text-neon-green hover:bg-neon-green/5"}`}
+                >
+                  <span className="tooltip-text">
+                    Auto-unlock if you don&apos;t check in periodically
+                  </span>
+                  DEADMAN
+                </button>
+                <button
+                  onClick={() => setSealType("ephemeral")}
+                  className={`py-2 rounded text-xs sm:text-sm font-bold transition-all tooltip ${sealType === "ephemeral" ? "bg-neon-green text-dark-bg shadow-[0_0_10px_rgba(0,255,65,0.3)]" : "text-neon-green/50 hover:text-neon-green hover:bg-neon-green/5"}`}
+                >
+                  <span className="tooltip-text">
+                    Self-destruct after limited views (read-once messages)
+                  </span>
+                  EPHEMERAL
+                </button>
+              </div>
+
+              <AnimatePresence mode="wait">
+                {sealType === "ephemeral" ? (
+                  <motion.div
+                    key="ephemeral"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
                   >
-                    MAX VIEWS
-                    <span className="tooltip-text">
-                      Seal self-destructs after this many views. Perfect for
-                      one-time passwords.
-                    </span>
-                  </label>
-                  <p className="text-xs text-neon-green/50 mb-2">
-                    Seal unlocks immediately but auto-deletes after being viewed
-                    this many times.
-                  </p>
-                  <input
-                    id="max-views"
-                    type="number"
-                    value={maxViews}
-                    onChange={(e) => {
-                      const val = Number.parseInt(e.target.value) || 1;
-                      setMaxViews(Math.max(1, Math.min(100, val)));
-                    }}
-                    min={1}
-                    max={100}
-                    step={1}
-                    className="cyber-input w-32 text-center"
-                  />
-                  <p className="text-xs text-neon-green/40 border-l-2 border-neon-green/20 pl-2 mt-2">
-                    💡 Set to 1 for read-once messages (most common). Max 100
-                    views.
-                  </p>
-                  <p className="text-xs text-yellow-500/50 border-l-2 border-yellow-500/20 pl-2 mt-2">
-                    ⚠️ Ephemeral seals cannot be recovered after deletion
-                  </p>
-                </motion.div>
-              ) : sealType === "timed" ? (
-                <motion.div
-                  key="timed"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="space-y-4"
-                >
-                  <div>
                     <label
-                      htmlFor="unlock-date"
-                      className="block text-sm text-neon-green/80 font-bold mb-1"
+                      htmlFor="max-views"
+                      className="block text-sm mb-2 text-neon-green/80 font-bold tooltip"
                     >
-                      UNLOCK DATE & TIME
+                      MAX VIEWS
+                      <span className="tooltip-text">
+                        Seal self-destructs after this many views. Perfect for
+                        one-time passwords.
+                      </span>
                     </label>
-                    <p className="text-xs text-neon-green/50">
-                      Quick presets or custom date below (max 30 days)
+                    <p className="text-xs text-neon-green/50 mb-2">
+                      Seal unlocks immediately but auto-deletes after being viewed
+                      this many times.
                     </p>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setUnlockDate(new Date(Date.now() + 60 * 60 * 1000))}
-                      className="cyber-border py-2.5 text-xs font-mono font-bold text-neon-green/70 hover:text-neon-green hover:bg-neon-green/10 hover:border-neon-green/50 active:scale-95 transition-all rounded-lg"
-                    >
-                      +1 HOUR
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setUnlockDate(new Date(Date.now() + 24 * 60 * 60 * 1000))}
-                      className="cyber-border py-2.5 text-xs font-mono font-bold text-neon-green/70 hover:text-neon-green hover:bg-neon-green/10 hover:border-neon-green/50 active:scale-95 transition-all rounded-lg"
-                    >
-                      TOMORROW
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setUnlockDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000))}
-                      className="cyber-border py-2.5 text-xs font-mono font-bold text-neon-green/70 hover:text-neon-green hover:bg-neon-green/10 hover:border-neon-green/50 active:scale-95 transition-all rounded-lg"
-                    >
-                      1 WEEK
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setUnlockDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000))}
-                      className="cyber-border py-2.5 text-xs font-mono font-bold text-neon-green/70 hover:text-neon-green hover:bg-neon-green/10 hover:border-neon-green/50 active:scale-95 transition-all rounded-lg"
-                    >
-                      30 DAYS
-                    </button>
-                  </div>
-
-                  <div className="relative">
-                    <DatePicker
-                      selected={unlockDate}
-                      onChange={(date: Date | null) => setUnlockDate(date)}
-                      showTimeSelect
-                      timeFormat="HH:mm"
-                      timeIntervals={15}
-                      dateFormat="MMMM d, yyyy h:mm aa"
-                      minDate={new Date()}
-                      maxDate={new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)}
-                      className="cyber-input w-full pr-12"
-                      calendarClassName="cyber-calendar"
-                      wrapperClassName="w-full"
-                    />
-                    <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neon-green pointer-events-none" />
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="deadman"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                >
-                  <label
-                    htmlFor="pulse-value"
-                    className="block text-sm mb-2 text-neon-green/80 tooltip"
-                  >
-                    PULSE INTERVAL
-                    <span className="tooltip-text">
-                      How often you must check in to keep the seal locked.
-                      Pinging is done via web from ANY device/location - just
-                      visit the pulse URL with your token.
-                    </span>
-                  </label>
-                  <div className="flex gap-2 items-center mb-2">
                     <input
-                      id="pulse-value"
+                      id="max-views"
                       type="number"
-                      value={pulseValue}
+                      value={maxViews}
                       onChange={(e) => {
                         const val = Number.parseInt(e.target.value) || 1;
-                        const min = pulseUnit === "minutes" ? 5 : 1;
-                        const max = pulseUnit === "minutes" ? 60 : 30;
-                        setPulseValue(Math.max(min, Math.min(max, val)));
+                        setMaxViews(Math.max(1, Math.min(100, val)));
                       }}
-                      min={pulseUnit === "minutes" ? 5 : 1}
-                      max={pulseUnit === "minutes" ? 60 : 30}
-                      className="cyber-input w-24 text-center"
+                      min={1}
+                      max={100}
+                      step={1}
+                      className="cyber-input w-32 text-center"
                     />
-                    <select
-                      value={pulseUnit}
-                      onChange={(e) => {
-                        const newUnit = e.target.value as "minutes" | "days";
-                        setPulseUnit(newUnit);
-                        if (newUnit === "minutes" && pulseValue < 5)
-                          setPulseValue(5);
-                        if (newUnit === "days" && pulseValue > 30)
-                          setPulseValue(30);
-                      }}
-                      className="cyber-input w-32"
-                    >
-                      <option value="minutes">Minutes</option>
-                      <option value="days">Days</option>
-                    </select>
-                  </div>
-                  <p className="text-xs text-neon-green/50 mb-2">
-                    You must check in every{" "}
-                    <strong className="text-neon-green">
-                      {pulseValue} {pulseUnit}
-                    </strong>{" "}
-                    to keep the seal locked.
-                  </p>
-                  <p className="text-xs text-neon-green/40 border-l-2 border-neon-green/20 pl-2">
-                    💡 Pinging works from any device with internet - just visit
-                    the pulse URL. No local storage or specific device required.
-                  </p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </section>
+                    <p className="text-xs text-neon-green/40 border-l-2 border-neon-green/20 pl-2 mt-2">
+                      💡 Set to 1 for read-once messages (most common). Max 100
+                      views.
+                    </p>
+                    <p className="text-xs text-yellow-500/50 border-l-2 border-yellow-500/20 pl-2 mt-2">
+                      ⚠️ Ephemeral seals cannot be recovered after deletion
+                    </p>
+                  </motion.div>
+                ) : sealType === "timed" ? (
+                  <motion.div
+                    key="timed"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="space-y-4"
+                  >
+                    <div>
+                      <label
+                        htmlFor="unlock-date"
+                        className="block text-sm text-neon-green/80 font-bold mb-1"
+                      >
+                        UNLOCK DATE & TIME
+                      </label>
+                      <p className="text-xs text-neon-green/50">
+                        Quick presets or custom date below (max 30 days)
+                      </p>
+                    </div>
 
-        <section aria-labelledby="submit-heading">
-          <h2 id="submit-heading" className="sr-only">
-            Create Seal
-          </h2>
-          <div className="flex justify-center pt-6">
-            <div className="tooltip">
-              <span className="tooltip-text">
-                {isCreating
-                  ? "Encrypting your data with AES-256..."
-                  : !message.trim() && !file
-                    ? "Enter a message or upload a file first"
-                    : sealType === "timed" && !unlockDate
-                      ? "Select an unlock date and time"
-                      : sealType === "ephemeral" && (!maxViews || maxViews < 1)
-                        ? "Set max views (1-100)"
-                        : !turnstileToken
-                          ? "Complete security check below"
-                          : sealType === "ephemeral"
-                            ? `Create self-destructing seal (${maxViews} view${maxViews === 1 ? "" : "s"})`
-                            : "Click to create your encrypted time-locked seal"}
-              </span>
-              <Button
-                onClick={handleCreateSeal}
-                disabled={
-                  isCreating ||
-                  (!message.trim() && !file) ||
-                  (sealType === "timed" && !unlockDate) ||
-                  (sealType === "ephemeral" &&
-                    (!maxViews || maxViews < 1 || maxViews > 100)) ||
-                  !turnstileToken
-                }
-                className="text-base sm:text-lg shadow-[0_0_20px_rgba(0,255,65,0.2)]"
-              >
-                {isCreating ? "ENCRYPTING & SEALING..." : "CREATE TIME-SEAL"}
-              </Button>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setUnlockDate(new Date(Date.now() + 60 * 60 * 1000))}
+                        className="cyber-border py-2.5 text-xs font-mono font-bold text-neon-green/70 hover:text-neon-green hover:bg-neon-green/10 hover:border-neon-green/50 active:scale-95 transition-all rounded-lg"
+                      >
+                        +1 HOUR
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setUnlockDate(new Date(Date.now() + 24 * 60 * 60 * 1000))}
+                        className="cyber-border py-2.5 text-xs font-mono font-bold text-neon-green/70 hover:text-neon-green hover:bg-neon-green/10 hover:border-neon-green/50 active:scale-95 transition-all rounded-lg"
+                      >
+                        TOMORROW
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setUnlockDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000))}
+                        className="cyber-border py-2.5 text-xs font-mono font-bold text-neon-green/70 hover:text-neon-green hover:bg-neon-green/10 hover:border-neon-green/50 active:scale-95 transition-all rounded-lg"
+                      >
+                        1 WEEK
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setUnlockDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000))}
+                        className="cyber-border py-2.5 text-xs font-mono font-bold text-neon-green/70 hover:text-neon-green hover:bg-neon-green/10 hover:border-neon-green/50 active:scale-95 transition-all rounded-lg"
+                      >
+                        30 DAYS
+                      </button>
+                    </div>
+
+                    <div className="relative">
+                      <DatePicker
+                        selected={unlockDate}
+                        onChange={(date: Date | null) => setUnlockDate(date)}
+                        showTimeSelect
+                        timeFormat="HH:mm"
+                        timeIntervals={15}
+                        dateFormat="MMMM d, yyyy h:mm aa"
+                        minDate={new Date()}
+                        maxDate={new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)}
+                        className="cyber-input w-full pr-12"
+                        calendarClassName="cyber-calendar"
+                        wrapperClassName="w-full"
+                      />
+                      <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neon-green pointer-events-none" />
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="deadman"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                  >
+                    <label
+                      htmlFor="pulse-value"
+                      className="block text-sm mb-2 text-neon-green/80 tooltip"
+                    >
+                      PULSE INTERVAL
+                      <span className="tooltip-text">
+                        How often you must check in to keep the seal locked.
+                        Pinging is done via web from ANY device/location - just
+                        visit the pulse URL with your token.
+                      </span>
+                    </label>
+                    <div className="flex gap-2 items-center mb-2">
+                      <input
+                        id="pulse-value"
+                        type="number"
+                        value={pulseValue}
+                        onChange={(e) => {
+                          const val = Number.parseInt(e.target.value) || 1;
+                          const min = pulseUnit === "minutes" ? 5 : 1;
+                          const max = pulseUnit === "minutes" ? 60 : 30;
+                          setPulseValue(Math.max(min, Math.min(max, val)));
+                        }}
+                        min={pulseUnit === "minutes" ? 5 : 1}
+                        max={pulseUnit === "minutes" ? 60 : 30}
+                        className="cyber-input w-24 text-center"
+                      />
+                      <select
+                        value={pulseUnit}
+                        onChange={(e) => {
+                          const newUnit = e.target.value as "minutes" | "days";
+                          setPulseUnit(newUnit);
+                          if (newUnit === "minutes" && pulseValue < 5)
+                            setPulseValue(5);
+                          if (newUnit === "days" && pulseValue > 30)
+                            setPulseValue(30);
+                        }}
+                        className="cyber-input w-32"
+                      >
+                        <option value="minutes">Minutes</option>
+                        <option value="days">Days</option>
+                      </select>
+                    </div>
+                    <p className="text-xs text-neon-green/50 mb-2">
+                      You must check in every{" "}
+                      <strong className="text-neon-green">
+                        {pulseValue} {pulseUnit}
+                      </strong>{" "}
+                      to keep the seal locked.
+                    </p>
+                    <p className="text-xs text-neon-green/40 border-l-2 border-neon-green/20 pl-2">
+                      💡 Pinging works from any device with internet - just visit
+                      the pulse URL. No local storage or specific device required.
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          </div>
-        </section>
+          </motion.section>
+
+          <motion.section variants={itemVariants} aria-labelledby="submit-heading">
+            <h2 id="submit-heading" className="sr-only">
+              Create Seal
+            </h2>
+            <div className="flex justify-center pt-6">
+              <MagneticButton className="tooltip">
+                <span className="tooltip-text">
+                  {isCreating
+                    ? "Encrypting your data with AES-256..."
+                    : !message.trim() && !file
+                      ? "Enter a message or upload a file first"
+                      : sealType === "timed" && !unlockDate
+                        ? "Select an unlock date and time"
+                        : sealType === "ephemeral" && (!maxViews || maxViews < 1)
+                          ? "Set max views (1-100)"
+                          : !turnstileToken
+                            ? "Complete security check below"
+                            : sealType === "ephemeral"
+                              ? `Create self-destructing seal (${maxViews} view${maxViews === 1 ? "" : "s"})`
+                              : "Click to create your encrypted time-locked seal"}
+                </span>
+                <Button
+                  onClick={handleCreateSeal}
+                  disabled={
+                    isCreating ||
+                    (!message.trim() && !file) ||
+                    (sealType === "timed" && !unlockDate) ||
+                    (sealType === "ephemeral" &&
+                      (!maxViews || maxViews < 1 || maxViews > 100)) ||
+                    !turnstileToken
+                  }
+                  className="text-base sm:text-lg shadow-[0_0_20px_rgba(0,255,65,0.2)]"
+                >
+                  {isCreating ? "ENCRYPTING & SEALING..." : "CREATE TIME-SEAL"}
+                </Button>
+              </MagneticButton>
+            </div>
+            <p
+              className="text-xs text-yellow-500/50 text-center mt-3"
+              role="note"
+            >
+              ⚠️ Seals auto-delete 30 days after unlock
+            </p>
+          </motion.section>
+        </motion.div>
       </Card>
 
       <div className="flex justify-center mt-6">

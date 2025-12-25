@@ -293,6 +293,59 @@ select option:hover {
   animation: subtle-shimmer 3s ease-in-out infinite;
 }
 
+/* Shimmer Border Beam */
+@keyframes shimmer-border {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.shimmer-border {
+  position: relative;
+}
+
+.shimmer-border::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 14px;
+  padding: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    transparent,
+    rgba(0, 255, 65, 0.4),
+    transparent,
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: shimmer-border 3s linear infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  will-change: background-position;
+}
+
+/* Disable shimmer on mobile for performance */
+@media (max-width: 768px) {
+  .shimmer-border::before {
+    animation: none;
+    opacity: 0.3;
+  }
+}
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .shimmer-border::before {
+    animation: none;
+    opacity: 0.5;
+  }
+}
+
 
 /* React DatePicker Custom Styling */
 .react-datepicker-wrapper {
@@ -345,4 +398,39 @@ select option:hover {
 .react-datepicker__time-list-item--selected {
   background-color: var(--neon-green) !important;
   color: var(--dark-bg) !important;
+}
+
+/* Shimmer Border Effect */
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes spin {
+  from {
+    --angle: 0deg;
+  }
+  to {
+    --angle: 360deg;
+  }
+}
+
+.shimmer-border {
+  position: relative;
+  border: 1px solid transparent; /* Fallback */
+  background: 
+    linear-gradient(rgba(10, 10, 10, 0.8), rgba(10, 10, 10, 0.8)) padding-box,
+    conic-gradient(from var(--angle), transparent 70%, var(--neon-green)) border-box;
+  animation: spin 4s linear infinite;
+}
+
+/* Ensure backdrop blur still works if needed, though background covers it */
+.shimmer-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: inherit;
 }

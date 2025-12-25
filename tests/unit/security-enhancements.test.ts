@@ -4,6 +4,7 @@ import { encryptKeyB, decryptKeyB } from '@/lib/keyEncryption';
 import { MockStorage } from '@/lib/storage';
 import { validateFileSize } from '@/lib/validation';
 import { verifyIntegrity, detectTampering } from '@/lib/clientIntegrity';
+import { MAX_FILE_SIZE, MAX_FILE_SIZE_BEFORE_ENCRYPTION } from '@/lib/constants';
 
 describe('Security Enhancements', () => {
   describe('1. Key Rotation', () => {
@@ -59,10 +60,8 @@ describe('Security Enhancements', () => {
   });
 
   describe('2. File Upload Limits', () => {
-    const MAX_SIZE = 750 * 1024; // 750KB binary limit (before base64 encoding)
-
     it('should reject files exceeding size limit', () => {
-      const oversized = MAX_SIZE + 1;
+      const oversized = MAX_FILE_SIZE_BEFORE_ENCRYPTION + 1;
       const result = validateFileSize(oversized);
 
       expect(result.valid).toBe(false);
@@ -79,7 +78,7 @@ describe('Security Enhancements', () => {
 
     it('should enforce size limit in MockStorage', async () => {
       const storage = new MockStorage();
-      const oversizedData = new ArrayBuffer(MAX_SIZE + 1);
+      const oversizedData = new ArrayBuffer(MAX_FILE_SIZE + 1);
 
       await expect(
         storage.uploadBlob('test-seal', oversizedData, Date.now() + 60000)
@@ -97,12 +96,12 @@ describe('Security Enhancements', () => {
 
     it('should validate at multiple layers', () => {
       const testSizes = [
-        { size: 1024, expected: true },           // 1KB - valid
-        { size: 500 * 1024, expected: true },     // 500KB - valid
-        { size: 700 * 1024, expected: true },     // 700KB - valid
-        { size: MAX_SIZE, expected: true },       // 750KB - valid (at limit)
-        { size: MAX_SIZE + 1, expected: false },  // 750KB+1 - invalid
-        { size: 50 * 1024 * 1024, expected: false }, // 50MB - invalid
+        { size: 1024, expected: true },
+        { size: 500 * 1024, expected: true },
+        { size: MAX_FILE_SIZE_BEFORE_ENCRYPTION - 1024, expected: true },
+        { size: MAX_FILE_SIZE_BEFORE_ENCRYPTION, expected: true },
+        { size: MAX_FILE_SIZE_BEFORE_ENCRYPTION + 1, expected: false },
+        { size: 50 * 1024 * 1024, expected: false },
       ];
 
       testSizes.forEach(({ size, expected }) => {
@@ -210,13 +209,12 @@ describe('Security Enhancements', () => {
     });
 
     it('should reject oversized files even with valid key', async () => {
-      const oversizedFile = MAX_FILE_SIZE + 1; // Just over 750KB limit
+      const oversizedFile = MAX_FILE_SIZE_BEFORE_ENCRYPTION + 1;
       const sizeValidation = validateFileSize(oversizedFile);
       expect(sizeValidation.valid).toBe(false);
 
-      // Even with valid encryption, storage should reject
       const storage = new MockStorage();
-      const blob = new ArrayBuffer(oversizedFile);
+      const blob = new ArrayBuffer(MAX_FILE_SIZE + 1);
 
       await expect(
         storage.uploadBlob('test-seal', blob, Date.now() + 60000)
@@ -225,14 +223,11 @@ describe('Security Enhancements', () => {
   });
 });
 
-import { MAX_FILE_SIZE } from '@/lib/constants';
-
 describe('Security Configuration', () => {
   it('should have secure file size limit', () => {
-    // Verify the constant is set correctly
     expect(MAX_FILE_SIZE).toBe(750 * 1024);
     expect(MAX_FILE_SIZE).toBeGreaterThan(0);
-    expect(MAX_FILE_SIZE).toBeLessThanOrEqual(1024 * 1024); // Max 1MB
+    expect(MAX_FILE_SIZE).toBeLessThanOrEqual(1024 * 1024);
   });
 
   it('should require master encryption key', () => {

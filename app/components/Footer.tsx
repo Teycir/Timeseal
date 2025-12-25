@@ -15,6 +15,8 @@ export function Footer() {
             <a href="/security" className="hover:text-neon-green transition-colors">Security</a>
             <span>•</span>
             <a href="/faq" className="hover:text-neon-green transition-colors">FAQ</a>
+            <span>•</span>
+            <a href="/canary" className="hover:text-neon-green transition-colors">Canary</a>
           </div>
         </div>
         <div className="flex gap-3 items-center">

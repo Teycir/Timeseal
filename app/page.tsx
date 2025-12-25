@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { usePWA } from '@/lib/usePWA';
 import { toast } from 'sonner';
 import { AnimatePresence } from 'framer-motion';
@@ -12,6 +12,7 @@ import { EncryptionProgress } from './components/EncryptionProgress';
 import { FloatingIcons } from './components/FloatingIcons';
 import { CreateSealForm } from './components/CreateSealForm';
 import { SealSuccess } from './components/SealSuccess';
+import { DustEffect } from './components/DustEffect';
 import { motion } from 'framer-motion';
 
 export default function HomePage() {
@@ -29,7 +30,7 @@ export default function HomePage() {
     maxViews?: number;
   } | null>(null);
 
-  const triggerConfetti = () => {
+  const triggerConfetti = useCallback(() => {
     const end = Date.now() + 3 * 1000;
     const colors = ['#00ff41', '#ffffff'];
 
@@ -53,7 +54,7 @@ export default function HomePage() {
         requestAnimationFrame(frame);
       }
     }());
-  };
+  }, []);
 
   useEffect(() => {
     if (globalThis.window !== undefined) {
@@ -112,6 +113,7 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen flex flex-col items-center pt-20 px-4 pb-4 relative w-full overflow-x-hidden">
+      <DustEffect />
       <BackgroundBeams className="absolute top-0 left-0 w-full h-full z-0" />
       <FloatingIcons />
 

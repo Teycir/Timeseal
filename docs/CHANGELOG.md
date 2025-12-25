@@ -8,6 +8,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **UI/UX Enhancements** - Premium visual effects and animations
+  - Staggered entrance animation for form sections (cascading reveal)
+  - Shimmer border beam effect on main card (continuous moving light)
+  - Magnetic button effect on CREATE TIME-SEAL button (follows cursor)
+  - Dust particle effect with 50 floating neon-green particles
+  - Right-to-left character fade animation on tagline and feature banner
+  - User-friendly rotating messages (25 benefit-focused messages)
+  - Canary link added to footer navigation
+  - Consistent page styling across FAQ, Security, and Canary pages
+  - Animated DecryptedText titles on all pages
+  - Background beams effect on all pages
+  - Proof of freshness section on Canary page (full timestamp display)
+  - Improved checklist layout with bullet points on Canary page
+
+### Changed
+- Security features banner now shows user benefits instead of technical details
+- Removed subtitle "Encrypt messages that unlock at a future date or after inactivity"
+- Moved warning "⚠️ Seals auto-delete 30 days after unlock" below CREATE TIME-SEAL button
+- Canary page now matches FAQ/Security page styling and layout
+- All page titles use consistent DecryptedText animation
+- Footer buttons now say "CREATE YOUR SEAL" instead of "BACK TO TIMESEAL"
+
+### Fixed
+- Canary page visibility (added explicit dark background)
+- Canary page header styling (now uses animated title)
+- Canary page footer button (consistent with other pages)
+
+### UI/UX Improvements
+- Slower animation timing for better visual impact (0.15s stagger, 0.05s delay per character)
+- Enhanced magnetic button physics (spring: stiffness 200, damping 20)
+- Cleaner layout with removed redundant text
+- Better visual hierarchy with repositioned warning
+- Consistent navigation and styling across all pages
+
+### Added
 - **Ephemeral Seals UI** - Complete user interface for self-destructing seals
   - Third seal type button (TIMED | DEADMAN | EPHEMERAL)
   - Max views input field (1-100 views)
