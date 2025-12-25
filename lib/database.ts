@@ -1,6 +1,6 @@
 // Database Abstraction Layer
-import type { D1Database } from '@cloudflare/workers-types';
-import { timingSafeEqual } from './timingSafe';
+import type { D1Database } from "@cloudflare/workers-types";
+import { timingSafeEqual } from "./timingSafe";
 
 export interface DatabaseProvider {
   createSeal(data: SealRecord): Promise<void>;
@@ -8,14 +8,27 @@ export interface DatabaseProvider {
   getSealByPulseToken(token: string): Promise<SealRecord | null>;
   updatePulse(id: string, timestamp: number): Promise<void>;
   updateUnlockTime(id: string, unlockTime: number): Promise<void>;
-  updatePulseAndUnlockTime(id: string, lastPulse: number, unlockTime: number, expiresAt?: number): Promise<void>;
+  updatePulseAndUnlockTime(
+    id: string,
+    lastPulse: number,
+    unlockTime: number,
+    expiresAt?: number,
+  ): Promise<void>;
   incrementAccessCount(id: string): Promise<void>;
   decrementViewCount(id: string): Promise<void>;
   deleteSeal(id: string): Promise<void>;
   getExpiredDMS(): Promise<SealRecord[]>;
-  checkRateLimit(key: string, limit: number, window: number): Promise<{ allowed: boolean; remaining: number }>;
+  checkRateLimit(
+    key: string,
+    limit: number,
+    window: number,
+  ): Promise<{ allowed: boolean; remaining: number }>;
   storeNonce(nonce: string, expiresAt: number): Promise<boolean>;
-  recordEphemeralView(sealId: string, fingerprint: string, timestamp: number): Promise<number>;
+  recordEphemeralView(
+    sealId: string,
+    fingerprint: string,
+    timestamp: number,
+  ): Promise<number>;
 }
 
 export interface SealRecord {
@@ -42,62 +55,116 @@ export interface SealRecord {
 
 // Production D1 Database
 export class SealDatabase implements DatabaseProvider {
-  constructor(private readonly db: D1Database) { }
+  constructor(private readonly db: D1Database) {}
 
   private mapResultToSealRecord(result: any): SealRecord {
     // Fail-fast validation - throw on missing required fields
-    if (!result.id) throw new Error('Invalid seal record: missing id');
-    if (!result.key_b) throw new Error('Invalid seal record: missing key_b');
-    if (!result.iv) throw new Error('Invalid seal record: missing iv');
+    if (!result.id) throw new Error("Invalid seal record: missing id");
+    if (!result.key_b) throw new Error("Invalid seal record: missing key_b");
+    if (!result.iv) throw new Error("Invalid seal record: missing iv");
     if (result.unlock_time === null || result.unlock_time === undefined) {
-      throw new Error('Invalid seal record: missing unlock_time');
+      throw new Error("Invalid seal record: missing unlock_time");
     }
 
     return {
       id: String(result.id),
-      unlockTime: Number(result.unlock_time),
+      unlockTime: (() => {
+        const v = Number(result.unlock_time);
+        if (isNaN(v)) throw new Error("Invalid unlock_time");
+        return v;
+      })(),
       isDMS: result.is_dms === 1,
-      pulseInterval: result.pulse_interval ? Number(result.pulse_interval) : undefined,
-      lastPulse: result.last_pulse ? Number(result.last_pulse) : undefined,
+      pulseInterval: result.pulse_interval
+        ? (() => {
+            const v = Number(result.pulse_interval);
+            if (isNaN(v)) throw new Error("Invalid pulse_interval");
+            return v;
+          })()
+        : undefined,
+      lastPulse: result.last_pulse
+        ? (() => {
+            const v = Number(result.last_pulse);
+            if (isNaN(v)) throw new Error("Invalid last_pulse");
+            return v;
+          })()
+        : undefined,
       keyB: String(result.key_b),
       iv: String(result.iv),
       pulseToken: result.pulse_token ? String(result.pulse_token) : undefined,
-      createdAt: Number(result.created_at || Date.now()),
+      createdAt: (() => {
+        const v = Number(result.created_at || Date.now());
+        if (isNaN(v)) throw new Error("Invalid created_at");
+        return v;
+      })(),
       blobHash: result.blob_hash ? String(result.blob_hash) : undefined,
-      unlockMessage: result.unlock_message ? String(result.unlock_message) : undefined,
-      expiresAt: result.expires_at ? Number(result.expires_at) : undefined,
-      accessCount: result.access_count ? Number(result.access_count) : 0,
+      unlockMessage: result.unlock_message
+        ? String(result.unlock_message)
+        : undefined,
+      expiresAt: result.expires_at
+        ? (() => {
+            const v = Number(result.expires_at);
+            if (isNaN(v)) throw new Error("Invalid expires_at");
+            return v;
+          })()
+        : undefined,
+      accessCount: (() => {
+        const v = Number(result.access_count || 0);
+        if (isNaN(v)) throw new Error("Invalid access_count");
+        return v;
+      })(),
       // Ephemeral fields
       isEphemeral: result.is_ephemeral === 1,
-      maxViews: result.max_views !== null ? Number(result.max_views) : null,
-      viewCount: result.view_count ? Number(result.view_count) : 0,
-      firstViewedAt: result.first_viewed_at ? Number(result.first_viewed_at) : null,
-      firstViewerFingerprint: result.first_viewer_fingerprint ? String(result.first_viewer_fingerprint) : null,
+      maxViews:
+        result.max_views !== null
+          ? (() => {
+              const v = Number(result.max_views);
+              if (isNaN(v)) throw new Error("Invalid max_views");
+              return v;
+            })()
+          : null,
+      viewCount: (() => {
+        const v = Number(result.view_count || 0);
+        if (isNaN(v)) throw new Error("Invalid view_count");
+        return v;
+      })(),
+      firstViewedAt: result.first_viewed_at
+        ? (() => {
+            const v = Number(result.first_viewed_at);
+            if (isNaN(v)) throw new Error("Invalid first_viewed_at");
+            return v;
+          })()
+        : null,
+      firstViewerFingerprint: result.first_viewer_fingerprint
+        ? String(result.first_viewer_fingerprint)
+        : null,
     };
   }
 
   async createSeal(data: SealRecord): Promise<void> {
-    const result = await this.db.prepare(
-      `INSERT INTO seals (id, unlock_time, is_dms, pulse_interval, last_pulse, key_b, iv, pulse_token, created_at, blob_hash, unlock_message, expires_at, access_count, is_ephemeral, max_views, view_count)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    ).bind(
-      data.id,
-      data.unlockTime,
-      data.isDMS ? 1 : 0,
-      data.pulseInterval || null,
-      data.lastPulse || null,
-      data.keyB,
-      data.iv,
-      data.pulseToken || null,
-      data.createdAt,
-      data.blobHash || null,
-      data.unlockMessage || null,
-      data.expiresAt || null,
-      data.accessCount || 0,
-      data.isEphemeral ? 1 : 0,
-      data.maxViews !== undefined ? data.maxViews : null,
-      data.viewCount || 0
-    ).run();
+    const result = await this.db
+      .prepare(
+        `INSERT INTO seals (id, unlock_time, is_dms, pulse_interval, last_pulse, key_b, iv, pulse_token, created_at, blob_hash, unlock_message, expires_at, access_count, is_ephemeral, max_views, view_count)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .bind(
+        data.id,
+        data.unlockTime,
+        data.isDMS ? 1 : 0,
+        data.pulseInterval || null,
+        data.lastPulse || null,
+        data.keyB,
+        data.iv,
+        data.pulseToken || null,
+        data.createdAt,
+        data.blobHash || null,
+        data.unlockMessage || null,
+        data.expiresAt || null,
+        data.accessCount || 0,
+        data.isEphemeral ? 1 : 0,
+        data.maxViews !== undefined ? data.maxViews : null,
+        data.viewCount || 0,
+      )
+      .run();
 
     if (!result.success) {
       throw new Error(`Failed to create seal ${data.id} in database`);
@@ -105,18 +172,20 @@ export class SealDatabase implements DatabaseProvider {
   }
 
   async getSeal(id: string): Promise<SealRecord | null> {
-    const result = await this.db.prepare(
-      'SELECT * FROM seals WHERE id = ?'
-    ).bind(id).first();
+    const result = await this.db
+      .prepare("SELECT * FROM seals WHERE id = ?")
+      .bind(id)
+      .first();
 
     if (!result) return null;
     return this.mapResultToSealRecord(result);
   }
 
   async incrementAccessCount(id: string): Promise<void> {
-    const result = await this.db.prepare(
-      'UPDATE seals SET access_count = access_count + 1 WHERE id = ?'
-    ).bind(id).run();
+    const result = await this.db
+      .prepare("UPDATE seals SET access_count = access_count + 1 WHERE id = ?")
+      .bind(id)
+      .run();
 
     if (!result.success || result.meta.changes === 0) {
       throw new Error(`Seal ${id} not found`);
@@ -124,9 +193,12 @@ export class SealDatabase implements DatabaseProvider {
   }
 
   async decrementViewCount(id: string): Promise<void> {
-    const result = await this.db.prepare(
-      'UPDATE seals SET view_count = CASE WHEN view_count > 0 THEN view_count - 1 ELSE 0 END WHERE id = ?'
-    ).bind(id).run();
+    const result = await this.db
+      .prepare(
+        "UPDATE seals SET view_count = CASE WHEN view_count > 0 THEN view_count - 1 ELSE 0 END WHERE id = ?",
+      )
+      .bind(id)
+      .run();
 
     if (!result.success || result.meta.changes === 0) {
       throw new Error(`Seal ${id} not found`);
@@ -134,9 +206,10 @@ export class SealDatabase implements DatabaseProvider {
   }
 
   async updatePulse(id: string, timestamp: number): Promise<void> {
-    const result = await this.db.prepare(
-      'UPDATE seals SET last_pulse = ? WHERE id = ?'
-    ).bind(timestamp, id).run();
+    const result = await this.db
+      .prepare("UPDATE seals SET last_pulse = ? WHERE id = ?")
+      .bind(timestamp, id)
+      .run();
 
     if (!result.success || result.meta.changes === 0) {
       throw new Error(`Seal ${id} not found`);
@@ -144,25 +217,31 @@ export class SealDatabase implements DatabaseProvider {
   }
 
   async updateUnlockTime(id: string, unlockTime: number): Promise<void> {
-    const result = await this.db.prepare(
-      'UPDATE seals SET unlock_time = ? WHERE id = ?'
-    ).bind(unlockTime, id).run();
+    const result = await this.db
+      .prepare("UPDATE seals SET unlock_time = ? WHERE id = ?")
+      .bind(unlockTime, id)
+      .run();
 
     if (!result.success || result.meta.changes === 0) {
       throw new Error(`Seal ${id} not found`);
     }
   }
 
-  async updatePulseAndUnlockTime(id: string, lastPulse: number, unlockTime: number, expiresAt?: number): Promise<void> {
-    let query = 'UPDATE seals SET last_pulse = ?, unlock_time = ?';
+  async updatePulseAndUnlockTime(
+    id: string,
+    lastPulse: number,
+    unlockTime: number,
+    expiresAt?: number,
+  ): Promise<void> {
+    let query = "UPDATE seals SET last_pulse = ?, unlock_time = ?";
     const params: any[] = [lastPulse, unlockTime];
 
     if (expiresAt !== undefined) {
-      query += ', expires_at = ?';
+      query += ", expires_at = ?";
       params.push(expiresAt);
     }
 
-    query += ' WHERE id = ?';
+    query += " WHERE id = ?";
     params.push(id);
 
     const stmt = this.db.prepare(query);
@@ -174,19 +253,21 @@ export class SealDatabase implements DatabaseProvider {
   }
 
   async deleteSeal(id: string): Promise<void> {
-    const result = await this.db.prepare(
-      'DELETE FROM seals WHERE id = ?'
-    ).bind(id).run();
+    const result = await this.db
+      .prepare("DELETE FROM seals WHERE id = ?")
+      .bind(id)
+      .run();
 
-    if (!result.success) {
-      throw new Error(`Failed to delete seal ${id}`);
+    if (!result.success || result.meta.changes === 0) {
+      throw new Error(`Seal ${id} not found`);
     }
   }
 
   async getSealByPulseToken(token: string): Promise<SealRecord | null> {
-    const result = await this.db.prepare(
-      'SELECT * FROM seals WHERE pulse_token = ?'
-    ).bind(token).first();
+    const result = await this.db
+      .prepare("SELECT * FROM seals WHERE pulse_token = ?")
+      .bind(token)
+      .first();
 
     if (!result) return null;
 
@@ -201,30 +282,42 @@ export class SealDatabase implements DatabaseProvider {
   }
 
   async getExpiredDMS(): Promise<SealRecord[]> {
-    const results = await this.db.prepare(
-      `SELECT * FROM seals
+    const results = await this.db
+      .prepare(
+        `SELECT * FROM seals
        WHERE is_dms = 1
        AND last_pulse IS NOT NULL
        AND pulse_interval IS NOT NULL
-       AND last_pulse + pulse_interval < ?`
-    ).bind(Date.now()).all();
+       AND last_pulse + pulse_interval < ?`,
+      )
+      .bind(Date.now())
+      .all();
 
     return results.results.map((r: any) => this.mapResultToSealRecord(r));
   }
 
-  async checkRateLimit(key: string, limit: number, window: number): Promise<{ allowed: boolean; remaining: number }> {
+  async checkRateLimit(
+    key: string,
+    limit: number,
+    window: number,
+  ): Promise<{ allowed: boolean; remaining: number }> {
     const now = Date.now();
     const windowStart = now;
 
     // Atomic upsert to prevent race conditions
-    const result = await this.db.prepare(`
-      INSERT INTO rate_limits (key, count, window_start)
+    const result = (await this.db
+      .prepare(
+        `
+      INSERT INTO rate_limits (key, count, reset_at)
       VALUES (?, 1, ?)
       ON CONFLICT(key) DO UPDATE SET
-        count = CASE WHEN window_start + ? <= ? THEN 1 ELSE count + 1 END,
-        window_start = CASE WHEN window_start + ? <= ? THEN ? ELSE window_start END
-      RETURNING count, window_start
-    `).bind(key, windowStart, window, now, window, now, windowStart).first() as { count: number; window_start: number } | null;
+        count = CASE WHEN reset_at <= ? THEN 1 ELSE count + 1 END,
+        reset_at = CASE WHEN reset_at <= ? THEN ? ELSE reset_at END
+      RETURNING count, reset_at
+    `,
+      )
+      .bind(key, windowStart + window, now, now, windowStart + window)
+      .first()) as { count: number; reset_at: number } | null;
 
     if (!result) return { allowed: false, remaining: 0 };
 
@@ -235,33 +328,56 @@ export class SealDatabase implements DatabaseProvider {
 
   async storeNonce(nonce: string, expiresAt: number): Promise<boolean> {
     try {
-      const result = await this.db.prepare(
-        'INSERT INTO nonces (nonce, created_at) VALUES (?, ?)'
-      ).bind(nonce, expiresAt).run();
+      const result = await this.db
+        .prepare("INSERT INTO nonces (nonce, expires_at) VALUES (?, ?)")
+        .bind(nonce, expiresAt)
+        .run();
       return result.success;
     } catch (error) {
       const err = error as Error;
-      if (err.message?.includes('UNIQUE')) {
-        console.warn('[SECURITY] Replay attack detected');
+      if (err.message?.includes("UNIQUE")) {
+        console.warn("[SECURITY] Replay attack detected");
       } else {
-        console.error('[DB] Nonce storage failed');
+        console.error("[DB] Nonce storage failed");
       }
       return false;
     }
   }
 
-  async recordEphemeralView(sealId: string, fingerprint: string, timestamp: number): Promise<number> {
-    const result = await this.db.prepare(`
+  // FIX #8: Race-condition safe view recording with optimistic locking
+  async recordEphemeralView(
+    sealId: string,
+    fingerprint: string,
+    timestamp: number,
+  ): Promise<number> {
+    // Use WHERE clause to check exhaustion atomically
+    const result = (await this.db
+      .prepare(
+        `
       UPDATE seals 
       SET view_count = view_count + 1,
       first_viewed_at = COALESCE(first_viewed_at, ?),
       first_viewer_fingerprint = COALESCE(first_viewer_fingerprint, ?)
       WHERE id = ?
+      AND (max_views IS NULL OR view_count < max_views)
       RETURNING view_count
-    `).bind(timestamp, fingerprint, sealId).first() as { view_count: number } | null;
+    `,
+      )
+      .bind(timestamp, fingerprint, sealId)
+      .first()) as { view_count: number } | null;
 
     if (!result) {
-      throw new Error(`Seal ${sealId} not found or already deleted`);
+      // Check if seal exists or is exhausted
+      const seal = (await this.db
+        .prepare("SELECT view_count, max_views FROM seals WHERE id = ?")
+        .bind(sealId)
+        .first()) as { view_count: number; max_views: number | null } | null;
+
+      if (!seal) {
+        throw new Error(`Seal ${sealId} not found or already deleted`);
+      }
+      // Seal exists but exhausted
+      throw new Error(`Seal ${sealId} already exhausted`);
     }
     return result.view_count;
   }
@@ -273,7 +389,7 @@ class MockStore {
   private seals = new Map<string, SealRecord>();
   private blobs = new Map<string, ArrayBuffer>();
 
-  private constructor() { }
+  private constructor() {}
 
   static getInstance(): MockStore {
     if (!MockStore.instance) {
@@ -282,8 +398,12 @@ class MockStore {
     return MockStore.instance;
   }
 
-  getSeals() { return this.seals; }
-  getBlobs() { return this.blobs; }
+  getSeals() {
+    return this.seals;
+  }
+  getBlobs() {
+    return this.blobs;
+  }
 
   clear() {
     this.seals.clear();
@@ -337,7 +457,12 @@ export class MockDatabase implements DatabaseProvider {
     this.store.getSeals().set(id, seal);
   }
 
-  async updatePulseAndUnlockTime(id: string, lastPulse: number, unlockTime: number, expiresAt?: number): Promise<void> {
+  async updatePulseAndUnlockTime(
+    id: string,
+    lastPulse: number,
+    unlockTime: number,
+    expiresAt?: number,
+  ): Promise<void> {
     const seal = this.store.getSeals().get(id);
     if (!seal) {
       throw new Error(`Failed to update pulse and unlock time for seal ${id}`);
@@ -367,12 +492,19 @@ export class MockDatabase implements DatabaseProvider {
   async getExpiredDMS(): Promise<SealRecord[]> {
     const now = Date.now();
     return Array.from(this.store.getSeals().values()).filter(
-      s => s.isDMS && s.lastPulse !== undefined && s.pulseInterval !== undefined &&
-        s.lastPulse + s.pulseInterval < now
+      (s) =>
+        s.isDMS &&
+        s.lastPulse !== undefined &&
+        s.pulseInterval !== undefined &&
+        s.lastPulse + s.pulseInterval < now,
     );
   }
 
-  async checkRateLimit(key: string, limit: number, window: number): Promise<{ allowed: boolean; remaining: number }> {
+  async checkRateLimit(
+    key: string,
+    limit: number,
+    window: number,
+  ): Promise<{ allowed: boolean; remaining: number }> {
     // Mock always allows (for dev)
     return { allowed: true, remaining: limit - 1 };
   }
@@ -382,7 +514,11 @@ export class MockDatabase implements DatabaseProvider {
     return true;
   }
 
-  async recordEphemeralView(sealId: string, fingerprint: string, timestamp: number): Promise<number> {
+  async recordEphemeralView(
+    sealId: string,
+    fingerprint: string,
+    timestamp: number,
+  ): Promise<number> {
     const seal = this.store.getSeals().get(sealId);
     if (!seal) {
       throw new Error(`Failed to record view for seal ${sealId}`);
@@ -412,6 +548,6 @@ export function createDatabase(env?: { DB?: D1Database }): DatabaseProvider {
   if (env?.DB) {
     return new SealDatabase(env.DB);
   }
-  console.warn('No D1 binding found, using MockDatabase');
+  console.warn("No D1 binding found, using MockDatabase");
   return new MockDatabase();
 }

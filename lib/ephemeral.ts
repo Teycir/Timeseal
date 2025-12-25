@@ -102,6 +102,7 @@ export function getRemainingViews(
 /**
  * Atomic view recording and exhaustion check
  * Returns whether view is allowed and if seal should be deleted
+ * FIX #8: Handle exhaustion errors from atomic check
  */
 export async function recordViewAndCheck(
   db: DatabaseProvider,
@@ -131,19 +132,33 @@ export async function recordViewAndCheck(
     };
   }
 
-  // Atomic increment using database method
-  const now = Date.now();
-  const newViewCount = await db.recordEphemeralView(sealId, fingerprint, now);
+  // Atomic increment with exhaustion check
+  try {
+    const now = Date.now();
+    const newViewCount = await db.recordEphemeralView(sealId, fingerprint, now);
 
-  // Check if this view exhausted the seal
-  const shouldDelete = maxViews !== null && newViewCount >= maxViews;
+    // Check if this view exhausted the seal
+    const shouldDelete = maxViews !== null && newViewCount >= maxViews;
 
-  return {
-    allowed: true,
-    viewCount: newViewCount,
-    maxViews,
-    shouldDelete,
-  };
+    return {
+      allowed: true,
+      viewCount: newViewCount,
+      maxViews,
+      shouldDelete,
+    };
+  } catch (error) {
+    const err = error as Error;
+    if (err.message?.includes('already exhausted')) {
+      // Concurrent request exhausted the seal
+      return {
+        allowed: false,
+        viewCount: maxViews || currentViewCount,
+        maxViews,
+        shouldDelete: false,
+      };
+    }
+    throw error;
+  }
 }
 
 /**

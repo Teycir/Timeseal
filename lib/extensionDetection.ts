@@ -20,13 +20,15 @@ export function detectSuspiciousExtensions(): SecurityWarning[] {
     });
   }
   
-  const originalFetch = window.fetch.toString();
-  if (!originalFetch.includes('[native code]')) {
-    warnings.push({
-      severity: 'high',
-      message: 'Fetch API has been modified',
-      recommendation: 'Close browser and restart without extensions',
-    });
+  if (typeof window !== 'undefined') {
+    const originalFetch = window.fetch.toString();
+    if (!originalFetch.includes('[native code]')) {
+      warnings.push({
+        severity: 'high',
+        message: 'Fetch API has been modified',
+        recommendation: 'Close browser and restart without extensions',
+      });
+    }
   }
   
   const originalSubtle = crypto.subtle.encrypt.toString();

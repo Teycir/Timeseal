@@ -66,7 +66,7 @@ export function detectTampering(): string[] {
   const warnings: string[] = [];
 
   // Check if running in secure context
-  if (!window.isSecureContext) {
+  if (typeof window !== 'undefined' && !window.isSecureContext) {
     warnings.push('Not running in secure context (HTTPS required)');
   }
 

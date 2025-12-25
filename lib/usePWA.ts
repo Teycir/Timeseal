@@ -8,6 +8,8 @@ export function usePWA() {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then((registrations) => {
         registrations.forEach((registration) => registration.unregister());
+      }).catch((error) => {
+        console.error('Failed to unregister service worker:', error);
       });
     }
   }, []);
