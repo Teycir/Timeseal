@@ -39,6 +39,8 @@ export function checkValidation(
 /**
  * Track analytics event (non-blocking)
  */
+import { ErrorTracker } from './errorTracker';
+
 export async function trackAnalytics(
   db: any,
   eventType: 'page_view' | 'seal_created' | 'seal_unlocked' | 'pulse_received' | 'seal_deleted',
@@ -48,7 +50,7 @@ export async function trackAnalytics(
     const analytics = new AnalyticsService(db);
     await analytics.trackEvent({ eventType });
   } catch (error) {
-    console.error('[Analytics] Failed to track event:', error);
+    ErrorTracker.trackError(error as Error, { eventType, component: 'analytics' });
   }
 }
 

@@ -41,3 +41,8 @@ next-env.d.ts
 
 # Internal documentation (for AI assistant)
 .selfdoc/
+
+# Logs and backups
+logs/
+backups/
+*.log

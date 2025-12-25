@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "load-test": "node scripts/load-test.js",
+    "load-test:prod": "node scripts/load-test.js https://timeseal.teycir-932.workers.dev 100 60",
+    "backup:local": "bash scripts/backup-db.sh false",
+    "backup:prod": "bash scripts/backup-db.sh true"
+  }
+}

@@ -9,6 +9,7 @@ import {
   validateSealAge,
 } from "./validation";
 import { logger, auditSealCreated, auditSealAccessed } from "./logger";
+import { ErrorTracker } from "./errorTracker";
 import { metrics } from "./metrics";
 import { ErrorCode } from "./errors";
 import { storageCircuitBreaker, withRetry } from "./circuitBreaker";
@@ -231,6 +232,12 @@ export class SealService {
 
       return { sealId, iv: request.iv, pulseToken, receipt };
     } catch (error) {
+      ErrorTracker.trackError(error as Error, {
+        action: 'create_seal',
+        sealId,
+        isDMS: request.isDMS,
+        isEphemeral: request.isEphemeral,
+      });
       // Rollback in reverse order
       if (blobUploaded) {
         try {
@@ -299,6 +306,11 @@ export class SealService {
         withRetry(() => this.storage.downloadBlob(sealId), 3, 1000),
       );
     } catch (error) {
+      ErrorTracker.trackError(error as Error, {
+        action: 'get_seal',
+        sealId,
+        ip,
+      });
       logger.error("blob_fetch_failed", error as Error, { sealId });
       throw new Error(
         `Failed to fetch seal content: ${(error as Error).message}`,
@@ -354,6 +366,10 @@ export class SealService {
         await this.db.deleteSeal(sealId);
         dbDeleted = true;
       } catch (dbError) {
+        ErrorTracker.trackError(dbError as Error, {
+          action: 'delete_seal_db',
+          sealId,
+        });
         logger.error("db_delete_failed", dbError as Error, { sealId });
         throw new Error("Failed to delete seal from database");
       }
@@ -361,6 +377,10 @@ export class SealService {
       try {
         await this.storage.deleteBlob(sealId);
       } catch (error) {
+        ErrorTracker.trackError(error as Error, {
+          action: 'delete_seal_blob',
+          sealId,
+        });
         logger.error("blob_delete_failed", error as Error, { sealId });
         if (dbDeleted) {
           try {
@@ -544,6 +564,11 @@ export class SealService {
 
       return { newUnlockTime, newPulseToken };
     } catch (error) {
+      ErrorTracker.trackError(error as Error, {
+        action: 'pulse_seal',
+        sealId: seal.id,
+        ip,
+      });
       logger.error("pulse_update_failed", error as Error, { sealId: seal.id });
       throw error;
     }
@@ -588,6 +613,11 @@ export class SealService {
     try {
       await this.db.updatePulseAndUnlockTime(seal.id, now, now);
     } catch (error) {
+      ErrorTracker.trackError(error as Error, {
+        action: 'unlock_seal',
+        sealId,
+        ip,
+      });
       logger.error("unlock_update_failed", error as Error, { sealId: seal.id });
       throw error;
     }
@@ -642,6 +672,11 @@ export class SealService {
     try {
       await this.db.deleteSeal(sealId);
     } catch (dbError) {
+      ErrorTracker.trackError(dbError as Error, {
+        action: 'burn_seal_db',
+        sealId,
+        ip,
+      });
       logger.error("db_delete_failed", dbError as Error, { sealId });
       throw dbError;
     }
