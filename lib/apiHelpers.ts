@@ -49,6 +49,8 @@ export async function trackAnalytics(
     const analytics = new AnalyticsService(db);
     await analytics.trackEvent({ eventType });
   } catch (error) {
+    const { metrics } = await import("./metrics");
+    metrics.incrementNonCriticalFailure('analytics');
     ErrorTracker.trackError(error as Error, { eventType, component: 'analytics' });
   }
 }

@@ -2,8 +2,7 @@
 export async function validateTurnstile(token: string, ip: string): Promise<boolean> {
   const secret = process.env.TURNSTILE_SECRET_KEY;
   if (!secret) {
-    console.warn('TURNSTILE_SECRET_KEY not configured, skipping validation');
-    return true; // Fail open in dev
+    throw new Error('TURNSTILE_SECRET_KEY not configured');
   }
 
   try {

@@ -1,27 +1,38 @@
-import { NextRequest } from "next/server";
 import { jsonResponse } from "@/lib/apiHandler";
 import { createAPIRoute } from "@/lib/routeHelper";
 import { ErrorCode, createErrorResponse } from "@/lib/errors";
 import { RATE_LIMIT_PULSE, MAX_PULSE_INTERVAL } from "@/lib/constants";
 import { trackAnalytics } from "@/lib/apiHelpers";
+import { NextRequest } from "next/server";
 
 export async function POST(request: NextRequest) {
-  console.log('[Pulse API] Request received');
+  console.log("[Pulse API] Request received");
   return createAPIRoute(
-    async ({ container, request: ctx, ip }) => {
+    async (params) => {
+      const { container, request: ctx, ip } = params;
       try {
-        console.log('[Pulse API] Parsing request body');
-        const { pulseToken, newInterval } = (await ctx.json()) as {
-          pulseToken: string;
-          newInterval?: number;
-        };
-        console.log('[Pulse API] Pulse token received:', pulseToken ? 'yes' : 'no');
-        console.log('[Pulse API] Pulse token length:', pulseToken?.length);
-        console.log('[Pulse API] Pulse token parts:', pulseToken?.split(':').length);
-        console.log('[Pulse API] New interval:', newInterval);
+        console.log("[Pulse API] Parsing request body");
+        const body = await ctx.json();
+        const pulseToken = body.pulseToken;
+        const newInterval = body.newInterval;
+        const operationNonce = body.operationNonce;
+        console.log(
+          "[Pulse API] Pulse token received:",
+          pulseToken ? "yes" : "no",
+        );
+        console.log("[Pulse API] Pulse token length:", pulseToken?.length);
+        console.log(
+          "[Pulse API] Pulse token parts:",
+          pulseToken?.split(":").length,
+        );
+        console.log("[Pulse API] New interval:", newInterval);
+        console.log(
+          "[Pulse API] Operation nonce:",
+          operationNonce ? "yes" : "no",
+        );
 
         if (!pulseToken) {
-          console.error('[Pulse API] No pulse token provided');
+          console.error("[Pulse API] No pulse token provided");
           return createErrorResponse(
             ErrorCode.INVALID_INPUT,
             "Pulse token required",
@@ -38,7 +49,7 @@ export async function POST(request: NextRequest) {
             newInterval < MIN_INTERVAL ||
             newInterval > MAX_PULSE_INTERVAL
           ) {
-            console.error('[Pulse API] Invalid interval:', newInterval);
+            console.error("[Pulse API] Invalid interval:", newInterval);
             return createErrorResponse(
               ErrorCode.INVALID_INPUT,
               `Pulse interval must be between 5 minutes and 30 days`,
@@ -46,10 +57,18 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        console.log('[Pulse API] Calling pulseSeal');
+        console.log("[Pulse API] Calling pulseSeal");
         const sealService = container.sealService;
-        const result = await sealService.pulseSeal(pulseToken, ip, newInterval);
-        console.log('[Pulse API] Pulse successful, new unlock time:', result.newUnlockTime);
+        const result = await sealService.pulseSeal(
+          pulseToken,
+          ip,
+          newInterval,
+          operationNonce,
+        );
+        console.log(
+          "[Pulse API] Pulse successful, new unlock time:",
+          result.newUnlockTime,
+        );
 
         await trackAnalytics(container.db, "pulse_received");
 
@@ -60,10 +79,16 @@ export async function POST(request: NextRequest) {
           message: "Pulse updated successfully",
         });
       } catch (error) {
-        console.error('[Pulse API] Error caught:', error);
-        console.error('[Pulse API] Error type:', typeof error);
-        console.error('[Pulse API] Error message:', error instanceof Error ? error.message : String(error));
-        console.error('[Pulse API] Error stack:', error instanceof Error ? error.stack : 'No stack');
+        console.error("[Pulse API] Error caught:", error);
+        console.error("[Pulse API] Error type:", typeof error);
+        console.error(
+          "[Pulse API] Error message:",
+          error instanceof Error ? error.message : String(error),
+        );
+        console.error(
+          "[Pulse API] Error stack:",
+          error instanceof Error ? error.stack : "No stack",
+        );
         throw error;
       }
     },

@@ -119,7 +119,7 @@ export function handleError(error: unknown): Response {
     if (error.message.includes("decrypt")) {
       return createErrorResponse(ErrorCode.DECRYPTION_FAILED, isDev ? error.message : undefined);
     }
-    if (error.message.includes("Replay attack")) {
+    if (error.message.includes("Replay attack") || error.message.includes("already processed")) {
       return createErrorResponse(ErrorCode.INVALID_INPUT, error.message);
     }
     // Return error message in dev mode

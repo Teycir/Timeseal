@@ -42,6 +42,12 @@ export const withErrorHandling: Middleware = async (ctx, next) => {
       stack: error instanceof Error ? error.stack : undefined,
     };
     
+    console.error('[ERROR HANDLER] ===== ERROR CAUGHT =====');
+    console.error('[ERROR HANDLER] Message:', errorDetails.message);
+    console.error('[ERROR HANDLER] Stack:', errorDetails.stack);
+    console.error('[ERROR HANDLER] URL:', errorDetails.url);
+    console.error('[ERROR HANDLER] Method:', errorDetails.method);
+    
     logger.error('request_error', error as Error, errorDetails);
     
     // Enhanced error logging

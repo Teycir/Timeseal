@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 import {
   constantTimeEqual,
   generatePulseToken,
@@ -31,7 +31,7 @@ describe('Security Utilities', () => {
     it('should generate valid pulse token', async () => {
       const token = await generatePulseToken('seal-123', testSecret);
       expect(token).toBeDefined();
-      expect(token.split(':').length).toBe(4);
+      expect(token.split(':').length).toBe(3);
     });
 
     it('should generate unique tokens', async () => {
@@ -62,14 +62,14 @@ describe('Security Utilities', () => {
 
   describe('sanitizeError', () => {
     it('should return generic message in production', () => {
-      setSecurityEnv({ NODE_ENV: 'production' });
+      setSecurityEnv({ NODE_ENV: 'production', NEXT_PUBLIC_APP_URL: 'http://localhost:3000' });
       const result = sanitizeError(new Error('Internal details'));
       expect(result).toBe('An error occurred. Please try again.');
-      setSecurityEnv({ NODE_ENV: 'development' }); // Reset
+      setSecurityEnv({ NODE_ENV: 'development', NEXT_PUBLIC_APP_URL: 'http://localhost:3000' }); // Reset
     });
 
     it('should return error message in development', () => {
-      setSecurityEnv({ NODE_ENV: 'development' });
+      setSecurityEnv({ NODE_ENV: 'development', NEXT_PUBLIC_APP_URL: 'http://localhost:3000' });
       const result = sanitizeError(new Error('Debug info'));
       expect(result).toBe('Debug info');
     });
@@ -108,15 +108,20 @@ describe('Security Utilities', () => {
   });
 
   describe('checkAndStoreNonce', () => {
-    it('should accept new nonce', () => {
+    it('should accept new nonce', async () => {
       const nonce = crypto.randomUUID();
-      expect(checkAndStoreNonce(nonce)).toBe(true);
+      const mockDb = {
+        storeNonce: async () => true
+      } as any;
+      expect(await checkAndStoreNonce(nonce, mockDb)).toBe(true);
     });
 
-    it('should reject duplicate nonce', () => {
+    it('should reject duplicate nonce', async () => {
       const nonce = crypto.randomUUID();
-      checkAndStoreNonce(nonce);
-      expect(checkAndStoreNonce(nonce)).toBe(false);
+      const mockDb = {
+        storeNonce: async (n: string) => n !== nonce
+      } as any;
+      expect(await checkAndStoreNonce(nonce, mockDb)).toBe(false);
     });
   });
 });

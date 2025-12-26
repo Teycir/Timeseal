@@ -1,0 +1,48 @@
+🧪 Shell Script Validation
+==========================
+
+✓ ./scripts/backup-db.sh
+✓ ./scripts/deploy.sh
+✓ ./scripts/init-db.sh
+✓ ./scripts/migrate-prod.sh
+✓ ./scripts/security-test.sh
+✓ ./scripts/setup-cloudflare.sh
+✓ ./scripts/setup-complete.sh
+✓ ./scripts/setup-d1.sh
+✓ ./scripts/setup-secrets.sh
+✓ ./scripts/setup.sh
+✓ ./scripts/setup-turnstile.sh
+✓ ./scripts/sign-canary.sh
+✓ ./scripts/test-hardening.sh
+✓ ./scripts/tests/check-all-scripts.sh
+✓ ./scripts/tests/load-test.sh
+✓ ./scripts/tests/run-all-tests.sh
+✓ ./scripts/tests/run-shell-tests.sh
+✓ ./scripts/tests/test-all-scripts.sh
+✓ ./scripts/tests/test-analytics.sh
+✓ ./scripts/tests/test-blob-download.sh
+✓ ./scripts/tests/test-dms-burn.sh
+✓ ./scripts/tests/test-dms-creation.sh
+✓ ./scripts/tests/test-dms-pulse.sh
+✓ ./scripts/tests/test-dms-unlock.sh
+✓ ./scripts/tests/test-ephemeral-exhaustion.sh
+✓ ./scripts/tests/test-ephemeral-seal.sh
+✓ ./scripts/tests/test-health.sh
+✓ ./scripts/tests/test-metrics.sh
+✓ ./scripts/tests/test-pulse-status.sh
+✓ ./scripts/tests/test-qr-code.sh
+✓ ./scripts/tests/test-receipt-verify.sh
+✓ ./scripts/tests/test-regression-v0.9.4.sh
+✓ ./scripts/tests/test-seal-creation.sh
+✓ ./scripts/tests/test-seal-unlock.sh
+✓ ./scripts/tests/test-shell-scripts.sh
+✓ ./scripts/tests/validate-all.sh
+✓ ./scripts/tests/validate-scripts.sh
+✓ ./setup.sh
+✓ ./tests/integration/dms-complete-workflow.sh
+✓ ./tests/integration/dms-create-burn.sh
+✓ ./tests/integration/dms-create-renew.sh
+✓ ./tests/integration/dms-create-unlock.sh
+
+Results: 42 passed, 0 failed
+✅ Success

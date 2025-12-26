@@ -338,10 +338,13 @@ export class SealDatabase implements DatabaseProvider {
       return result.success;
     } catch (error) {
       const err = error as Error;
+      console.error("[DB] Nonce storage error:", err.message);
+      console.error("[DB] Nonce:", nonce);
+      console.error("[DB] ExpiresAt:", expiresAt);
       if (err.message?.includes("UNIQUE")) {
         console.warn("[SECURITY] Replay attack detected");
       } else {
-        console.error("[DB] Nonce storage failed");
+        console.error("[DB] Nonce storage failed - unknown error");
       }
       return false;
     }

@@ -243,6 +243,7 @@ export class SealService {
         try {
           await this.storage.deleteBlob(sealId);
         } catch (blobError) {
+          metrics.incrementNonCriticalFailure('rollbackBlob');
           logger.error("blob_rollback_failed", blobError as Error, { sealId });
         }
       }
@@ -250,6 +251,7 @@ export class SealService {
         try {
           await this.db.deleteSeal(sealId);
         } catch (dbError) {
+          metrics.incrementNonCriticalFailure('rollbackDb');
           logger.error("db_rollback_failed", dbError as Error, { sealId });
         }
       }
@@ -405,6 +407,7 @@ export class SealService {
             });
             logger.info("db_rollback_success", { sealId });
           } catch (rollbackError) {
+            metrics.incrementNonCriticalFailure('rollbackDb');
             logger.error("db_rollback_failed", rollbackError as Error, {
               sealId,
             });
@@ -418,6 +421,7 @@ export class SealService {
         await trackAnalytics(this.db, "seal_deleted");
       } catch (error) {
         logger.error("analytics_track_failed", error as Error, { sealId });
+        metrics.incrementNonCriticalFailure('analytics');
       }
 
       sealEvents.emit("seal:exhausted", {
@@ -431,6 +435,7 @@ export class SealService {
       try {
         await this.db.incrementAccessCount(sealId);
       } catch (error) {
+        metrics.incrementNonCriticalFailure('accessCount');
         logger.error("access_count_failed", error as Error, { sealId });
       }
     }
@@ -457,7 +462,7 @@ export class SealService {
     };
   }
 
-  async getBlob(sealId: string): Promise<ArrayBuffer> {
+  async getBlob(sealId: string) {
     return await storageCircuitBreaker.execute(() =>
       withRetry(() => this.storage.downloadBlob(sealId), 3, 1000),
     );
@@ -467,22 +472,25 @@ export class SealService {
     pulseToken: string,
     ip: string,
     newInterval?: number,
+    operationNonce?: string,
   ): Promise<{ newUnlockTime: number; newPulseToken: string }> {
-    console.log("[pulseSeal] Starting pulse renewal");
+    console.log("[pulseSeal] ===== PULSE START =====");
     console.log("[pulseSeal] Token:", pulseToken);
+    console.log("[pulseSeal] IP:", ip);
+    console.log("[pulseSeal] New interval:", newInterval);
+    console.log("[pulseSeal] Operation nonce:", operationNonce);
 
     const parts = pulseToken.split(":");
     console.log("[pulseSeal] Token parts count:", parts.length);
 
-    if (parts.length !== 4) {
+    if (parts.length !== 3) {
       console.error("[pulseSeal] Invalid token format");
       throw new Error("Invalid pulse token");
     }
 
-    const [sealId, timestamp, nonce, signature] = parts;
+    const [sealId, timestamp, signature] = parts;
     console.log("[pulseSeal] Extracted sealId:", sealId);
     console.log("[pulseSeal] Timestamp:", timestamp);
-    console.log("[pulseSeal] Nonce:", nonce);
 
     // Validate format strictly
     if (!sealId || !/^[a-f0-9]{32}$/.test(sealId)) {
@@ -498,25 +506,26 @@ export class SealService {
       console.error("[pulseSeal] Invalid timestamp value");
       throw new Error("Invalid pulse token");
     }
-    if (
-      !nonce ||
-      !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(
-        nonce,
-      )
-    ) {
-      console.error("[pulseSeal] Invalid nonce format");
-      throw new Error("Invalid pulse token");
-    }
     if (!signature) {
       console.error("[pulseSeal] Missing signature");
       throw new Error("Invalid pulse token");
     }
 
-    // SKIP nonce check for pulse renewal - user may have just visited pulse page
-    // The nonce is consumed on page load, so renewal would always fail
-    console.log(
-      "[pulseSeal] Skipping nonce check (may have been consumed by pulse page visit)",
-    );
+    // Check operation nonce FIRST (prevents replay attacks)
+    if (operationNonce) {
+      console.log("[pulseSeal] Checking operation nonce:", operationNonce);
+      const { validatePulseOperation } = await import("./security");
+      console.log("[pulseSeal] Calling validatePulseOperation");
+      const nonceValid = await validatePulseOperation(pulseToken, operationNonce, this.db);
+      console.log("[pulseSeal] Nonce validation result:", nonceValid);
+      if (!nonceValid) {
+        console.error("[pulseSeal] NONCE REPLAY DETECTED");
+        throw new Error("Operation already processed");
+      }
+      console.log("[pulseSeal] Nonce validation passed");
+    } else {
+      console.warn("[pulseSeal] NO OPERATION NONCE PROVIDED");
+    }
 
     // Validate token signature
     console.log("[pulseSeal] Validating token signature");
@@ -594,6 +603,7 @@ export class SealService {
         logger.info("pulse_received", { sealId: seal.id, newUnlockTime });
         sealEvents.emit("pulse:received", { sealId: seal.id, ip });
       } catch (obsError) {
+        metrics.incrementNonCriticalFailure('observability');
         logger.error("pulse_observability_failed", obsError as Error, {
           sealId: seal.id,
         });
@@ -612,37 +622,46 @@ export class SealService {
     }
   }
 
-  async unlockSeal(pulseToken: string, ip: string): Promise<void> {
-    console.log("[unlockSeal] Starting unlock process");
+  async unlockSeal(pulseToken: string, ip: string, operationNonce?: string) {
+    console.log("[unlockSeal] ===== UNLOCK START =====");
     console.log("[unlockSeal] Token:", pulseToken);
     console.log("[unlockSeal] IP:", ip);
+    console.log("[unlockSeal] Operation nonce:", operationNonce);
 
     const parts = pulseToken.split(":");
     console.log("[unlockSeal] Token parts count:", parts.length);
 
-    if (parts.length !== 4) {
+    if (parts.length !== 3) {
       console.error(
-        "[unlockSeal] Invalid token format - expected 4 parts, got",
+        "[unlockSeal] Invalid token format - expected 3 parts, got",
         parts.length,
       );
       throw new Error("Invalid pulse token");
     }
 
-    const [sealId, , nonce] = parts;
+    const [sealId] = parts;
     console.log("[unlockSeal] Extracted sealId:", sealId);
-    console.log("[unlockSeal] Extracted nonce:", nonce);
 
-    if (!sealId || !nonce) {
-      console.error("[unlockSeal] Missing sealId or nonce");
+    if (!sealId) {
+      console.error("[unlockSeal] Missing sealId");
       throw new Error("Invalid pulse token");
     }
 
-    // SKIP nonce check for unlock - user may have just visited pulse page
-    // Nonce replay protection is less critical for unlock operations
-    // since the seal will be unlocked anyway
-    console.log(
-      "[unlockSeal] Skipping nonce check (may have been consumed by pulse page visit)",
-    );
+    // Check operation nonce FIRST (prevents replay attacks)
+    if (operationNonce) {
+      console.log("[unlockSeal] Checking operation nonce:", operationNonce);
+      const { validatePulseOperation } = await import("./security");
+      console.log("[unlockSeal] Calling validatePulseOperation");
+      const nonceValid = await validatePulseOperation(pulseToken, operationNonce, this.db);
+      console.log("[unlockSeal] Nonce validation result:", nonceValid);
+      if (!nonceValid) {
+        console.error("[unlockSeal] NONCE REPLAY DETECTED");
+        throw new Error("Operation already processed");
+      }
+      console.log("[unlockSeal] Nonce validation passed");
+    } else {
+      console.warn("[unlockSeal] NO OPERATION NONCE PROVIDED");
+    }
 
     // Validate token signature
     console.log("[unlockSeal] Validating token signature");
@@ -700,21 +719,38 @@ export class SealService {
     sealEvents.emit("seal:unlocked", { sealId, ip });
   }
 
-  async burnSeal(pulseToken: string, ip: string): Promise<void> {
+  async burnSeal(pulseToken: string = "", ip: string = "", operationNonce?: string) {
+    console.log("[burnSeal] ===== BURN START =====");
+    console.log("[burnSeal] Token:", pulseToken);
+    console.log("[burnSeal] IP:", ip);
+    console.log("[burnSeal] Operation nonce:", operationNonce);
+    
     const parts = pulseToken.split(":");
-    if (parts.length !== 4) {
+    if (parts.length !== 3) {
       throw new Error("Invalid pulse token");
     }
 
-    const [sealId, , nonce] = parts;
+    const [sealId] = parts;
 
-    if (!sealId || !nonce) {
+    if (!sealId) {
       throw new Error("Invalid pulse token");
     }
 
-    // SKIP nonce check for burn - user may have just visited pulse page
-    // Nonce replay protection is less critical for destructive operations
-    // since the seal will be deleted anyway
+    // Check operation nonce FIRST (prevents replay attacks)
+    if (operationNonce) {
+      console.log("[burnSeal] Checking operation nonce:", operationNonce);
+      const { validatePulseOperation } = await import("./security");
+      console.log("[burnSeal] Calling validatePulseOperation");
+      const nonceValid = await validatePulseOperation(pulseToken, operationNonce, this.db);
+      console.log("[burnSeal] Nonce validation result:", nonceValid);
+      if (!nonceValid) {
+        console.error("[burnSeal] NONCE REPLAY DETECTED");
+        throw new Error("Operation already processed");
+      }
+      console.log("[burnSeal] Nonce validation passed");
+    } else {
+      console.warn("[burnSeal] NO OPERATION NONCE PROVIDED");
+    }
 
     // Validate token signature
     const isValid = await validatePulseToken(
@@ -747,6 +783,7 @@ export class SealService {
     try {
       await this.storage.deleteBlob(sealId);
     } catch (storageError) {
+      metrics.incrementNonCriticalFailure('blobDeletion');
       logger.error("blob_delete_failed", storageError as Error, { sealId });
     }
 
@@ -765,6 +802,7 @@ export class SealService {
       await trackAnalytics(this.db, "seal_deleted");
     } catch (error) {
       logger.error("analytics_track_failed", error as Error, { sealId });
+      metrics.incrementNonCriticalFailure('analytics');
     }
 
     // Emit event for observers
@@ -777,7 +815,7 @@ export class SealService {
     return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
   }
 
-  private async hashBlob(blob: ArrayBuffer): Promise<string> {
+  private async hashBlob(blob: ArrayBuffer) {
     const hashBuffer = await crypto.subtle.digest("SHA-256", blob);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");

@@ -86,41 +86,15 @@ class RateLimiterRegistry {
 export async function withRateLimit(
   request: Request,
   handler: () => Promise<Response>,
-  config: RateLimitConfig = { limit: 10, window: 60000 }
+  config: RateLimitConfig
 ): Promise<Response> {
-  const identifier = config.key || request.headers.get('CF-Connecting-IP') || 'unknown';
-
-  // Use DB-backed rate limiting if available
-  if (config.db) {
-    const { allowed, remaining } = await config.db.checkRateLimit(identifier, config.limit, config.window);
-    
-    if (!allowed) {
-      return new Response(
-        JSON.stringify({ error: 'Rate limit exceeded' }),
-        {
-          status: 429,
-          headers: {
-            'Content-Type': 'application/json',
-            'X-RateLimit-Limit': config.limit.toString(),
-            'X-RateLimit-Remaining': '0',
-            'Retry-After': Math.ceil(config.window / 1000).toString(),
-          },
-        }
-      );
-    }
-
-    const response = await handler();
-    response.headers.set('X-RateLimit-Limit', config.limit.toString());
-    response.headers.set('X-RateLimit-Remaining', remaining.toString());
-    return response;
+  if (!config.db) {
+    throw new Error("Database required for rate limiting");
   }
 
-  // Fallback to in-memory (dev only)
-  const key = `${config.limit}:${config.window}`;
-  const limiter = RateLimiterRegistry.getInstance().getLimiter(key, config);
-
-  const { allowed, remaining } = await limiter.check(identifier);
-
+  const identifier = config.key || request.headers.get('CF-Connecting-IP') || 'unknown';
+  const { allowed, remaining } = await config.db.checkRateLimit(identifier, config.limit, config.window);
+  
   if (!allowed) {
     return new Response(
       JSON.stringify({ error: 'Rate limit exceeded' }),

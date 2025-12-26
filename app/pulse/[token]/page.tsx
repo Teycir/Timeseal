@@ -96,11 +96,14 @@ export default function PulsePage({ params }: { params: { token: string } }) {
     setIsUpdating(true);
     setActionType(action);
     try {
+      // Generate operation nonce for replay protection
+      const operationNonce = crypto.randomUUID();
+
       if (action === "delete") {
         const res = await fetch("/api/burn", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pulseToken: currentToken }),
+          body: JSON.stringify({ pulseToken: currentToken, operationNonce }),
         });
         const data = await res.json();
         if (res.ok) {
@@ -132,7 +135,7 @@ export default function PulsePage({ params }: { params: { token: string } }) {
         const res = await fetch("/api/unlock", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pulseToken: currentToken }),
+          body: JSON.stringify({ pulseToken: currentToken, operationNonce }),
         });
         const data = await res.json();
         if (res.ok) {
@@ -175,6 +178,7 @@ export default function PulsePage({ params }: { params: { token: string } }) {
           body: JSON.stringify({
             pulseToken: currentToken,
             newInterval: intervalMs,
+            operationNonce,
           }),
         });
         const data = await res.json();
@@ -345,7 +349,7 @@ export default function PulsePage({ params }: { params: { token: string } }) {
               {actionType === "renew" && (
                 <button
                   onClick={() => {
-                    window.location.href = `/pulse/${encodeURIComponent(currentToken)}`;
+                    globalThis.location.href = `/pulse/${encodeURIComponent(currentToken)}`;
                   }}
                   className="cyber-button flex-1"
                 >
@@ -390,7 +394,7 @@ export default function PulsePage({ params }: { params: { token: string } }) {
                 onClick={() => {
                   setStatus("loading");
                   setErrorDetails(null);
-                  window.location.reload();
+                  globalThis.location.reload();
                 }}
                 className="cyber-button flex-1"
               >
