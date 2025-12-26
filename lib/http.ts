@@ -26,8 +26,9 @@ export function successResponse(data: unknown = { success: true }): Response {
 export async function parseJSON<T>(request: Request): Promise<T> {
   try {
     return await request.json();
-  } catch {
-    throw new Error('Invalid JSON body');
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    throw new Error(`Invalid JSON body: ${message}`);
   }
 }
 

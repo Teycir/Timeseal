@@ -71,41 +71,56 @@ async function getLogger() {
 
 export class ErrorTracker {
   static trackError(error: Error, context?: ErrorContext) {
-    getLogger().then(logger => {
-      const errorData = {
-        message: error.message,
-        stack: error.stack,
-        name: error.name,
-        ...context,
-        timestamp: new Date().toISOString(),
-      };
+    getLogger()
+      .then(logger => {
+        const errorData = {
+          message: error.message,
+          stack: error.stack,
+          name: error.name,
+          ...context,
+          timestamp: new Date().toISOString(),
+        };
 
-      if (logger) {
-        logger.error("Application error", errorData);
-      } else {
-        console.error("[ErrorTracker]", errorData);
-      }
-    });
+        if (logger) {
+          logger.error("Application error", errorData);
+        } else {
+          console.error("[ErrorTracker]", errorData);
+        }
+      })
+      .catch(logError => {
+        console.error("[ErrorTracker] Failed to log error:", logError);
+        console.error("[ErrorTracker] Original error:", error);
+      });
   }
 
   static trackWarning(message: string, context?: ErrorContext) {
-    getLogger().then(logger => {
-      if (logger) {
-        logger.warn(message, context);
-      } else {
-        console.warn("[ErrorTracker]", message, context);
-      }
-    });
+    getLogger()
+      .then(logger => {
+        if (logger) {
+          logger.warn(message, context);
+        } else {
+          console.warn("[ErrorTracker]", message, context);
+        }
+      })
+      .catch(logError => {
+        console.error("[ErrorTracker] Failed to log warning:", logError);
+        console.warn("[ErrorTracker] Original warning:", message, context);
+      });
   }
 
   static trackInfo(message: string, context?: ErrorContext) {
-    getLogger().then(logger => {
-      if (logger) {
-        logger.info(message, context);
-      } else {
-        console.log("[ErrorTracker]", message, context);
-      }
-    });
+    getLogger()
+      .then(logger => {
+        if (logger) {
+          logger.info(message, context);
+        } else {
+          console.log("[ErrorTracker]", message, context);
+        }
+      })
+      .catch(logError => {
+        console.error("[ErrorTracker] Failed to log info:", logError);
+        console.log("[ErrorTracker] Original info:", message, context);
+      });
   }
 
   static trackMetric(
@@ -113,19 +128,24 @@ export class ErrorTracker {
     value: number,
     context?: ErrorContext,
   ) {
-    getLogger().then(logger => {
-      const metricData = {
-        metric,
-        value,
-        ...context,
-        timestamp: new Date().toISOString(),
-      };
+    getLogger()
+      .then(logger => {
+        const metricData = {
+          metric,
+          value,
+          ...context,
+          timestamp: new Date().toISOString(),
+        };
 
-      if (logger) {
-        logger.info("Metric", metricData);
-      } else {
-        console.log("[ErrorTracker] Metric:", metricData);
-      }
-    });
+        if (logger) {
+          logger.info("Metric", metricData);
+        } else {
+          console.log("[ErrorTracker] Metric:", metricData);
+        }
+      })
+      .catch(logError => {
+        console.error("[ErrorTracker] Failed to log metric:", logError);
+        console.log("[ErrorTracker] Original metric:", metric, value, context);
+      });
   }
 }

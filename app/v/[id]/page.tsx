@@ -53,11 +53,11 @@ function VaultPageClient({ id }: { id: string }) {
   const copyVaultLink = async () => {
     try {
       const fullUrl = globalThis.window.location.href;
-      const success = await copyToClipboard(fullUrl);
-      if (success) {
+      const result = await copyToClipboard(fullUrl);
+      if (result.success) {
         toast.success('Vault link copied to clipboard');
       } else {
-        toast.error('Failed to copy link');
+        toast.error(result.error || 'Failed to copy link');
       }
     } catch {
       toast.error('Failed to copy link');
