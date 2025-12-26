@@ -34,6 +34,7 @@ next-env.d.ts
 # cloudflare
 .wrangler
 .dev.vars
+.prod.vars
 .history
 
 # OpenNext Cloudflare
