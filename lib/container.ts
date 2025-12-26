@@ -9,6 +9,7 @@ import type { D1Database } from "@cloudflare/workers-types";
 interface CloudflareEnv {
   DB: D1Database; // Required, not optional
   MASTER_ENCRYPTION_KEY: string; // Required, not optional
+  MASTER_ENCRYPTION_KEY_OLD?: string; // Optional, for key rotation
   METRICS_SECRET?: string; // Optional
 }
 
@@ -42,10 +43,15 @@ export function createContainer(env: CloudflareEnv): Container {
   console.log('[Container] Creating audit logger');
   const auditLogger = new AuditLogger(env.DB);
   console.log('[Container] Creating seal service');
+  const masterKeys = [env.MASTER_ENCRYPTION_KEY];
+  if (env.MASTER_ENCRYPTION_KEY_OLD) {
+    masterKeys.push(env.MASTER_ENCRYPTION_KEY_OLD);
+    console.log('[Container] Using dual-key rotation mode');
+  }
   const sealService = new SealService(
     storage,
     database,
-    env.MASTER_ENCRYPTION_KEY,
+    masterKeys,
     auditLogger,
   );
 

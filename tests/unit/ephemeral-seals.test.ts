@@ -33,7 +33,7 @@ describe("Ephemeral Seals", () => {
     auditLogger = {
       log: jest.fn(),
     };
-    sealService = new SealService(storage, db, masterKey, auditLogger);
+    sealService = new SealService(storage, db, [masterKey], auditLogger);
   });
 
   describe("validateEphemeralConfig", () => {

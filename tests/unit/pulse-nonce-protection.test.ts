@@ -13,7 +13,7 @@ describe("Pulse Operation Nonce Protection", () => {
   beforeEach(async () => {
     db = new MockDatabase();
     storage = new MockStorage();
-    sealService = new SealService(storage, db, masterKey);
+    sealService = new SealService(storage, db, [masterKey]);
   });
 
   it("should allow pulse renewal with valid operation nonce", async () => {

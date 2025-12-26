@@ -17,7 +17,7 @@ describe("DMS Expiration Fix", () => {
     sealService = new SealService(
       storage,
       db,
-      "test-master-key-32-bytes-long!!",
+      ["test-master-key-32-bytes-long!!"],
     );
   });
 

@@ -12,7 +12,7 @@ describe('Timed Release Unlock Logic', () => {
   beforeEach(() => {
     db = new MockDatabase();
     storage = new MockStorage();
-    sealService = new SealService(storage, db, 'test-master-key-32-bytes-long!!');
+    sealService = new SealService(storage, db, ['test-master-key-32-bytes-long!!']);
   });
 
   it('should create timed release seal without pulse interval', async () => {

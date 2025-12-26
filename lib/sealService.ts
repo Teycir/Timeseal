@@ -75,11 +75,11 @@ export class SealService {
   constructor(
     private storage: StorageProvider,
     private db: DatabaseProvider,
-    private masterKey: string,
+    private masterKeys: string[],
     private auditLogger?: AuditLogger,
   ) {
-    if (!masterKey) {
-      throw new Error("SealService requires masterKey");
+    if (!masterKeys || masterKeys.length === 0) {
+      throw new Error("SealService requires at least one masterKey");
     }
   }
 
@@ -136,12 +136,12 @@ export class SealService {
     const sealId = this.generateSealId();
     const createdAt = Date.now();
     const pulseToken = request.isDMS
-      ? await generatePulseToken(sealId, this.masterKey)
+      ? await generatePulseToken(sealId, this.masterKeys[0])
       : undefined;
 
     const encryptedKeyB = await encryptKeyB(
       request.keyB,
-      this.masterKey,
+      this.masterKeys[0],
       sealId,
     );
 
@@ -347,9 +347,7 @@ export class SealService {
     }
 
     // Decrypt key
-    const decryptedKeyB = await decryptKeyBWithFallback(seal.keyB, sealId, [
-      this.masterKey,
-    ]);
+    const decryptedKeyB = await decryptKeyBWithFallback(seal.keyB, sealId, this.masterKeys);
     metrics.incrementSealUnlocked();
 
     auditSealAccessed(sealId, ip, "unlocked");
@@ -532,7 +530,7 @@ export class SealService {
     const isValid = await validatePulseToken(
       pulseToken,
       sealId,
-      this.masterKey,
+      this.masterKeys[0],
     );
     console.log("[pulseSeal] Token signature valid:", isValid);
 
@@ -581,7 +579,7 @@ export class SealService {
     const newUnlockTime = now + intervalToUse;
     console.log("[pulseSeal] New unlock time:", newUnlockTime);
 
-    const newPulseToken = await generatePulseToken(sealId, this.masterKey);
+    const newPulseToken = await generatePulseToken(sealId, this.masterKeys[0]);
     console.log("[pulseSeal] Generated new pulse token");
 
     // FIX #6: Atomic update with observability wrapped in try-catch
@@ -668,7 +666,7 @@ export class SealService {
     const isValid = await validatePulseToken(
       pulseToken,
       sealId,
-      this.masterKey,
+      this.masterKeys[0],
     );
     console.log("[unlockSeal] Token signature valid:", isValid);
 
@@ -756,7 +754,7 @@ export class SealService {
     const isValid = await validatePulseToken(
       pulseToken,
       sealId,
-      this.masterKey,
+      this.masterKeys[0],
     );
     if (!isValid) {
       throw new Error("Invalid pulse token");
@@ -832,7 +830,7 @@ export class SealService {
 
     const key = await crypto.subtle.importKey(
       "raw",
-      encoder.encode(this.masterKey),
+      encoder.encode(this.masterKeys[0]),
       { name: "HMAC", hash: "SHA-256" },
       false,
       ["sign"],

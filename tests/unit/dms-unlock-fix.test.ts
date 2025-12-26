@@ -12,7 +12,7 @@ describe('Dead Man\'s Switch Unlock Logic', () => {
   beforeEach(() => {
     db = new MockDatabase();
     storage = new MockStorage();
-    sealService = new SealService(storage, db, 'test-master-key-32-bytes-long!!');
+    sealService = new SealService(storage, db, ['test-master-key-32-bytes-long!!']);
   });
 
   it('should reject DMS seal creation without pulse interval', async () => {

@@ -38,7 +38,7 @@ describe('Audit Logging Integration', () => {
     mockDb = new MockDatabase();
     auditLogger = new AuditLogger(mockAuditDb);
     const storage = new MockStorage();
-    sealService = new SealService(storage, mockDb, 'test-master-key-32-bytes-long!!', auditLogger);
+    sealService = new SealService(storage, mockDb, ['test-master-key-32-bytes-long!!'], auditLogger);
   });
 
   it('should log SEAL_CREATED event', async () => {
