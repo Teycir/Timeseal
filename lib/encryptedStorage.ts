@@ -90,7 +90,15 @@ export async function saveSeals(seals: StoredSeal[]): Promise<void> {
   }
   const json = JSON.stringify(seals);
   const encrypted = await encryptStorage(json);
-  localStorage.setItem(STORAGE_KEY, encrypted);
+  
+  try {
+    localStorage.setItem(STORAGE_KEY, encrypted);
+  } catch (error) {
+    if (error instanceof Error && error.name === 'QuotaExceededError') {
+      throw new Error('Storage limit exceeded. Delete old seals or download them as markdown files.');
+    }
+    throw error;
+  }
 }
 
 // Load seals (decrypted, sorted by most recent first)
@@ -115,7 +123,15 @@ export async function loadSeals(): Promise<StoredSeal[]> {
 export async function addSeal(seal: StoredSeal): Promise<void> {
   const seals = await loadSeals();
   seals.push(seal);
-  await saveSeals(seals);
+  
+  try {
+    await saveSeals(seals);
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('Storage limit exceeded')) {
+      throw error;
+    }
+    throw error;
+  }
 }
 
 // Remove seal
