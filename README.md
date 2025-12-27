@@ -15,8 +15,6 @@
   <img src="public/demo.gif" alt="TimeSeal Demo">
 </a>
 
-![YouTube Thumbnail](public/thumbnail.png)
-
 ![Time-Seal Architecture](public/explainerimage.png)
 
 ![Time-Seal Landing Page](public/landingpage.png)
