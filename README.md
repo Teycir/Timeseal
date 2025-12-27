@@ -386,12 +386,12 @@ sequenceDiagram
 
 **Automatic Encrypted Storage:**
 
-- All created seals are automatically saved encrypted in your browser's localStorage
+- All vault links are automatically saved encrypted in your browser's localStorage
 - Encryption uses AES-GCM-256 with a unique key per browser
-- Access your saved seals anytime from the dashboard at /dashboard
-- No server-side storage - your vault links never leave your device
+- Access your saved vault links anytime from the dashboard at /dashboard
+- Vault links are stored locally only (not sent to server)
 - Data persists until you clear browser data
-- **Storage limit:** ~5MB total (browser localStorage limit) - approximately 50-100 seals depending on content size
+- **Storage limit:** ~5MB total (browser localStorage limit) - approximately 50-100 vault links depending on content size
 
 **Best practices:**
 
@@ -410,13 +410,13 @@ sequenceDiagram
 4. Delete seals you no longer need
 
 **How it works:**
-- Seals are automatically encrypted with AES-GCM-256 when created
+- Vault links are automatically encrypted with AES-GCM-256 when created
 - Stored in your browser's localStorage (never sent to server)
 - Unique encryption key per browser
 - Access from any page via the dashboard link
 - **Storage limit:** ~5MB (browser localStorage limit)
 
-**Note:** Saved seals are stored locally in your browser only. They are NOT synced to the server or across devices. Clearing browser data will delete your saved vault links (but the seals remain in the database). If you reach the storage limit, delete old saved links or download them as markdown files for offline backup.
+**Note:** Only vault links are stored locally in your browser. The actual seals (encrypted content) are always in the D1 database. Clearing browser data only deletes your local vault links - the seals remain accessible if you have the link saved elsewhere. If you reach the storage limit, delete old saved links or download them as markdown files for offline backup.
 
 ### What happens if I lose the vault link?
 
