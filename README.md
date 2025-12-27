@@ -391,6 +391,7 @@ sequenceDiagram
 - Access your saved seals anytime from the dashboard at /dashboard
 - No server-side storage - your vault links never leave your device
 - Data persists until you clear browser data
+- **Storage limit:** ~5MB total (browser localStorage limit) - approximately 50-100 seals depending on content size
 
 **Best practices:**
 
@@ -413,8 +414,9 @@ sequenceDiagram
 - Stored in your browser's localStorage (never sent to server)
 - Unique encryption key per browser
 - Access from any page via the dashboard link
+- **Storage limit:** ~5MB (browser localStorage limit)
 
-**Note:** Saved seals are stored locally in your browser only. They are NOT synced to the server or across devices. Clearing browser data will delete saved seals.
+**Note:** Saved seals are stored locally in your browser only. They are NOT synced to the server or across devices. Clearing browser data will delete saved seals. If you reach the storage limit, delete old seals or download them as markdown files for offline backup.
 
 ### What happens if I lose the vault link?
 
