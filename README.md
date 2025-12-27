@@ -9,7 +9,7 @@
 
 **Send digital time capsules that are impossible to open until the date you choose.**
 
-![TimeSeal Demo](public/demo.gif)
+[![TimeSeal Demo](public/demo.gif)](https://www.youtube.com/watch?v=7nwcL-pt0pA)
 
 ![YouTube Thumbnail](public/thumbnail.png)
 
