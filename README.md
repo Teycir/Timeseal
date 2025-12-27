@@ -535,7 +535,7 @@ After encryption, the file becomes ~750KB which fits within the 1MB database lim
    - Deploy your own instance
    - Configure `MAX_DURATION_DAYS` to any value
    - Remove auto-deletion cron job
-   - See [SELF-HOSTING.md](docs/SELF-HOSTING.md)
+   - See [SELF-HOSTING.md](docs/deployment/SELF-HOSTING.md)
 
    ```typescript
    // In your self-hosted instance
@@ -617,7 +617,7 @@ Contact for commercial licensing: [https://teycirbensoltane.tn](https://teycirbe
 
 ### How do I self-host Time-Seal?
 
-See [SELF-HOSTING.md](docs/SELF-HOSTING.md) for complete guide.
+See [SELF-HOSTING.md](docs/deployment/SELF-HOSTING.md) for complete guide.
 
 **Requirements:**
 
@@ -778,7 +778,7 @@ Stage 4 (Week 4): "Final Exam [link]"
 **✅ Warrant Canary** - Live transparency status at /canary  
 **✅ Self-Hosting** - Deploy your own instance to eliminate infrastructure trust
 
-See [HARDENING.md](docs/HARDENING.md) for full details.
+See [HARDENING.md](docs/security/HARDENING.md) for full details.
 
 ### 🕊️ Warrant Canary - Transparency by Design
 
@@ -936,35 +936,35 @@ wrangler secret put MASTER_ENCRYPTION_KEY
 ## 📚 Documentation
 
 ### Core Documentation
-- [API Reference](docs/API.md) - Complete REST API documentation
-- [Architecture Guide](docs/ARCHITECTURE.md) - Design patterns and abstractions
-- [Reusable Libraries](docs/REUSABLE-LIBRARIES.md) - Extracted library documentation
-- [Libraries Quick Reference](docs/LIBRARIES-QUICK-REF.md) - Quick reference cheat sheet
+- [API Reference](docs/core/API.md) - Complete REST API documentation
+- [Architecture Guide](docs/core/ARCHITECTURE.md) - Design patterns and abstractions
+- [Reusable Libraries](docs/core/REUSABLE-LIBRARIES.md) - Extracted library documentation
+- [Libraries Quick Reference](docs/core/LIBRARIES-QUICK-REF.md) - Quick reference cheat sheet
 
 ### Deployment & Operations
-- [Deployment Guide](docs/DEPLOYMENT.md) - Cloudflare setup instructions
-- [Self-Hosting Guide](docs/SELF-HOSTING.md) - Deploy your own instance
-- [Domain Migration Guide](docs/DOMAIN-MIGRATION-LEARNINGS.md) - Custom domain setup and troubleshooting
-- [Analytics Setup](docs/ANALYTICS.md) - Privacy-first analytics implementation
+- [Deployment Guide](docs/deployment/DEPLOYMENT.md) - Cloudflare setup instructions
+- [Self-Hosting Guide](docs/deployment/SELF-HOSTING.md) - Deploy your own instance
+- [Domain Migration Guide](docs/deployment/DOMAIN-MIGRATION-LEARNINGS.md) - Custom domain setup and troubleshooting
+- [Analytics Setup](docs/deployment/ANALYTICS.md) - Privacy-first analytics implementation
 
 ### Security
-- [Security Documentation](docs/SECURITY.md) - Threat model and security controls
-- [Defense Audit Report](docs/DEFENSE-AUDIT.md) - Comprehensive security audit (v1.0.0)
-- [Trust Assumptions](docs/TRUST-ASSUMPTIONS.md) - What you must trust to use TimeSeal
-- [Hardening Guide](docs/HARDENING.md) - Mitigations for highest-priority threats
-- [Security Enhancements](docs/SECURITY-ENHANCEMENTS.md) - Key rotation, upload limits, integrity
-- [Key Rotation Guide](docs/KEY-ROTATION.md) - Master key rotation procedures
-- [Security Testing](docs/SECURITY-TESTING.md) - Penetration testing guide
-- [Audit Logging](docs/AUDIT-LOGGING.md) - Immutable audit trail for all operations
+- [Security Documentation](docs/security/SECURITY.md) - Threat model and security controls
+- [Defense Audit Report](docs/security/DEFENSE-AUDIT.md) - Comprehensive security audit (v1.0.0)
+- [Trust Assumptions](docs/security/TRUST-ASSUMPTIONS.md) - What you must trust to use TimeSeal
+- [Hardening Guide](docs/security/HARDENING.md) - Mitigations for highest-priority threats
+- [Security Enhancements](docs/security/SECURITY-ENHANCEMENTS.md) - Key rotation, upload limits, integrity
+- [Key Rotation Guide](docs/security/KEY-ROTATION.md) - Master key rotation procedures
+- [Security Testing](docs/security/SECURITY-TESTING.md) - Penetration testing guide
+- [Audit Logging](docs/security/AUDIT-LOGGING.md) - Immutable audit trail for all operations
 
 ### Testing & Quality
-- [Testing Guide](docs/TESTING.md) - Complete testing documentation
-- [Testing Infrastructure](docs/TESTING-INFRASTRUCTURE.md) - Test setup and configuration
+- [Testing Guide](docs/testing/TESTING.md) - Complete testing documentation
+- [Testing Infrastructure](docs/testing/TESTING-INFRASTRUCTURE.md) - Test setup and configuration
 
 ### Legal & Transparency
-- [Transparency Reports](docs/TRANSPARENCY-REPORT-TEMPLATE.md) - Quarterly legal disclosure
-- [Changelog](docs/CHANGELOG.md) - Version history and changes
-- [TODO](docs/TODO.md) - Production readiness checklist
+- [Transparency Reports](docs/legal/TRANSPARENCY-REPORT-TEMPLATE.md) - Quarterly legal disclosure
+- [Changelog](docs/legal/CHANGELOG.md) - Version history and changes
+- [TODO](docs/legal/TODO.md) - Production readiness checklist
 
 This project is licensed under the **Business Source License (BSL)**.
 
