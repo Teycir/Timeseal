@@ -5,7 +5,9 @@
 ![Storage](https://img.shields.io/badge/Storage-D1_Database-neon_green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Operational-neon_green?style=for-the-badge)
 
-![Time-Seal Animation](public/timeseal_ascii.svg)
+<a href="https://timeseal.online">
+  <img src="public/timeseal_ascii.svg" alt="Time-Seal Animation">
+</a>
 
 **Send digital time capsules that are impossible to open until the date you choose.**
 
