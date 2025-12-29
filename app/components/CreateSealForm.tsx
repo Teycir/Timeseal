@@ -28,6 +28,9 @@ import {
   Trash2,
   AlertTriangle,
   Calendar,
+  Megaphone,
+  LifeBuoy,
+  KeyRound,
 } from "lucide-react";
 import { triggerHaptic } from "@/lib/mobile";
 
@@ -81,7 +84,7 @@ const TEMPLATES: Template[] = [
   {
     name: "Whistleblower",
     icon: (
-      <ShieldAlert className="w-6 h-6 text-neon-green drop-shadow-[0_0_5px_rgba(0,255,65,0.5)]" />
+      <Megaphone className="w-6 h-6 text-neon-green drop-shadow-[0_0_5px_rgba(0,255,65,0.5)]" />
     ),
     type: "deadman",
     placeholder:
@@ -143,7 +146,7 @@ const TEMPLATES: Template[] = [
   {
     name: "Emergency Backup",
     icon: (
-      <ShieldAlert className="w-6 h-6 text-neon-green drop-shadow-[0_0_5px_rgba(0,255,65,0.5)]" />
+      <LifeBuoy className="w-6 h-6 text-neon-green drop-shadow-[0_0_5px_rgba(0,255,65,0.5)]" />
     ),
     type: "deadman",
     placeholder: "Emergency contacts: ...\nAccount recovery codes: ...\nImportant instructions: ...",
@@ -154,7 +157,7 @@ const TEMPLATES: Template[] = [
   {
     name: "Shared Secret",
     icon: (
-      <ShieldAlert className="w-6 h-6 text-neon-green drop-shadow-[0_0_5px_rgba(0,255,65,0.5)]" />
+      <KeyRound className="w-6 h-6 text-neon-green drop-shadow-[0_0_5px_rgba(0,255,65,0.5)]" />
     ),
     type: "ephemeral",
     placeholder: "API Key: ...\nValid until: ...\nUse immediately and securely",
