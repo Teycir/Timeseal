@@ -19,7 +19,15 @@ export default function HowItWorksPage() {
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold glow-text mb-4 px-2">
             <DecryptedText text="HOW IT WORKS" animateOn="view" className="text-neon-green" speed={75} maxIterations={20} />
           </h1>
-          <p className="text-neon-green/70 text-sm sm:text-base px-4">Zero-Trust • Edge-Native</p>
+          <p className="text-neon-green/70 text-sm sm:text-base px-4 mb-6">Zero-Trust • Edge-Native</p>
+          <a 
+            href="https://www.youtube.com/watch?v=7nwcL-pt0pA" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-neon-green hover:text-neon-green/80 transition-colors text-sm sm:text-base"
+          >
+            <span>📺 Watch Explainer Video</span>
+          </a>
         </motion.div>
 
         <Card className="p-4 sm:p-6 md:p-8 space-y-6">
