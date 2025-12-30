@@ -27,6 +27,21 @@
 
 ---
 
+## 📑 Table of Contents
+
+- [Overview](#-overview)
+- [Architecture](#️-architecture)
+- [Logic Flow](#-logic-flow)
+- [Use Cases](#-use-cases)
+- [FAQ: How It Works](#-faq-how-it-works)
+- [Security: Attack Scenarios](#️-security-attack-scenarios)
+- [Tech Stack](#️-tech-stack)
+- [Quick Start](#-quick-start)
+- [Documentation](#-documentation)
+- [Services Offered](#-services-offered)
+
+---
+
 ## ⚡ Overview
 
 **TIME-SEAL** is a cryptographically enforced time-locked vault system built on Cloudflare's edge infrastructure. It allows you to encrypt a file or message that **mathematically cannot be opened** until a specific moment in the future.
@@ -974,6 +989,18 @@ This project is licensed under the **Business Source License (BSL)**.
 - **Converts to Apache 2.0 after 4 years**
 
 See [LICENSE](LICENSE) for full terms.
+
+---
+
+## 💼 Services Offered
+
+- 🔒 **Privacy-First Development** - P2P applications, encrypted communication, zero-knowledge systems
+- 🚀 **Web Application Development** - Full-stack development with Next.js, React, TypeScript
+- 🔧 **WebRTC Solutions** - Real-time communication, video/audio streaming, data channels
+- 🛡️ **Security Tool Development** - Burp extensions, penetration testing tools, automation frameworks
+- 🤖 **AI Integration** - LLM-powered applications, intelligent automation, custom AI solutions
+
+**Get in Touch**: [teycirbensoltane.tn](https://teycirbensoltane.tn) | Available for freelance projects and consulting
 
 ---
 
