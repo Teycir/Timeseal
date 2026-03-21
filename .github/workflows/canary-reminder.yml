@@ -1,12 +1,22 @@
 name: Warrant Canary Reminder
 
 on:
+  push:
+    branches: [master, main]
   schedule:
     - cron: '0 0 1 * *'  # First day of every month at midnight UTC
   workflow_dispatch:  # Allow manual trigger
 
 jobs:
+  noop_on_push:
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Canary workflow noop on push
+        run: echo "Warrant Canary reminder runs on schedule/workflow_dispatch."
+
   remind:
+    if: ${{ github.event_name != 'push' }}
     runs-on: ubuntu-latest
     steps:
       - name: Create Issue
@@ -15,13 +25,13 @@ jobs:
           script: |
             const today = new Date().toISOString().split('T')[0];
             const nextMonth = new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0];
-            
+
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: `🔐 Update Warrant Canary - ${today}`,
               body: `## Monthly Warrant Canary Update
-              
+
 **Action Required:** Update and sign the warrant canary.
 
 ### Steps:
