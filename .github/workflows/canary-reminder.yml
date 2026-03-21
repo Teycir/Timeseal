@@ -4,8 +4,12 @@ on:
   push:
     branches: [master, main]
   schedule:
-    - cron: '0 0 1 * *'  # First day of every month at midnight UTC
-  workflow_dispatch:  # Allow manual trigger
+    - cron: '0 0 1 * *' # First day of every month at midnight UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
 
 jobs:
   noop_on_push:
@@ -19,38 +23,43 @@ jobs:
     if: ${{ github.event_name != 'push' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Create Issue
+      - name: Create issue reminder
         uses: actions/github-script@v7
         with:
           script: |
-            const today = new Date().toISOString().split('T')[0];
-            const nextMonth = new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0];
+            const today = new Date().toISOString().slice(0, 10);
+            const nextMonth = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+            const title = `🔐 Update Warrant Canary - ${today}`;
+            const body = [
+              '## Monthly Warrant Canary Update',
+              '',
+              '**Action Required:** Update and sign the warrant canary.',
+              '',
+              '### Steps:',
+              '1. Run: `./scripts/sign-canary.sh`',
+              '2. Review `public/canary.txt`',
+              '3. Commit: `git add public/canary.txt public/pgp-key.asc`',
+              `4. Push: \`git commit -m "Update warrant canary ${today}" && git push\``,
+              '5. Deploy: `npm run deploy`',
+              '6. Close this issue',
+              '',
+              '### Checklist:',
+              '- [ ] No warrants received',
+              '- [ ] No subpoenas received',
+              '- [ ] No NSLs received',
+              '- [ ] No government requests',
+              '- [ ] No forced time manipulation',
+              '- [ ] Infrastructure under control',
+              '- [ ] No backdoors or compromises',
+              '',
+              `**Next update:** ${nextMonth}`,
+            ].join('\n');
 
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `🔐 Update Warrant Canary - ${today}`,
-              body: `## Monthly Warrant Canary Update
-
-**Action Required:** Update and sign the warrant canary.
-
-### Steps:
-1. Run: \`./scripts/sign-canary.sh\`
-2. Review \`public/canary.txt\`
-3. Commit: \`git add public/canary.txt public/pgp-key.asc\`
-4. Push: \`git commit -m "Update warrant canary ${today}" && git push\`
-5. Deploy: \`npm run deploy\`
-6. Close this issue
-
-### Checklist:
-- [ ] No warrants received
-- [ ] No subpoenas received
-- [ ] No NSLs received
-- [ ] No government requests
-- [ ] No forced time manipulation
-- [ ] Infrastructure under control
-- [ ] No backdoors or compromises
-
-**Next update:** ${nextMonth}`,
-              labels: ['security', 'canary', 'monthly']
+              title,
+              body,
+              labels: ['security', 'canary', 'monthly'],
             });
