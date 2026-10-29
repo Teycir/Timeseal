@@ -5,6 +5,7 @@ import { BackgroundBeams } from '../components/ui/background-beams';
 import { Card } from '../components/Card';
 import DecryptedText from '../components/DecryptedText';
 import { Lock, Handshake, Activity, ShieldCheck, ClipboardList, Trash2, Eye } from 'lucide-react';
+import Link from 'next/link';
 
 export default function HowItWorksPage() {
   return (
@@ -223,9 +224,9 @@ export default function HowItWorksPage() {
         </Card>
 
         <div className="text-center pt-4">
-          <a href="/" className="cyber-button inline-block">
+          <Link href="/" className="cyber-button inline-block">
             CREATE YOUR SEAL
-          </a>
+          </Link>
         </div>
       </div>
     </div>

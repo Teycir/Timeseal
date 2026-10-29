@@ -9,7 +9,7 @@ interface CountdownProps {
 }
 
 export function Countdown({ unlockTime, onUnlock }: CountdownProps) {
-  const [timeLeft, setTimeLeft] = useState(unlockTime - Date.now());
+  const [timeLeft, setTimeLeft] = useState(() => unlockTime - Date.now());
 
   useEffect(() => {
     const interval = setInterval(() => {

@@ -172,7 +172,7 @@ ${seal.type === "ephemeral" ? `- Ephemeral seals delete automatically after ${se
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `timeseal-${seal.id}-${Date.now()}.md`;
+    a.download = `timeseal-${seal.id}-${+new Date()}.md`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -182,7 +182,7 @@ ${seal.type === "ephemeral" ? `- Ephemeral seals delete automatically after ${se
 
   const formatTimeLeft = (unlockTime: number) => {
     if (unlockTime === -1) return "DESTROYED";
-    const ms = unlockTime - Date.now();
+    const ms = unlockTime - +new Date();
     if (ms <= 0) return "UNLOCKED";
 
     const days = Math.floor(ms / (1000 * 60 * 60 * 24));

@@ -5,6 +5,7 @@ import { BackgroundBeams } from '../components/ui/background-beams';
 import { Card } from '../components/Card';
 import DecryptedText from '../components/DecryptedText';
 import { Lock, Server, ShieldCheck, AlertTriangle, BookOpen, CheckCircle2 } from 'lucide-react';
+import Link from 'next/link';
 
 export default function SecurityPage() {
   return (
@@ -283,9 +284,9 @@ export default function SecurityPage() {
         </Card>
 
         <div className="text-center pt-4">
-          <a href="/" className="cyber-button inline-block">
+          <Link href="/" className="cyber-button inline-block">
             CREATE YOUR SEAL
-          </a>
+          </Link>
         </div>
       </div>
     </div>

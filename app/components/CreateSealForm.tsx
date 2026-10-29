@@ -985,7 +985,7 @@ export function CreateSealForm({
                         timeIntervals={15}
                         dateFormat="MMMM d, yyyy h:mm aa"
                         minDate={new Date()}
-                        maxDate={new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)}
+                        maxDate={new Date(+new Date() + 30 * 24 * 60 * 60 * 1000)}
                         className="cyber-input w-full pr-12"
                         calendarClassName="cyber-calendar"
                         wrapperClassName="w-full"

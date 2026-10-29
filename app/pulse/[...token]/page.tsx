@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { BackgroundBeams } from "@/app/components/ui/background-beams";
 import { Card } from "@/app/components/Card";
 import { Button } from "@/app/components/Button";
@@ -15,9 +15,11 @@ import {
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
+import Link from "next/link";
 
 export default function PulsePage() {
   const navParams = useParams();
+  const router = useRouter();
   const [status, setStatus] = useState<
     "loading" | "confirm" | "success" | "error"
   >("loading");
@@ -325,19 +327,19 @@ export default function PulsePage() {
             </Button>
             <div className="flex gap-3 mb-2">
               <Button
-                onClick={() => window.location.href = "/"}
+                onClick={() => router.push("/")}
                 variant="primary"
                 className="w-full"
               >
                 CREATE NEW SEAL
               </Button>
             </div>
-            <a
+            <Link
               href="/"
               className="text-neon-green/50 text-sm hover:text-neon-green/70"
             >
               Cancel
-            </a>
+            </Link>
           </>
         )}
 
@@ -363,7 +365,7 @@ export default function PulsePage() {
               {actionType === "renew" && (
                 <Button
                   onClick={() => {
-                    globalThis.location.href = `/pulse/${encodeURIComponent(currentToken)}`;
+                    router.push(`/pulse/${encodeURIComponent(currentToken)}`);
                   }}
                   className="flex-1"
                 >
@@ -371,12 +373,12 @@ export default function PulsePage() {
                 </Button>
               )}
               {actionType !== "delete" && (
-                <Button onClick={() => window.location.href = "/"} className="flex-1">
+                <Button onClick={() => router.push("/")} className="flex-1">
                   RETURN HOME
                 </Button>
               )}
               {actionType === "delete" && (
-                <Button onClick={() => window.location.href = "/"} className="w-full">
+                <Button onClick={() => router.push("/")} className="w-full">
                   RETURN HOME
                 </Button>
               )}
@@ -414,7 +416,7 @@ export default function PulsePage() {
               >
                 TRY AGAIN
               </Button>
-              <Button onClick={() => window.location.href = "/"} className="flex-1">
+              <Button onClick={() => router.push("/")} className="flex-1">
                 RETURN HOME
               </Button>
             </div>

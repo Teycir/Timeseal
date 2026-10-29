@@ -4,6 +4,7 @@ import { Shield, CheckCircle, Calendar, AlertTriangle, RefreshCw } from 'lucide-
 import { motion } from 'framer-motion';
 import { BackgroundBeams } from '../components/ui/background-beams';
 import DecryptedText from '../components/DecryptedText';
+import Link from 'next/link';
 
 export default function CanaryPage() {
   const today = new Date();
@@ -140,9 +141,9 @@ export default function CanaryPage() {
 
         {/* Footer */}
         <div className="text-center pt-4">
-          <a href="/" className="cyber-button inline-block">
+          <Link href="/" className="cyber-button inline-block">
             CREATE YOUR SEAL
-          </a>
+          </Link>
         </div>
       </div>
     </div>

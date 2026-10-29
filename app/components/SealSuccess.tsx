@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Card } from "./Card";
@@ -57,6 +57,15 @@ export function SealSuccess({
     generateQR();
   }, [publicUrl]);
 
+  const copyToClipboard = useCallback(async (text: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(`${label} copied to clipboard`);
+    } catch {
+      toast.error("Failed to copy to clipboard");
+    }
+  }, []);
+
   useEffect(() => {
     const handleKeyboard = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "k") {
@@ -79,16 +88,7 @@ export function SealSuccess({
     };
     window.addEventListener("keydown", handleKeyboard);
     return () => window.removeEventListener("keydown", handleKeyboard);
-  }, [publicUrl, pulseUrl, pulseToken]);
-
-  const copyToClipboard = async (text: string, label: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      toast.success(`${label} copied to clipboard`);
-    } catch {
-      toast.error("Failed to copy to clipboard");
-    }
-  };
+  }, [publicUrl, pulseUrl, pulseToken, copyToClipboard]);
 
   const getSubtitleText = () => {
     if (sealType === "ephemeral") {

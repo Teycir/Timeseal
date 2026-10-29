@@ -11,7 +11,10 @@ export function useTextScramble(
   const scramblerRef = useRef<TextScrambler | null>(null);
   const hasAnimatedRef = useRef(false);
   const configRef = useRef(config);
-  configRef.current = config;
+
+  useEffect(() => {
+    configRef.current = config;
+  });
 
   const scramble = useCallback(() => {
     if (!scramblerRef.current) {

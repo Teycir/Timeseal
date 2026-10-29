@@ -9,7 +9,7 @@ export interface UseCountdownOptions {
 
 export function useCountdown(unlockTime: number, options: UseCountdownOptions = {}) {
   const { onComplete, interval = 1000, autoStart = true } = options;
-  const [timeRemaining, setTimeRemaining] = useState(Math.max(0, unlockTime - Date.now()));
+  const [timeRemaining, setTimeRemaining] = useState(() => Math.max(0, unlockTime - Date.now()));
   const [isRunning, setIsRunning] = useState(autoStart);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -99,7 +99,7 @@ export function useDebounce<T>(value: T, delay: number): T {
 
 export function useThrottle<T>(value: T, limit: number): T {
   const [throttledValue, setThrottledValue] = useState<T>(value);
-  const lastRan = useRef(Date.now());
+  const lastRan = useRef(0);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -179,7 +179,8 @@ export function useAsync<T>(asyncFunction: () => Promise<T>, immediate = true) {
 
   useEffect(() => {
     if (immediate) {
-      execute();
+      // Defer to avoid synchronous setState-in-effect
+      setTimeout(execute, 0);
     }
   }, [execute, immediate]);
 

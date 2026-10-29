@@ -13,6 +13,7 @@ import { Lock, AlertTriangle, Hourglass, Copy, Download, Share2 } from 'lucide-r
 import { ErrorLogger } from '@/lib/errorLogger';
 import { triggerHaptic, shareContent, copyToClipboard, isMobile } from '@/lib/mobile';
 import { BottomSheet } from '../../components/BottomSheet';
+import Link from 'next/link';
 
 interface SealStatus {
   id: string;
@@ -316,9 +317,9 @@ function VaultPageClient({ id }: { id: string }) {
               </details>
             )}
           </Card>
-          <a href="/" className="cyber-button inline-block hover:shadow-[0_0_30px_rgba(255,0,0,0.4)] hover:border-red-500/50">
+          <Link href="/" className="cyber-button inline-block hover:shadow-[0_0_30px_rgba(255,0,0,0.4)] hover:border-red-500/50">
             CREATE NEW SEAL
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -463,9 +464,9 @@ function VaultPageClient({ id }: { id: string }) {
             transition={{ delay: 1.7 }}
             className="text-center"
           >
-            <a href="/" className="cyber-button text-sm sm:text-base md:text-lg px-4 sm:px-6 md:px-8 py-3 sm:py-4">
+            <Link href="/" className="cyber-button text-sm sm:text-base md:text-lg px-4 sm:px-6 md:px-8 py-3 sm:py-4">
               CREATE YOUR OWN TIME-SEAL
-            </a>
+            </Link>
           </motion.div>
         </motion.div>
       </div>
@@ -577,9 +578,9 @@ function VaultPageClient({ id }: { id: string }) {
             It cannot be opened early, even by the creator.
           </p>
 
-          <a href="/" className="cyber-button inline-block text-sm opacity-80 hover:opacity-100">
+          <Link href="/" className="cyber-button inline-block text-sm opacity-80 hover:opacity-100">
             CREATE YOUR OWN TIME-SEAL
-          </a>
+          </Link>
         </div>
       </div>
     </div>

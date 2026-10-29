@@ -1,17 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AlertTriangle, Shield, X } from 'lucide-react';
 import { detectSuspiciousExtensions, type SecurityWarning } from '@/lib/extensionDetection';
 
 export function SecurityDashboard() {
-  const [warnings, setWarnings] = useState<SecurityWarning[]>([]);
+  const [warnings] = useState(() => typeof window !== 'undefined' ? detectSuspiciousExtensions() : []);
   const [dismissed, setDismissed] = useState(false);
-
-  useEffect(() => {
-    const detected = detectSuspiciousExtensions();
-    setWarnings(detected);
-  }, []);
 
   if (dismissed || warnings.length === 0) return null;
 
