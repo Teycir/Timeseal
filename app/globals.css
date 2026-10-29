@@ -493,47 +493,6 @@ select option:hover {
   color: var(--dark-bg) !important;
 }
 
-/* Shimmer Border Effect */
-@property --angle {
-  syntax: "<angle>";
-  initial-value: 0deg;
-  inherits: false;
-}
-
-@keyframes shimmer-conic-spin {
-  from {
-    --angle: 0deg;
-  }
-  to {
-    --angle: 360deg;
-  }
-}
-
-.shimmer-border {
-  position: relative;
-  border: 1px solid transparent; /* Fallback */
-  background: 
-    linear-gradient(rgba(10, 10, 10, 0.8), rgba(10, 10, 10, 0.8)) padding-box,
-    conic-gradient(from var(--angle), transparent 70%, var(--neon-green)) border-box;
-  animation: shimmer-conic-spin 4s linear infinite;
-  transform: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .shimmer-border {
-    animation: none;
-  }
-}
-
-/* Ensure backdrop blur still works if needed, though background covers it */
-.shimmer-border::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  background: inherit;
-}
 
 /* Seal Type Button Styles */
 .seal-type-button {
