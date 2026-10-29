@@ -500,7 +500,7 @@ select option:hover {
   inherits: false;
 }
 
-@keyframes spin {
+@keyframes shimmer-conic-spin {
   from {
     --angle: 0deg;
   }
@@ -515,7 +515,14 @@ select option:hover {
   background: 
     linear-gradient(rgba(10, 10, 10, 0.8), rgba(10, 10, 10, 0.8)) padding-box,
     conic-gradient(from var(--angle), transparent 70%, var(--neon-green)) border-box;
-  animation: spin 4s linear infinite;
+  animation: shimmer-conic-spin 4s linear infinite;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer-border {
+    animation: none;
+  }
 }
 
 /* Ensure backdrop blur still works if needed, though background covers it */
