@@ -1,5 +1,5 @@
 // Test: Dual-key rotation for master encryption key
-import { describe, it, expect, beforeEach } from "@jest/globals";
+import { describe, it, expect, beforeEach, afterEach, jest } from "@jest/globals";
 import { SealService } from "@/lib/sealService";
 import { MockStorage } from "@/lib/storage";
 import { MockDatabase } from "@/lib/database";
@@ -10,9 +10,21 @@ describe("Master Key Rotation", () => {
   const oldKey = "old-master-key-32-bytes-long!!";
   const newKey = "new-master-key-32-bytes-long!!";
 
+  // Unlock times must be >= 1 minute in the future, so tests create seals 2 minutes
+  // out and fast-forward the clock instead of sleeping.
+  const UNLOCK_DELAY = 2 * 60 * 1000;
+  const advancePastUnlock = () => {
+    const realNow = Date.now();
+    jest.spyOn(Date, "now").mockReturnValue(realNow + UNLOCK_DELAY + 1000);
+  };
+
   beforeEach(() => {
     storage = new MockStorage();
     db = new MockDatabase();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it("should encrypt new seals with new key (masterKeys[0])", async () => {
@@ -24,7 +36,7 @@ describe("Master Key Rotation", () => {
         encryptedBlob,
         keyB: "test-key-b",
         iv: "test-iv",
-        unlockTime: Date.now() + 1000,
+        unlockTime: Date.now() + UNLOCK_DELAY,
         isDMS: false,
       },
       "127.0.0.1",
@@ -48,14 +60,13 @@ describe("Master Key Rotation", () => {
         encryptedBlob,
         keyB: "test-key-b",
         iv: "test-iv",
-        unlockTime: Date.now() + 100,
+        unlockTime: Date.now() + UNLOCK_DELAY,
         isDMS: false,
       },
       "127.0.0.1",
     );
 
-    // Wait for unlock
-    await new Promise(resolve => setTimeout(resolve, 150));
+    advancePastUnlock();
 
     // Try to decrypt with new service (has both keys)
     const newService = new SealService(storage, db, [newKey, oldKey]);
@@ -76,13 +87,13 @@ describe("Master Key Rotation", () => {
         encryptedBlob,
         keyB: "test-key-b",
         iv: "test-iv",
-        unlockTime: Date.now() + 100,
+        unlockTime: Date.now() + UNLOCK_DELAY,
         isDMS: false,
       },
       "127.0.0.1",
     );
 
-    await new Promise(resolve => setTimeout(resolve, 150));
+    advancePastUnlock();
 
     // Try to decrypt with only new key (no fallback)
     const newServiceOnly = new SealService(storage, db, [newKey]);
@@ -101,13 +112,13 @@ describe("Master Key Rotation", () => {
         encryptedBlob,
         keyB: "test-key-b",
         iv: "test-iv",
-        unlockTime: Date.now() + 100,
+        unlockTime: Date.now() + UNLOCK_DELAY,
         isDMS: false,
       },
       "127.0.0.1",
     );
 
-    await new Promise(resolve => setTimeout(resolve, 150));
+    advancePastUnlock();
 
     const seal = await sealService.getSeal(result.sealId, "127.0.0.1");
     
@@ -126,13 +137,13 @@ describe("Master Key Rotation", () => {
         encryptedBlob,
         keyB: "test-key-b",
         iv: "test-iv",
-        unlockTime: Date.now() + 100,
+        unlockTime: Date.now() + UNLOCK_DELAY,
         isDMS: false,
       },
       "127.0.0.1",
     );
 
-    await new Promise(resolve => setTimeout(resolve, 150));
+    advancePastUnlock();
 
     // Should decrypt successfully with new key (first in array)
     const seal = await sealService.getSeal(result.sealId, "127.0.0.1");
