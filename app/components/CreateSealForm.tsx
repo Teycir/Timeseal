@@ -628,16 +628,15 @@ export function CreateSealForm({
   return (
     <motion.div
       key="form"
-      layoutId="main-card"
       variants={containerVariants}
       initial="hidden"
       animate="show"
       exit={{ opacity: 0, x: 20, filter: "blur(10px)" }}
       className="space-y-4"
     >
-      <motion.div variants={itemVariants} layoutId="header" className="text-center">
+      <motion.div variants={itemVariants} className="text-center">
         <SecurityFeaturesBanner />
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold glow-text pulse-glow mb-4 px-2">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold glow-text mb-4 px-2">
           <DecryptedText
             text="TIME-SEAL"
             animateOn="view"

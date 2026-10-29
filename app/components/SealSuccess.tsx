@@ -100,14 +100,13 @@ export function SealSuccess({
   return (
     <motion.div
       key="result"
-      layoutId="main-card"
       initial={{ opacity: 0, x: -20, filter: "blur(10px)" }}
       animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
       exit={{ opacity: 0, x: 20, filter: "blur(10px)" }}
       transition={{ duration: 0.3 }}
       className="space-y-8"
     >
-      <motion.div layoutId="header" className="text-center">
+      <motion.div className="text-center">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold glow-text pulse-glow mb-4 px-2">
           SEAL CREATED
         </h1>

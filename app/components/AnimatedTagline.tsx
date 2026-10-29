@@ -1,8 +1,9 @@
 'use client';
 
+import { memo } from 'react';
 import { motion } from 'framer-motion';
 
-export function AnimatedTagline({ text }: { text: string }) {
+export const AnimatedTagline = memo(function AnimatedTagline({ text }: { text: string }) {
   const chars = text.split('');
 
   return (
@@ -38,4 +39,4 @@ export function AnimatedTagline({ text }: { text: string }) {
       ))}
     </motion.p>
   );
-}
+});

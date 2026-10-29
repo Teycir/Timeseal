@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-export const BackgroundBeams = ({ className }: { className?: string }) => {
+export const BackgroundBeams = React.memo(function BackgroundBeams({ className }: { className?: string }) {
   const [beams, setBeams] = useState<
     { id: number; path: string; duration: number; delay: number }[]
   >([]);
@@ -77,4 +77,4 @@ export const BackgroundBeams = ({ className }: { className?: string }) => {
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-neon-green/5 to-transparent blur-3xl opacity-20 pointer-events-none" />
     </div>
   );
-};
+});

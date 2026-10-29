@@ -10,14 +10,16 @@ export function useTextScramble(
   const [isScrambling, setIsScrambling] = useState(false);
   const scramblerRef = useRef<TextScrambler | null>(null);
   const hasAnimatedRef = useRef(false);
+  const configRef = useRef(config);
+  configRef.current = config;
 
   const scramble = useCallback(() => {
     if (!scramblerRef.current) {
       scramblerRef.current = new TextScrambler({
-        speed: config.speed,
-        maxIterations: config.maxIterations,
-        characters: config.characters,
-        useOriginalCharsOnly: config.useOriginalCharsOnly,
+        speed: configRef.current.speed,
+        maxIterations: configRef.current.maxIterations,
+        characters: configRef.current.characters,
+        useOriginalCharsOnly: configRef.current.useOriginalCharsOnly,
       });
     }
 
@@ -30,10 +32,10 @@ export function useTextScramble(
         hasAnimatedRef.current = true;
       }
     );
-  }, [text, config.speed, config.maxIterations, config.characters, config.useOriginalCharsOnly]);
+  }, [text]);
 
   useEffect(() => {
-    if (config.animateOn === 'view' && !hasAnimatedRef.current) {
+    if (configRef.current.animateOn === 'view' && !hasAnimatedRef.current) {
       const timer = setTimeout(() => {
         scramble();
       }, 100);
@@ -42,8 +44,7 @@ export function useTextScramble(
         scramblerRef.current?.stop();
       };
     }
-    return () => scramblerRef.current?.stop();
-  }, [config.animateOn, scramble]);
+  }, [scramble]);
 
   return {
     displayText,

@@ -1,11 +1,12 @@
 'use client';
 
+import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 import { Lock, Key, Shield } from 'lucide-react';
 
 const icons = [Lock, Key, Shield];
 
-export function FloatingIcons() {
+export const FloatingIcons = memo(function FloatingIcons() {
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
       {Array.from({ length: 8 }).map((_, i) => {
@@ -38,4 +39,4 @@ export function FloatingIcons() {
       })}
     </div>
   );
-}
+});

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const SECURITY_FEATURES = [
@@ -41,12 +41,12 @@ interface Particle {
   char: string;
 }
 
-export function SecurityFeaturesBanner() {
+export const SecurityFeaturesBanner = memo(function SecurityFeaturesBanner() {
   const [index, setIndex] = useState(0);
-  const [particles, setParticles] = useState<Particle[]>([]);
   const [canvasSupported, setCanvasSupported] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
+  const particlesRef = useRef<Particle[]>([]);
   const animationRef = useRef<number | undefined>(undefined);
 
   // Check canvas support on mount
@@ -63,7 +63,7 @@ export function SecurityFeaturesBanner() {
     return () => clearInterval(interval);
   }, []);
 
-  // Particle animation
+  // Particle animation directly on canvas without causing React state updates
   useEffect(() => {
     if (!canvasSupported) return;
     
@@ -86,30 +86,36 @@ export function SecurityFeaturesBanner() {
       
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      setParticles((prev) => {
-        const updated = prev
-          .map((p) => ({
-            ...p,
-            x: p.x + p.vx,
-            y: p.y + p.vy,
-            vy: p.vy + 0.1,
-            life: p.life - 0.02,
-          }))
-          .filter((p) => p.life > 0);
+      const currentParticles = particlesRef.current;
+      const updated: Particle[] = [];
 
-        updated.forEach((p) => {
-          ctx.fillStyle = `rgba(0, 255, 65, ${p.life * 0.6})`;
+      for (let i = 0; i < currentParticles.length; i++) {
+        const p = currentParticles[i];
+        const life = p.life - 0.02;
+        if (life > 0) {
+          const x = p.x + p.vx;
+          const y = p.y + p.vy;
+          const vy = p.vy + 0.1;
+          
+          ctx.fillStyle = `rgba(0, 255, 65, ${life * 0.6})`;
           ctx.font = "10px monospace";
-          ctx.fillText(p.char, p.x, p.y);
-        });
+          ctx.fillText(p.char, x, y);
 
-        return updated;
-      });
+          updated.push({
+            ...p,
+            x,
+            y,
+            vy,
+            life,
+          });
+        }
+      }
 
+      particlesRef.current = updated;
       animationRef.current = requestAnimationFrame(animate);
     };
 
-    animate();
+    animationRef.current = requestAnimationFrame(animate);
     
     return () => {
       if (animationRef.current) {
@@ -143,7 +149,7 @@ export function SecurityFeaturesBanner() {
       });
     }
 
-    setParticles(newParticles);
+    particlesRef.current = newParticles;
   }, [canvasSupported, index]);
 
   return (
@@ -157,28 +163,18 @@ export function SecurityFeaturesBanner() {
         />
       )}
       <AnimatePresence mode="wait" onExitComplete={createParticles}>
-        <motion.div
+        <motion.p
           key={index}
           ref={textRef}
+          initial={{ opacity: 0, y: 3 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -3 }}
+          transition={{ duration: 0.25, ease: "easeInOut" }}
           className="text-neon-green/60 text-[10px] xs:text-xs sm:text-sm font-mono text-center leading-tight max-w-full"
         >
-          {SECURITY_FEATURES[index].split('').map((char, i) => (
-            <motion.span
-              key={i}
-              className="inline-block"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0, transition: { duration: 0.3 } }}
-              transition={{
-                duration: 0.15,
-                delay: (SECURITY_FEATURES[index].length - 1 - i) * 0.02,
-              }}
-            >
-              {char === ' ' ? '\u00A0' : char}
-            </motion.span>
-          ))}
-        </motion.div>
+          {SECURITY_FEATURES[index]}
+        </motion.p>
       </AnimatePresence>
     </div>
   );
-}
+});

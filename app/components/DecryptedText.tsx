@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { motion } from 'framer-motion';
 import { useTextScramble } from '@/lib/ui/hooks';
 
@@ -18,7 +18,7 @@ interface DecryptedTextProps {
     animateOn?: 'view' | 'hover';
 }
 
-export default function DecryptedText({
+const DecryptedText = memo(function DecryptedText({
     text,
     speed = 50,
     maxIterations = 10,
@@ -74,4 +74,6 @@ export default function DecryptedText({
             </span>
         </motion.span>
     );
-}
+});
+
+export default DecryptedText;
