@@ -13,6 +13,7 @@ export interface DatabaseProvider {
     lastPulse: number,
     unlockTime: number,
     expiresAt?: number,
+    pulseInterval?: number,
   ): Promise<void>;
   incrementAccessCount(id: string): Promise<void>;
   decrementViewCount(id: string): Promise<void>;
