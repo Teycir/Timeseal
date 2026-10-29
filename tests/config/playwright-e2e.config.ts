@@ -30,5 +30,6 @@ export default defineConfig({
     command: 'NEXT_PUBLIC_IS_E2E=true npm run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
+    timeout: 120000,
   },
 });
