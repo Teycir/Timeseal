@@ -11,6 +11,7 @@ interface CloudflareEnv {
   MASTER_ENCRYPTION_KEY: string; // Required, not optional
   MASTER_ENCRYPTION_KEY_OLD?: string; // Optional, for key rotation
   METRICS_SECRET?: string; // Optional
+  TURNSTILE_SECRET_KEY?: string; // Optional, Cloudflare Turnstile secret
 }
 
 export interface Container {

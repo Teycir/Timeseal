@@ -9,6 +9,7 @@ import {
   validateTimestamp,
 } from "@/lib/validation";
 import { ErrorCode, createErrorResponse } from "@/lib/errors";
+import { validateTurnstile } from "@/lib/turnstile";
 import { RATE_LIMIT_CREATE_SEAL } from "@/lib/constants";
 import { validateAPIRequest, validateFields, trackAnalytics } from "@/lib/apiHelpers";
 
@@ -53,6 +54,28 @@ export async function POST(request: NextRequest) {
           );
         }
         maxViews = parsed;
+      }
+
+      // Verify Cloudflare Turnstile challenge server-side.
+      // TURNSTILE_SECRET_KEY is configured as a Cloudflare Worker secret
+      // (`wrangler secret put TURNSTILE_SECRET_KEY`). When absent (local dev
+      // and integration tests), validation is skipped so automated flows work.
+      const turnstileResponse = formData.get("cf-turnstile-response") as string | null;
+      if (process.env.TURNSTILE_SECRET_KEY) {
+        if (!turnstileResponse) {
+          return createErrorResponse(
+            ErrorCode.TURNSTILE_REQUIRED,
+            "Security verification required",
+          );
+        }
+
+        const turnstileValid = await validateTurnstile(turnstileResponse, ip);
+        if (!turnstileValid) {
+          return createErrorResponse(
+            ErrorCode.TURNSTILE_INVALID,
+            "Security verification failed",
+          );
+        }
       }
 
       if (!encryptedBlob || !keyB || !iv || !unlockTime || isNaN(unlockTime)) {

@@ -47,7 +47,7 @@ export function SecurityFeaturesBanner() {
   const [canvasSupported, setCanvasSupported] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number | undefined>(undefined);
 
   // Check canvas support on mount
   useEffect(() => {
@@ -168,11 +168,10 @@ export function SecurityFeaturesBanner() {
               className="inline-block"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              exit={{ opacity: 0, transition: { duration: 0.3 } }}
               transition={{
                 duration: 0.15,
                 delay: (SECURITY_FEATURES[index].length - 1 - i) * 0.02,
-                exit: { duration: 0.3 }
               }}
             >
               {char === ' ' ? '\u00A0' : char}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { decryptData } from '@/lib/crypto';
 import { ensureIntegrity } from '@/lib/clientIntegrity';
@@ -23,8 +24,9 @@ interface SealStatus {
   isDMS?: boolean;
 }
 
-export default function VaultPage({ params }: { params: { id: string } }) {
-  return <VaultPageClient id={params.id} />;
+export default function VaultPage() {
+  const { id } = useParams<{ id: string }>();
+  return <VaultPageClient id={id} />;
 }
 
 function VaultPageClient({ id }: { id: string }) {

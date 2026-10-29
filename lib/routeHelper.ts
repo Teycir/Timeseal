@@ -13,6 +13,7 @@ interface RouteHandlerOptions {
 interface CloudflareEnv {
   DB: any;
   MASTER_ENCRYPTION_KEY?: string;
+  TURNSTILE_SECRET_KEY?: string;
 }
 
 export function createAPIRoute(

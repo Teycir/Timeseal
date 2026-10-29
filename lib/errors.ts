@@ -10,6 +10,8 @@ export enum ErrorCode {
   STORAGE_ERROR = "STORAGE_ERROR",
   DATABASE_ERROR = "DATABASE_ERROR",
   INTERNAL_ERROR = "INTERNAL_ERROR",
+  TURNSTILE_REQUIRED = "TURNSTILE_REQUIRED",
+  TURNSTILE_INVALID = "TURNSTILE_INVALID",
 }
 
 export interface AppError {
@@ -82,6 +84,18 @@ export const ErrorMessages: Record<ErrorCode, AppError> = {
     message: "Internal server error",
     userMessage: "An unexpected error occurred. Please try again.",
     statusCode: 500,
+  },
+  [ErrorCode.TURNSTILE_REQUIRED]: {
+    code: ErrorCode.TURNSTILE_REQUIRED,
+    message: "Turnstile verification required",
+    userMessage: "Please complete the security check to continue.",
+    statusCode: 403,
+  },
+  [ErrorCode.TURNSTILE_INVALID]: {
+    code: ErrorCode.TURNSTILE_INVALID,
+    message: "Turnstile verification failed",
+    userMessage: "Security verification failed. Please refresh and try again.",
+    statusCode: 403,
   },
 };
 

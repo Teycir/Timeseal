@@ -964,6 +964,10 @@ npm run deploy
 # Set production secrets
 openssl rand -base64 32  # Generate key
 wrangler secret put MASTER_ENCRYPTION_KEY
+# Set the Cloudflare Turnstile secret (get it from dash.cloudflare.com → Turnstile)
+# NEVER put TURNSTILE_SECRET_KEY in .env.production — it is a server-side secret.
+# Only the public NEXT_PUBLIC_TURNSTILE_SITE_KEY lives in .env.production.
+wrangler secret put TURNSTILE_SECRET_KEY
 ```
 
 ---

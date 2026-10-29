@@ -22,6 +22,9 @@ export function Footer() {
           </div>
         </div>
         <div className="flex gap-3 items-center">
+          <span className="text-neon-green/40 leading-none" title="Deployed version">
+            v{process.env.NEXT_PUBLIC_APP_VERSION}
+          </span>
           <span className="text-neon-green/50 leading-none">Share:</span>
           <a href="https://twitter.com/intent/tweet?text=Check%20out%20TimeSeal%20-%20cryptographically%20enforced%20time-locked%20vaults!%20Send%20messages%20that%20can%27t%20be%20opened%20until%20a%20specific%20date.&url=https://timeseal.online&hashtags=Encryption,Privacy,TimeLock" target="_blank" rel="noopener noreferrer" className="hover:text-neon-green transition-colors flex items-center justify-center p-2" aria-label="Share on X/Twitter">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">

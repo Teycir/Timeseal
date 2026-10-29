@@ -1,4 +1,7 @@
+import { readFileSync } from "node:fs";
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
+
+const pkg = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8"));
 
 initOpenNextCloudflareForDev();
 
@@ -6,6 +9,7 @@ initOpenNextCloudflareForDev();
 const nextConfig = {
   env: {
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+    NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION || pkg.version,
   },
   generateBuildId: async () => {
     return `v${Date.now()}-${Math.random().toString(36).substring(7)}`;

@@ -61,3 +61,5 @@ scripts/deploy.sh
 # Backup files with sensitive data
 backup-seals-*.json
 *.backup
+.env.production
+.env.production

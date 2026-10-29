@@ -126,6 +126,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✅ Better security (fewer attack surfaces)
 - ❌ No offline dashboard access (acceptable tradeoff)
 
+### Next.js 16 & Turnstile Server-Side Validation
+- ✅ Next.js upgraded to 16.4.3 (latest)
+- ✅ Server-side Turnstile verification now enforced on `POST /api/create-seal`
+  - `validateTurnstile()` in `lib/turnstile.ts` is now called with the `cf-turnstile-response` token and client IP
+  - Previously the Turnstile widget rendered and sent tokens client-side, but the server never validated them — the helper was dead code, making the check fully bypassable
+  - Added `TURNSTILE_REQUIRED` (403) and `TURNSTILE_INVALID` (403) error codes for clear client feedback
+  - Validation is gated on `TURNSTILE_SECRET_KEY`: enforced in production, gracefully skipped in local dev & integration tests (which don't send a Turnstile token)
+  - `validateTurnstile()` now checks `response.ok` and surfaces Cloudflare `error-codes` for diagnostics
+- ✅ `TURNSTILE_SECRET_KEY` added to `CloudflareEnv` types and deployment docs
+  - Set in production via `wrangler secret put TURNSTILE_SECRET_KEY` (never committed to `.env.production`)
+
 ## [0.9.1] - 2025-01-18
 
 ### Added

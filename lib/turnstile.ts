@@ -16,10 +16,23 @@ export async function validateTurnstile(token: string, ip: string): Promise<bool
       }),
     });
 
-    const data = await response.json() as { success: boolean };
+    if (!response.ok) {
+      console.error('[Turnstile] Cloudflare siteverify returned HTTP', response.status);
+      return false;
+    }
+
+    const data = await response.json() as {
+      success: boolean;
+      'error-codes'?: string[];
+    };
+
+    if (!data.success && data['error-codes']?.length) {
+      console.warn('[Turnstile] Validation failed:', data['error-codes'].join(', '));
+    }
+
     return data.success;
   } catch (error) {
-    console.error('Turnstile validation failed:', error);
+    console.error('[Turnstile] Validation error:', error);
     return false;
   }
 }

@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-export default function PulsePage({ params }: { params?: { token?: string | string[] } }) {
+export default function PulsePage() {
   const navParams = useParams();
   const [status, setStatus] = useState<
     "loading" | "confirm" | "success" | "error"
@@ -35,7 +35,7 @@ export default function PulsePage({ params }: { params?: { token?: string | stri
   useEffect(() => {
     const fetchSealInfo = async () => {
       try {
-        const tokenParam = params?.token ?? navParams?.token;
+        const tokenParam = navParams?.token;
         const rawToken = Array.isArray(tokenParam) ? tokenParam.join("/") : (tokenParam || "");
         const token = decodeURIComponent(rawToken);
         setCurrentToken(token);
@@ -99,7 +99,7 @@ export default function PulsePage({ params }: { params?: { token?: string | stri
     };
 
     fetchSealInfo();
-  }, [params?.token, navParams?.token]);
+  }, [navParams?.token]);
 
   const handleAction = async (action: "renew" | "unlock" | "delete") => {
     setIsUpdating(true);

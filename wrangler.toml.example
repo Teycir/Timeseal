@@ -25,6 +25,7 @@ MAX_SEAL_DURATION_DAYS = "365"
 # Secrets (set via: wrangler secret put MASTER_ENCRYPTION_KEY)
 # MASTER_ENCRYPTION_KEY
 # MASTER_ENCRYPTION_KEY_PREVIOUS  # Optional: For zero-downtime rotation
+# TURNSTILE_SECRET_KEY  # Set via: wrangler secret put TURNSTILE_SECRET_KEY
 
 # Development
 [env.development]
