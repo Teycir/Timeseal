@@ -9,14 +9,27 @@ export const DustEffect = memo(function DustEffect() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    // Skip animation entirely if the user prefers reduced motion
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     let animId: number;
+    let lastW = 0;
 
     const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      // Mobile browsers fire `resize` whenever the URL bar collapses/expands
+      // (height-only change). Assigning canvas.width/height reallocates and
+      // blanks the bitmap, which shows up as a flash. Ignore those.
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      if (lastW === w && Math.abs(h - canvas.height) < 200) return;
+      lastW = w;
+      canvas.width = w;
+      canvas.height = h;
     };
     resize();
 
@@ -29,7 +42,8 @@ export const DustEffect = memo(function DustEffect() {
       opacity: number;
     }> = [];
 
-    for (let i = 0; i < 40; i++) {
+    // Reduced from 40 to 15 particles for smoother performance on mobile/low-end
+    for (let i = 0; i < 15; i++) {
       particles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,

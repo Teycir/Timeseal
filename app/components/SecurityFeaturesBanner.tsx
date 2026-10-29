@@ -66,7 +66,12 @@ export const SecurityFeaturesBanner = memo(function SecurityFeaturesBanner() {
   // Particle animation directly on canvas without causing React state updates
   useEffect(() => {
     if (!canvasSupported) return;
-    
+
+    // Skip particle animation if user prefers reduced motion
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 

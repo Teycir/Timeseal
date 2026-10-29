@@ -52,13 +52,13 @@ export function IdleBlur() {
     };
   }, [isIdle]);
 
-  return (
+   return (
     <AnimatePresence>
       {isIdle && (
         <motion.div
-          initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
-          animate={{ opacity: 1, backdropFilter: "blur(12px)" }}
-          exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
           transition={{ duration: 0.8, ease: "easeInOut" }}
           className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center pointer-events-none"
         >

@@ -112,7 +112,6 @@ export const metadata: Metadata = {
       { rel: 'mask-icon', url: '/favicon.svg', color: '#00ff41' }
     ]
   },
-  manifest: '/manifest.json',
 }
 
 export default function RootLayout({
@@ -124,8 +123,6 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <StructuredData />
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#00ff41" />
         <script
           dangerouslySetInnerHTML={{
             __html: `

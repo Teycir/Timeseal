@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { usePWA } from '@/lib/usePWA';
 import { toast } from 'sonner';
 import { AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -16,8 +15,6 @@ import { DustEffect } from './components/DustEffect';
 import { motion } from 'framer-motion';
 
 export default function HomePage() {
-  usePWA();
-
   const [encryptionProgress, setEncryptionProgress] = useState(0);
   const [result, setResult] = useState<{
     publicUrl: string;

@@ -30,6 +30,17 @@ html {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Respect user's reduced-motion preference globally.
+   Disables non-essential animations/transitions that can cause
+   flicker on Chromium browsers or jank on low-end devices. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 body {
   font-family: "JetBrains Mono", monospace;
   background-color: var(--dark-bg);
@@ -38,19 +49,9 @@ body {
   touch-action: manipulation;
 }
 
-/* Noise Texture Overlay */
-body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0.03;
-  z-index: 9999;
-  pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-}
+/* Noise texture removed — the fixed body::before pseudo-element at
+   z-index 9999 was a major Chromium repaint trigger causing flicker
+   on scroll/resize. The subtle texture is not worth the performance cost. */
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
