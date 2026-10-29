@@ -235,9 +235,15 @@ export class SealDatabase implements DatabaseProvider {
     lastPulse: number,
     unlockTime: number,
     expiresAt?: number,
+    pulseInterval?: number,
   ): Promise<void> {
     let query = "UPDATE seals SET last_pulse = ?, unlock_time = ?";
     const params: any[] = [lastPulse, unlockTime];
+
+    if (pulseInterval !== undefined) {
+      query += ", pulse_interval = ?";
+      params.push(pulseInterval);
+    }
 
     if (expiresAt !== undefined) {
       query += ", expires_at = ?";
@@ -468,6 +474,7 @@ export class MockDatabase implements DatabaseProvider {
     lastPulse: number,
     unlockTime: number,
     expiresAt?: number,
+    pulseInterval?: number,
   ): Promise<void> {
     const seal = this.store.getSeals().get(id);
     if (!seal) {
@@ -475,6 +482,9 @@ export class MockDatabase implements DatabaseProvider {
     }
     seal.lastPulse = lastPulse;
     seal.unlockTime = unlockTime;
+    if (pulseInterval !== undefined) {
+      seal.pulseInterval = pulseInterval;
+    }
     if (expiresAt !== undefined) {
       seal.expiresAt = expiresAt;
     }

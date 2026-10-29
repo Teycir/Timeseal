@@ -2,6 +2,7 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { jsonResponse } from "@/lib/apiHandler";
 import { storageCircuitBreaker } from "@/lib/circuitBreaker";
 import { metrics } from "@/lib/metrics";
+import { logger } from "@/lib/logger";
 
 export async function GET() {
   try {
@@ -24,6 +25,12 @@ export async function GET() {
       { status: hasDegradation ? 503 : 200 },
     );
   } catch (error) {
+    console.error("[Health Check] Error:", error);
+    logger.error('health_check_error', error as Error, {
+      endpoint: '/api/health',
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return jsonResponse(
       {
         status: "error",

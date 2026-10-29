@@ -585,7 +585,7 @@ export class SealService {
     // FIX #6: Atomic update with observability wrapped in try-catch
     try {
       console.log("[pulseSeal] Updating database");
-      await this.db.updatePulseAndUnlockTime(seal.id, now, newUnlockTime);
+      await this.db.updatePulseAndUnlockTime(seal.id, now, newUnlockTime, undefined, intervalToUse);
       console.log("[pulseSeal] Database updated successfully");
 
       // Best-effort observability - don't fail pulse on logging errors

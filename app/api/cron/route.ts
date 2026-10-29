@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { jsonResponse } from "@/lib/apiHandler";
 import type { D1Database } from "@cloudflare/workers-types";
+import { logger } from "@/lib/logger";
 
 interface CloudflareEnv {
   DB: D1Database;
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
 
     // Delete seals (blobs deleted automatically via encrypted_blob column)
     const sealsResult = await env.DB.prepare(
-      `DELETE FROM seals 
+      `DELETE FROM seals
        WHERE (expires_at IS NULL AND unlock_time < ?)
        OR (expires_at IS NOT NULL AND expires_at < ?)`
     ).bind(cutoffTime, now).run();
@@ -61,6 +62,11 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("[CRON] Cleanup error:", error);
+    logger.error('cron_cleanup_error', error as Error, {
+      endpoint: '/api/cron',
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return jsonResponse({ error: "Cleanup failed" }, { status: 500 });
   }
 }
