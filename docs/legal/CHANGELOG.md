@@ -5,6 +5,36 @@ All notable changes to Time-Seal will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.0] - 2026-10-29
+
+### 🐛 UI Stability Fixes (Chromium flicker + Firefox perf)
+
+**Flicker Root Cause:** `body::before` noise texture (z-index:9999) + `backdrop-filter: blur()` (GPU stall) + 3 concurrent continuous animations (canvas RAF, WAAPI, Framer Motion).
+
+- Reduced particle count in DustEffect (40→15) for lower GPU/CPU load
+- Reduced floating icons in FloatingIcons (8→4) for lower animation overhead
+- Reduced beam particles in BackgroundBeams (40→20) for smoother rendering
+- Removed `body::before` noise texture pseudo-element (z-index:9999 stall source)
+- Removed `backdrop-filter: blur()` from layout (Chromium GPU stall source)
+- Added `prefers-reduced-motion` guards to all continuous animations
+- Simplified IdleBlur, SecurityFeaturesBanner, page.tsx animation hooks
+
+### 🔧 Lint Fixes (20 errors + 5 warnings, 15 files)
+
+- **`<a>` → `<Link` component:** 9 instances across canary, faq, how-it-works, license, pulse/[...token], security, v/[id] pages (Next.js best practice for client-side navigation)
+- **`Date.now()` in render:** Converted to lazy `useState(() => …)` initializers and `+new Date()` in callbacks (Countdown.tsx, CreateSealForm.tsx, dashboard/page.tsx, lib/hooks.ts)
+- **`setState` in effect:** Converted to lazy initializers or `setTimeout` deferral (MagneticButton.tsx, SecurityDashboard.tsx, lib/hooks.ts useAsync)
+- **Variable used-before-declaration:** Moved `copyToClipboard` before `useEffect` via `useCallback` (SealSuccess.tsx)
+- **Ref mutated during render:** Moved `configRef.current = config` into `useEffect` (lib/ui/hooks.ts) — preserves latest-value pattern for callbacks
+- **`window.location.href` → `useRouter().push()`:** 5 warnings in pulse/[...token]/page.tsx
+
+### ✅ Verification
+- ESLint: 0 errors, 0 warnings
+- TypeScript: compiles cleanly (`tsc --noEmit`)
+- Build: Next.js 16.4.3 production build passes
+- Deploy: Cloudflare Workers (16ms startup, all routes HTTP 200)
+- UI confirmed stable on both smartphone and laptop
+
 ## [1.0.0] - 2025-12-26 🎉
 
 ### 🎊 First Stable Release
