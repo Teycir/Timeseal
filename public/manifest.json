@@ -3,7 +3,7 @@
   "short_name": "TimeSeal",
   "description": "Create cryptographically enforced time-locked vaults and dead man's switches. Zero-trust, edge-native encryption.",
   "start_url": "/",
-  "display": "standalone",
+  "display": "browser",
   "orientation": "portrait",
   "background_color": "#0a0a0a",
   "theme_color": "#00ff41",

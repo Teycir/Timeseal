@@ -61,7 +61,7 @@ export default function DashboardPage() {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("focus", handleFocus);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const deleteSeal = async (id: string) => {

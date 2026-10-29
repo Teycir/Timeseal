@@ -107,3 +107,51 @@ Per `.amazonq/rules/error-handling.md`, the code should NOT be using bare catch 
 2. Re-throw unexpected errors
 3. Log errors with context
 4. Only catch expected error types (e.g., `TurnstileValidationError`)
+
+---
+
+## ✅ Resolution (2025-01-20)
+
+### Root Cause
+`validateTurnstile()` existed in `lib/turnstile.ts` and the Turnstile widget rendered client-side
+(via `@marsidev/react-turnstile` in `CreateSealForm.tsx` with the public `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
+from `.env.production`), sending `cf-turnstile-response` in FormData — **but `app/api/create-seal/route.ts`
+never called `validateTurnstile()`**. The helper was dead code. Additionally, `TURNSTILE_SECRET_KEY`
+was never deployed to the Worker, so even if the call had existed, it would have been bypassed.
+
+### Fix Applied
+1. **`app/api/create-seal/route.ts`** — Added server-side validation:
+   - Extracts `cf-turnstile-response` from FormData
+   - Calls `validateTurnstile(token, ip)` using the client's IP
+   - Gated on `process.env.TURNSTILE_SECRET_KEY` so local dev & integration tests (which don't
+     send a Turnstile token) continue to work — production enforcement only activates when the
+     secret is set
+   - Returns `TURNSTILE_REQUIRED` (403) when token is missing, `TURNSTILE_INVALID` (403) on failure
+
+2. **`lib/errors.ts`** — Added `TURNSTILE_REQUIRED` (403) and `TURNSTILE_INVALID` (403) error codes.
+
+3. **`lib/turnstile.ts`** — Hardened: added `response.ok` check, parses & logs Cloudflare `error-codes`.
+
+4. **Env types** — Added `TURNSTILE_SECRET_KEY?` to `CloudflareEnv` in `env.d.ts`, `lib/container.ts`,
+   `lib/routeHelper.ts` (matching the existing `process.env.MASTER_ENCRYPTION_KEY` pattern used elsewhere).
+
+5. **`TURNSTILE_SECRET_KEY`** deployed via `wrangler secret put TURNSTILE_SECRET_KEY` (NOT in `.env.production`).
+
+### Verification
+- `npx tsc --noEmit` → exit 0
+- `npx jest tests/unit` → 148/148 passed
+- `NODE_ENV=production npx next build` → exit 0
+- Production curl tests (live, post-deploy):
+  - Missing token → `403 TURNSTILE_REQUIRED` ✓
+  - Invalid/fake token → `403 TURNSTILE_INVALID` ✓
+  - Site GET → `200` ✓
+
+### Deployment
+- **Commit:** `7d20d7e feat(security): wire up Cloudflare Turnstile server-side validation on create-seal`
+- **Deploy:** `npx wrangler deploy` → Version ID: `39738579-2ca5-40b6-8e84-7e536594e6ac`
+
+### Outstanding Recommendation
+The site key `0x4AAAAAACHzq8TngxZwCTuD` in `.env.production` matches the key documented as
+**leaked/compromised** in `docs/deployment/TURNSTILE-ROTATION-GUIDE.md`. Cloudflare may throttle
+the compromised widget, causing slow load times. Follow that guide to rotate to a fresh
+site key + secret key pair when convenient.
