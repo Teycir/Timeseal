@@ -36,6 +36,7 @@ describe('Security Utilities', () => {
 
     it('should generate unique tokens', async () => {
       const token1 = await generatePulseToken('seal-123', testSecret);
+      await new Promise((resolve) => setTimeout(resolve, 5)); // token embeds a ms timestamp
       const token2 = await generatePulseToken('seal-123', testSecret);
       expect(token1).not.toBe(token2);
     });
@@ -57,6 +58,40 @@ describe('Security Utilities', () => {
     it('should reject malformed token', async () => {
       const isValid = await validatePulseToken('invalid', 'seal-123', testSecret);
       expect(isValid).toBe(false);
+    });
+
+    it('should accept a valid token days after creation (no 5-minute window)', async () => {
+      const token = await generatePulseToken('seal-123', testSecret);
+      const realNow = Date.now();
+      const spy = jest.spyOn(Date, 'now').mockReturnValue(realNow + 30 * 24 * 60 * 60 * 1000);
+      try {
+        expect(await validatePulseToken(token, 'seal-123', testSecret)).toBe(true);
+      } finally {
+        spy.mockRestore();
+      }
+    });
+
+    it('should accept a URL-encoded token (slash and plus in base64 signature)', async () => {
+      const token = await generatePulseToken('seal-123', testSecret);
+      expect(await validatePulseToken(encodeURIComponent(token), 'seal-123', testSecret)).toBe(true);
+    });
+
+    it('should reject a token with a tampered signature', async () => {
+      const token = await generatePulseToken('seal-123', testSecret);
+      const [id, ts] = token.split(':');
+      const forged = `${id}:${ts}:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=`;
+      expect(await validatePulseToken(forged, 'seal-123', testSecret)).toBe(false);
+    });
+
+    it('should reject a token whose timestamp is far in the future', async () => {
+      const token = await generatePulseToken('seal-123', testSecret);
+      const realNow = Date.now();
+      const spy = jest.spyOn(Date, 'now').mockReturnValue(realNow - 60 * 60 * 1000);
+      try {
+        expect(await validatePulseToken(token, 'seal-123', testSecret)).toBe(false);
+      } finally {
+        spy.mockRestore();
+      }
     });
   });
 

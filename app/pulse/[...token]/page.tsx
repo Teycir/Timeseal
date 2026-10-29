@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { BackgroundBeams } from "@/app/components/ui/background-beams";
 import { Card } from "@/app/components/Card";
 import { Button } from "@/app/components/Button";
@@ -15,7 +16,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-export default function PulsePage({ params }: { params: { token: string } }) {
+export default function PulsePage({ params }: { params?: { token?: string | string[] } }) {
+  const navParams = useParams();
   const [status, setStatus] = useState<
     "loading" | "confirm" | "success" | "error"
   >("loading");
@@ -33,7 +35,9 @@ export default function PulsePage({ params }: { params: { token: string } }) {
   useEffect(() => {
     const fetchSealInfo = async () => {
       try {
-        const token = decodeURIComponent(params.token);
+        const tokenParam = params?.token ?? navParams?.token;
+        const rawToken = Array.isArray(tokenParam) ? tokenParam.join("/") : (tokenParam || "");
+        const token = decodeURIComponent(rawToken);
         setCurrentToken(token);
 
         const parts = token.split(":");
@@ -51,6 +55,10 @@ export default function PulsePage({ params }: { params: { token: string } }) {
           setStatus("error");
           if (res.status === 404) {
             setMessage("This seal has been deleted or never existed.");
+          } else if (res.status === 429) {
+            setMessage("Too many requests. Please wait a minute and reload this page.");
+          } else if (res.status >= 500) {
+            setMessage("Temporary server error. Please try again in a moment.");
           } else {
             setMessage("Invalid pulse link or seal not found");
           }
@@ -91,7 +99,7 @@ export default function PulsePage({ params }: { params: { token: string } }) {
     };
 
     fetchSealInfo();
-  }, [params.token]);
+  }, [params?.token, navParams?.token]);
 
   const handleAction = async (action: "renew" | "unlock" | "delete") => {
     setIsUpdating(true);

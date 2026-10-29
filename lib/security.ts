@@ -39,7 +39,6 @@ import {
   MAX_CONCURRENT_REQUESTS,
   MAX_CONCURRENT_TRACKER_ENTRIES,
   NONCE_EXPIRY,
-  PULSE_TOKEN_WINDOW,
 } from "./constants";
 
 export function isHoneypot(sealId: string): boolean {
@@ -160,18 +159,42 @@ export async function validatePulseToken(
   sealId: string,
   secret: string,
 ): Promise<boolean> {
-  const parts = token.split(":");
+  let decodedToken = token;
+  try {
+    decodedToken = decodeURIComponent(token);
+  } catch {
+    decodedToken = token;
+  }
+
+  const parts = decodedToken.split(":");
   if (parts.length !== 3) return false;
 
   const [tokenSealId, timestamp, signature] = parts;
 
   if (tokenSealId !== sealId) return false;
 
-  const tokenAge = Date.now() - parseInt(timestamp, 10);
-  if (tokenAge > PULSE_TOKEN_WINDOW || tokenAge < 0) return false;
+  const ts = parseInt(timestamp, 10);
+  if (isNaN(ts) || ts <= 0) return false;
+
+  // Reject timestamps too far in the future (allow up to 5 minutes clock drift)
+  if (ts > Date.now() + 300000) return false;
 
   const data = `${tokenSealId}:${timestamp}`;
-  return await hmacVerify(data, signature, secret);
+
+  // Try standard signature, space-to-plus normalization, and URL-safe Base64
+  const candidateSignatures = [
+    signature,
+    signature.replace(/ /g, "+"),
+    signature.replace(/-/g, "+").replace(/_/g, "/"),
+  ];
+
+  for (const sig of candidateSignatures) {
+    if (await hmacVerify(data, sig, secret)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 export async function validatePulseOperation(

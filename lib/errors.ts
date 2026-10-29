@@ -119,6 +119,9 @@ export function handleError(error: unknown): Response {
     if (error.message.includes("decrypt")) {
       return createErrorResponse(ErrorCode.DECRYPTION_FAILED, isDev ? error.message : undefined);
     }
+    if (error.message.includes("Invalid pulse token")) {
+      return createErrorResponse(ErrorCode.INVALID_INPUT, isDev ? error.message : undefined);
+    }
     if (error.message.includes("Replay attack") || error.message.includes("already processed")) {
       return createErrorResponse(ErrorCode.INVALID_INPUT, error.message);
     }
