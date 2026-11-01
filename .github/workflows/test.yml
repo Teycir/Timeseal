@@ -2,9 +2,9 @@ name: Test Suite
 
 on:
   push:
-    branches: [main, develop]
+    branches: [master, main, develop]
   pull_request:
-    branches: [main, develop]
+    branches: [master, main, develop]
 
 jobs:
   unit-integration:
@@ -15,7 +15,7 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-      - run: npm ci
+      - run: npm ci --legacy-peer-deps
       - run: npm run test:unit
       - run: npm run test:integration
       - uses: codecov/codecov-action@v3
@@ -30,10 +30,10 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-      - run: npm ci
+      - run: npm ci --legacy-peer-deps
       - run: npx playwright install --with-deps
-      - run: npm run test:e2e
-      - uses: actions/upload-artifact@v3
+      - run: npm run test:e2e:full
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report
