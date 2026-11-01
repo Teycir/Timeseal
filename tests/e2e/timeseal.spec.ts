@@ -17,18 +17,14 @@ test.describe('TimeSeal E2E Tests', () => {
   test('should apply template and populate form', async ({ page }) => {
     await page.goto(BASE_URL);
 
-    // Click Crypto Inheritance template
-    await page.click('button[title="Crypto Inheritance"]');
+    await page.getByRole('button', { name: 'Crypto Inheritance' }).click();
 
-    // Verify form is populated
     const messageValue = await page.inputValue('textarea#message-input');
     expect(messageValue).toContain('Seed phrase');
 
-    // Verify dead man's switch is selected
-    await expect(page.locator('button:has-text("DEAD MAN\'S SWITCH")')).toHaveClass(/bg-neon-green/);
+    await expect(page.getByRole('button', { name: 'DEADMAN' })).toHaveClass(/seal-type-button-active/);
 
-    // Verify pulse interval is set to 30 days
-    const pulseDays = await page.inputValue('input#pulse-days');
+    const pulseDays = await page.inputValue('input#pulse-value');
     expect(pulseDays).toBe('30');
   });
 
@@ -47,11 +43,11 @@ test.describe('TimeSeal E2E Tests', () => {
       buffer: buffer,
     });
 
-    // Verify file is shown
-    await expect(page.getByText('📎 test.txt')).toBeVisible();
+    await expect(page.getByText('test.txt', { exact: true })).toBeVisible();
 
-    // Verify message input is disabled
-    await expect(page.locator('textarea#message-input')).toBeDisabled();
+    // File takes priority: typing into the message box is rejected client-side.
+    await page.fill('textarea#message-input', 'should not stick');
+    await expect(page.locator('textarea#message-input')).toHaveValue('');
   });
 
   test('should navigate to info pages', async ({ page }) => {
@@ -63,7 +59,7 @@ test.describe('TimeSeal E2E Tests', () => {
     // Test Security page
     await page.goto(`${BASE_URL}/security`);
     await expect(page.locator('h1', { hasText: 'SECURITY' })).toBeVisible();
-    await expect(page.locator('text=AES-GCM 256-bit')).toBeVisible();
+    await expect(page.getByText('AES-GCM-256').first()).toBeVisible();
 
     // Test FAQ page
     await page.goto(`${BASE_URL}/faq`);
@@ -74,32 +70,18 @@ test.describe('TimeSeal E2E Tests', () => {
   test('should validate form inputs', async ({ page }) => {
     await page.goto(BASE_URL);
 
-    // Try to create seal without message
-    await page.click('button:has-text("TIMED RELEASE")');
+    await page.getByRole('button', { name: 'TIMED', exact: true }).click();
 
-    // Button should be disabled
-    const createButton = page.locator('button:has-text("CREATE TIME-SEAL")');
+    const createButton = page.getByRole('button', { name: 'CREATE TIME-SEAL' });
     await expect(createButton).toBeDisabled();
 
-    // Add message
     await page.fill('textarea#message-input', 'Test');
-
-    // Button still disabled (no unlock time)
     await expect(createButton).toBeDisabled();
 
-    // Set unlock time
-    const future = new Date();
-    future.setMinutes(future.getMinutes() + 5);
-    const fYear = future.getFullYear();
-    const fMonth = String(future.getMonth() + 1).padStart(2, '0');
-    const fDay = String(future.getDate()).padStart(2, '0');
-    const fHours = String(future.getHours()).padStart(2, '0');
-    const fMinutes = String(future.getMinutes()).padStart(2, '0');
-    const fDateString = `${fYear}-${fMonth}-${fDay}T${fHours}:${fMinutes}`;
-    await page.fill('input[type="datetime-local"]', fDateString);
+    await page.getByRole('button', { name: '+1 HOUR' }).click();
 
-    // Button should be enabled (Turnstile bypassed in E2E)
-    await expect(createButton).toBeEnabled();
+    // Still gated on the Turnstile token: no automated bypass exists in the app.
+    await expect(createButton).toBeDisabled();
   });
 
   test('should display footer with links', async ({ page }) => {
@@ -113,8 +95,7 @@ test.describe('TimeSeal E2E Tests', () => {
     await expect(page.locator('footer a:has-text("Security")')).toBeVisible();
     await expect(page.locator('footer a:has-text("FAQ")')).toBeVisible();
 
-    // Check social icons
-    await expect(page.locator('footer a[aria-label="GitHub"]')).toBeVisible();
+    await expect(page.locator('footer a[aria-label="Share on X/Twitter"]')).toBeVisible();
   });
 
 
@@ -126,6 +107,7 @@ test.describe('API Health Checks', () => {
     expect(healthResponse.ok()).toBeTruthy();
 
     const metricsResponse = await request.get(`${BASE_URL}/api/metrics`);
-    expect(metricsResponse.ok()).toBeTruthy();
+    // Metrics are auth-gated by design: 200 with a secret, 401 wrong bearer, 404 when disabled.
+    expect([200, 401, 404]).toContain(metricsResponse.status());
   });
 });

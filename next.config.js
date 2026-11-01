@@ -18,29 +18,10 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/_next/static/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
-      {
+        // No Cache-Control here: proxy.ts applies no-store to pages, and hashed /_next assets
+        // keep Next's immutable caching (a custom Cache-Control on /_next/ warns at build).
         source: '/:path*',
         headers: [
-          {
-            key: 'Cache-Control',
-            value: 'no-store, must-revalidate',
-          },
-          {
-            key: 'Pragma',
-            value: 'no-cache',
-          },
-          {
-            key: 'Expires',
-            value: '0',
-          },
           {
             key: 'Content-Security-Policy',
             value: [

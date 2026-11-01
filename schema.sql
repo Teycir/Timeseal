@@ -19,7 +19,10 @@ CREATE TABLE IF NOT EXISTS seals (
   max_views INTEGER DEFAULT NULL,
   view_count INTEGER DEFAULT 0,
   first_viewed_at INTEGER DEFAULT NULL,
-  first_viewer_fingerprint TEXT DEFAULT NULL
+  first_viewer_fingerprint TEXT DEFAULT NULL,
+  -- Added by migrations 004_add_compression_flag / 006_webhook_support
+  compressed BOOLEAN DEFAULT 0,
+  encrypted_webhook TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_seals_unlock_time ON seals(unlock_time);
@@ -47,3 +50,43 @@ CREATE TABLE IF NOT EXISTS nonces (
 
 CREATE INDEX IF NOT EXISTS idx_nonces_expires ON nonces(expires_at);
 CREATE INDEX IF NOT EXISTS idx_nonces_nonce ON nonces(nonce);
+
+-- Audit log (migration 001_audit_logs)
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  timestamp INTEGER NOT NULL,
+  event_type TEXT NOT NULL,
+  seal_id TEXT NOT NULL,
+  ip TEXT NOT NULL,
+  metadata TEXT DEFAULT '{}',
+  created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000)
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_seal_id ON audit_logs(seal_id);
+CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_logs(timestamp);
+CREATE INDEX IF NOT EXISTS idx_audit_event_type ON audit_logs(event_type);
+
+-- Analytics (migration 003_analytics)
+CREATE TABLE IF NOT EXISTS analytics_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  event_type TEXT NOT NULL,
+  path TEXT,
+  referrer TEXT,
+  country TEXT,
+  timestamp INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_event_type ON analytics_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_timestamp ON analytics_events(timestamp);
+
+CREATE TABLE IF NOT EXISTS analytics_summary (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  date TEXT NOT NULL,
+  total_page_views INTEGER DEFAULT 0,
+  total_seals_created INTEGER DEFAULT 0,
+  total_seals_unlocked INTEGER DEFAULT 0,
+  total_pulses_received INTEGER DEFAULT 0,
+  total_seals_deleted INTEGER DEFAULT 0,
+  unique_countries INTEGER DEFAULT 0,
+  UNIQUE(date)
+);
